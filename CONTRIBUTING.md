@@ -64,6 +64,6 @@ By making a contribution to this project, I certify that:
 + [General GitHub documentation](https://help.github.com/)
 + [GitHub pull request documentation](https://help.github.com/send-pull-requests/)
 
-[dw]: https://developer.ibm.com/answers/questions/ask/?topics=watson
-[stackoverflow]: http://stackoverflow.com/questions/ask?tags=ibm-watson
+[dw]: https://developer.ibm.com/answers/questions/ask.html
+[stackoverflow]: http://stackoverflow.com/questions/ask?tags=ibm
 [dep]: https://github.com/golang/dep

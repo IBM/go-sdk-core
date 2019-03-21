@@ -25,5 +25,5 @@ script:
 deploy:
 - provider: script
   skip_cleanup: true
-  script: npx semantic-release --repository-url https://${GH_TOKEN}@github.com/watson-developer-cloud/go-sdk
+  script: npx semantic-release --repository-url https://${GH_TOKEN}@github.com/IBM/go-sdk-core
     --debug

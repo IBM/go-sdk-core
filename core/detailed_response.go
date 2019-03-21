@@ -22,7 +22,7 @@ import (
 	"net/http"
 )
 
-// DetailedResponse : Generic response for Watson API
+// DetailedResponse : Generic response for IBM API
 type DetailedResponse struct {
 	StatusCode int         // HTTP status code
 	Headers    http.Header // HTTP response headers

@@ -57,7 +57,7 @@ type ServiceOptions struct {
 	IAMURL         string
 }
 
-// WatsonService Base Service
+// BaseService Base Service
 type BaseService struct {
 	Options        *ServiceOptions
 	DefaultHeaders http.Header
@@ -66,7 +66,7 @@ type BaseService struct {
 	UserAgent      string
 }
 
-// NewBaseService Instantiate a Watson Service
+// NewBaseService Instantiate a Base Service
 func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*BaseService, error) {
 	if HasBadFirstOrLastChar(options.URL) {
 		return nil, fmt.Errorf("The URL shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your URL")
