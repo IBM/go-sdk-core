@@ -17,4 +17,4 @@ package core
  */
 
 // Version of the SDK
-const __VERSION__ = "0.0.0"
+const __VERSION__ = "0.1.0"
