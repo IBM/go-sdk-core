@@ -1,0 +1,4 @@
+{
+  "Enable": ["golint"],
+  "Exclude": ["don't use MixedCaps in package name", "should not use dot imports", "don't use ALL_CAPS in Go names; use CamelCase"]
+}
