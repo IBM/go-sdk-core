@@ -22,6 +22,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -44,6 +45,7 @@ const (
 	IAM_API_KEY                  = "iam_apikey"
 	IAM_URL                      = "iam_url"
 	SDK_NAME                     = "ibm-go-sdk-core"
+	UNKNOWN_ERROR                = "Unknown Error"
 )
 
 // ServiceOptions Service options
@@ -261,9 +263,9 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (*Det
 	response.StatusCode = resp.StatusCode
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		if resp != nil {
-			buff := new(bytes.Buffer)
-			buff.ReadFrom(resp.Body)
-			return response, fmt.Errorf(buff.String())
+			response.Result = resp
+			message := getErrorMessage(resp)
+			return response, fmt.Errorf(message)
 		}
 	}
 
@@ -281,6 +283,45 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (*Det
 	}
 
 	return response, nil
+}
+
+type Errors struct {
+	Errors []Error `json:"errors,omitempty"`
+}
+
+type Error struct {
+	Message string `json:"message,omitempty"`
+}
+
+func getErrorMessage(response *http.Response) string {
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return UNKNOWN_ERROR
+	}
+
+	var data map[string]interface{}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		buff := new(bytes.Buffer)
+		buff.ReadFrom(response.Body)
+		return fmt.Sprint(buff.String())
+	}
+
+	if _, ok := data["errors"]; ok {
+		var errors Errors
+		json.Unmarshal(body, &errors)
+		return errors.Errors[0].Message
+	}
+
+	if val, ok := data["error"]; ok {
+		return val.(string)
+	}
+
+	if val, ok := data["message"]; ok {
+		return val.(string)
+	}
+
+	return UNKNOWN_ERROR
 }
 
 func (service *BaseService) loadFromCredentialFile(serviceName string, separator string) error {
