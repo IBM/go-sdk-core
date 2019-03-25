@@ -17,6 +17,7 @@ package core
  */
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"github.com/stretchr/testify/assert"
@@ -350,4 +351,34 @@ func TestLoadingFromVCAPServices(t *testing.T) {
 func TestNoAuth(t *testing.T) {
 	_, err := NewBaseService(&ServiceOptions{}, "watson", "watson")
 	assert.NotNil(t, err)
+}
+
+func TestErrorMessage(t *testing.T) {
+	msg1 := []byte(`{"error":"error1"}`)
+	response1 := http.Response{
+		Body: ioutil.NopCloser(bytes.NewBuffer(msg1)),
+	}
+	message1 := getErrorMessage(&response1)
+	assert.Equal(t, message1, "error1")
+
+	msg2 := []byte(`{"message":"error2"}`)
+	response2 := http.Response{
+		Body: ioutil.NopCloser(bytes.NewBuffer(msg2)),
+	}
+	message2 := getErrorMessage(&response2)
+	assert.Equal(t, message2, "error2")
+
+	msg3 := []byte(`{"errors":[{"message":"error3"}]}`)
+	response3 := http.Response{
+		Body: ioutil.NopCloser(bytes.NewBuffer(msg3)),
+	}
+	message3 := getErrorMessage(&response3)
+	assert.Equal(t, message3, "error3")
+
+	msg4 := []byte(`{"msg":"error4"}`)
+	response4 := http.Response{
+		Body: ioutil.NopCloser(bytes.NewBuffer(msg4)),
+	}
+	message4 := getErrorMessage(&response4)
+	assert.Equal(t, message4, "Unknown Error")
 }
