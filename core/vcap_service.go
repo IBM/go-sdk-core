@@ -18,7 +18,6 @@ package core
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 )
 
@@ -44,7 +43,6 @@ func LoadFromVCAPServices(serviceName string) *Credential {
 			for name, instances := range rawServices {
 				if name == serviceName {
 					creds := &instances[0].Credentials
-					fmt.Println(creds)
 					return creds
 				}
 			}
