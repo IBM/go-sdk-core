@@ -321,6 +321,10 @@ func getErrorMessage(response *http.Response) string {
 		return val.(string)
 	}
 
+	if val, ok := data["errorMessage"]; ok {
+		return val.(string)
+	}
+
 	return UNKNOWN_ERROR
 }
 

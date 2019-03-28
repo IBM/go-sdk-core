@@ -381,4 +381,11 @@ func TestErrorMessage(t *testing.T) {
 	}
 	message4 := getErrorMessage(&response4)
 	assert.Equal(t, message4, "Unknown Error")
+
+	msg5 := []byte(`{"errorMessage":"error5"}`)
+	response5 := http.Response{
+		Body: ioutil.NopCloser(bytes.NewBuffer(msg5)),
+	}
+	message5 := getErrorMessage(&response5)
+	assert.Equal(t, message5, "error5")
 }
