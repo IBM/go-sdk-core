@@ -45,6 +45,7 @@ func TestDetailedResponseJson(t *testing.T) {
 	assert.Equal(t, response.GetStatusCode(), 200)
 	assert.Equal(t, response.GetHeaders().Get("accept"), "application/json")
 	response.String()
+	PrettyPrint(response.GetResult(), "result: ")
 }
 
 func TestDetailedResponseNonJson(t *testing.T) {

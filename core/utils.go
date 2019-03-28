@@ -17,6 +17,7 @@ package core
  */
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -155,4 +156,13 @@ func UserHomeDir() string {
 
 func SystemInfo() string {
 	return fmt.Sprintf("(arch=%s; os=%s; go.version=%s)", runtime.GOARCH, runtime.GOOS, runtime.Version())
+}
+
+// PrettyPrint print pretty
+func PrettyPrint(result interface{}, resultName string) {
+	output, err := json.MarshalIndent(result, "", "    ")
+
+	if err == nil {
+		fmt.Printf("%v:\n%+v\n\n", resultName, string(output))
+	}
 }
