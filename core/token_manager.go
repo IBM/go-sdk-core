@@ -26,9 +26,10 @@ import (
 
 // for handling token management
 const (
-	DefaultIAMURL            = "https://iam.bluemix.net/identity/token"
+	DefaultIAMURL            = "https://iam.cloud.ibm.com/identity/token"
+    DefaultIAMClientId       = "bx"
+    DefaultIAMClientSecret   = "bx"
 	DefaultContentType       = "application/x-www-form-urlencoded"
-	DefaultAuthorization     = "Basic Yng6Yng="
 	RequestTokenGrantType    = "urn:ibm:params:oauth:grant-type:apikey"
 	RequestTokenResponseType = "cloud_iam"
 	RefreshTokenGrantType    = "refresh_token"
@@ -48,19 +49,34 @@ type TokenManager struct {
 	userAccessToken string
 	iamAPIkey       string
 	iamURL          string
+	iamClientId     string
+	iamClientSecret string
 	tokenInfo       *TokenInfo
 	client          *http.Client
 }
 
 // NewTokenManager : Instantiate TokenManager
-func NewTokenManager(iamAPIkey string, iamURL string, userAccessToken string) *TokenManager {
+func NewTokenManager(iamAPIkey string, iamURL string, userAccessToken string,
+    iamClientId string, iamClientSecret string) (*TokenManager, error) {
 	if iamURL == "" {
 		iamURL = DefaultIAMURL
+	}
+	
+	if iamClientId == "" && iamClientSecret == "" {
+	    iamClientId = DefaultIAMClientId
+	    iamClientSecret = DefaultIAMClientSecret
+	} else if iamClientId != "" && iamClientSecret != "" {
+	    // Do nothing as this is the valid scenario
+	} else {
+        // Only one of client id/secret was specified... error.
+        return nil, fmt.Errorf("You specified only one of 'iamClientId' and 'iamClientSecret', but you must supply both values together or supply neither of them.")       
 	}
 
 	tokenManager := TokenManager{
 		iamAPIkey:       iamAPIkey,
 		iamURL:          iamURL,
+		iamClientId:     iamClientId,
+		iamClientSecret: iamClientSecret,
 		userAccessToken: userAccessToken,
 		tokenInfo:       &TokenInfo{},
 
@@ -68,7 +84,7 @@ func NewTokenManager(iamAPIkey string, iamURL string, userAccessToken string) *T
 			Timeout: time.Second * 30,
 		},
 	}
-	return &tokenManager
+	return &tokenManager, nil
 }
 
 // GetToken : Return token set by user or fresh token
@@ -111,6 +127,7 @@ func (tm *TokenManager) SetIAMAPIKey(key string) {
 
 // makes an HTTP request
 func (tm *TokenManager) request(req *http.Request) (*TokenInfo, error) {
+    req.SetBasicAuth(tm.iamClientId, tm.iamClientSecret)
 	resp, err := tm.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -136,7 +153,6 @@ func (tm *TokenManager) requestToken() (*TokenInfo, error) {
 		ConstructHTTPURL(tm.iamURL, nil, nil)
 
 	builder.AddHeader(CONTENT_TYPE, DefaultContentType).
-		AddHeader(AUTHORIZATION, DefaultAuthorization).
 		AddHeader(Accept, APPLICATION_JSON)
 
 	// Add form data
@@ -157,7 +173,6 @@ func (tm *TokenManager) refreshToken() (*TokenInfo, error) {
 		ConstructHTTPURL(tm.iamURL, nil, nil)
 
 	builder.AddHeader(CONTENT_TYPE, DefaultContentType).
-		AddHeader(AUTHORIZATION, DefaultAuthorization).
 		AddHeader(Accept, APPLICATION_JSON)
 
 	builder.AddFormData("grant_type", "", "", RefreshTokenGrantType).

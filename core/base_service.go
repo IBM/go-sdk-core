@@ -50,13 +50,15 @@ const (
 
 // ServiceOptions Service options
 type ServiceOptions struct {
-	Version        string
-	URL            string
-	Username       string
-	Password       string
-	IAMApiKey      string
-	IAMAccessToken string
-	IAMURL         string
+	Version         string
+	URL             string
+	Username        string
+	Password        string
+	IAMApiKey       string
+	IAMAccessToken  string
+	IAMURL          string
+	IAMClientId     string
+	IAMClientSecret string
 }
 
 // BaseService Base Service
@@ -87,7 +89,8 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 	// 1. Credentials are passed in constructor
 	if options.Username != "" && options.Password != "" {
 		if options.Username == API_KEY && !strings.HasPrefix(options.Password, ICP_PREFIX) {
-			if err := service.SetTokenManager(options.Password, options.IAMAccessToken, options.IAMURL); err != nil {
+			if err := service.SetTokenManager(options.Password, options.IAMAccessToken, options.IAMURL, 
+                options.IAMClientId, options.IAMClientSecret); err != nil {
 				return nil, err
 			}
 		} else {
@@ -101,7 +104,8 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 				return nil, err
 			}
 		} else {
-			if err := service.SetTokenManager(options.IAMApiKey, options.IAMAccessToken, options.IAMURL); err != nil {
+			if err := service.SetTokenManager(options.IAMApiKey, options.IAMAccessToken, options.IAMURL,
+                options.IAMClientId, options.IAMClientSecret); err != nil {
 				return nil, err
 			}
 		}
@@ -122,7 +126,8 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 			}
 
 			if credential.APIKey != "" {
-				service.SetTokenManager(credential.APIKey, "", "")
+				service.SetTokenManager(credential.APIKey, "", "",
+				    service.Options.IAMClientId, service.Options.IAMClientSecret)
 			} else if credential.Username != "" && credential.Password != "" {
 				service.SetUsernameAndPassword(credential.Username, credential.Password)
 			}
@@ -150,16 +155,19 @@ func (service *BaseService) SetUsernameAndPassword(username string, password str
 }
 
 // SetTokenManager Sets the Token Manager for IAM Authentication
-func (service *BaseService) SetTokenManager(iamAPIKey string, iamAccessToken string, iamURL string) error {
+func (service *BaseService) SetTokenManager(iamAPIKey string, iamAccessToken string, iamURL string,
+    iamClientId string, iamClientSecret string) error {
 	if HasBadFirstOrLastChar(iamAPIKey) {
 		return fmt.Errorf("The credentials shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your credentials")
 	}
 	service.Options.IAMApiKey = iamAPIKey
 	service.Options.IAMAccessToken = iamAccessToken
 	service.Options.IAMURL = iamURL
-	tokenManager := NewTokenManager(iamAPIKey, iamURL, iamAccessToken)
+	service.Options.IAMClientId = iamClientId
+	service.Options.IAMClientSecret = iamClientSecret
+	tokenManager, err := NewTokenManager(iamAPIKey, iamURL, iamAccessToken, iamClientId, iamClientSecret)
 	service.TokenManager = tokenManager
-	return nil
+	return err
 }
 
 // SetIAMAccessToken Sets the IAM access token
@@ -167,7 +175,7 @@ func (service *BaseService) SetIAMAccessToken(iamAccessToken string) {
 	if service.TokenManager != nil {
 		service.TokenManager.SetAccessToken(iamAccessToken)
 	} else {
-		tokenManager := NewTokenManager("", "", iamAccessToken)
+		tokenManager, _ := NewTokenManager("", "", iamAccessToken, "", "")
 		service.TokenManager = tokenManager
 	}
 	service.Options.IAMAccessToken = iamAccessToken
@@ -181,7 +189,11 @@ func (service *BaseService) SetIAMAPIKey(iamAPIKey string) error {
 	if service.TokenManager != nil {
 		service.TokenManager.SetIAMAPIKey(iamAPIKey)
 	} else {
-		tokenManager := NewTokenManager(iamAPIKey, "", "")
+		tokenManager, err := NewTokenManager(iamAPIKey, "", "",
+            service.Options.IAMClientId, service.Options.IAMClientSecret)
+        if err != nil {
+            return err
+        }
 		service.TokenManager = tokenManager
 	}
 	service.Options.IAMApiKey = iamAPIKey

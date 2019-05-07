@@ -222,6 +222,102 @@ func TestIAMAuthentication(t *testing.T) {
 	service.Request(req, new(Foo))
 }
 
+func TestIAMBasicAuthDefault(t *testing.T) {
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        w.WriteHeader(http.StatusOK)
+        body, _ := ioutil.ReadAll(r.Body)
+        if strings.Contains(string(body), "grant_type") {
+            fmt.Fprintf(w, `{
+                "access_token": "captain marvel",
+                "token_type": "Bearer",
+                "expires_in": 3600,
+                "expiration": 1524167011,
+                "refresh_token": "jy4gl91BQ"
+            }`)
+            username, password, ok := r.BasicAuth()
+            assert.Equal(t, ok, true)
+            assert.Equal(t, username, "bx")
+            assert.Equal(t, password, "bx")
+        } else {
+            assert.Equal(t, "Bearer captain marvel", r.Header["Authorization"][0])
+        }
+    }))
+    defer server.Close()
+
+    builder := NewRequestBuilder("GET").
+        ConstructHTTPURL(server.URL, nil, nil).
+        AddQuery("Version", "2018-22-09")
+    req, _ := builder.Build()
+
+    options := &ServiceOptions{
+        URL:       server.URL,
+        IAMApiKey: "xxxxx",
+        IAMURL:    server.URL,
+    }
+    service, _ := NewBaseService(options, "watson", "watson")
+
+    service.Request(req, new(Foo))
+}
+
+func TestIAMBasicAuthNonDefault(t *testing.T) {
+    server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        w.WriteHeader(http.StatusOK)
+        body, _ := ioutil.ReadAll(r.Body)
+        if strings.Contains(string(body), "grant_type") {
+            fmt.Fprintf(w, `{
+                "access_token": "captain marvel",
+                "token_type": "Bearer",
+                "expires_in": 3600,
+                "expiration": 1524167011,
+                "refresh_token": "jy4gl91BQ"
+            }`)
+            username, password, ok := r.BasicAuth()
+            assert.Equal(t, ok, true)
+            assert.Equal(t, username, "foo")
+            assert.Equal(t, password, "bar")
+        } else {
+            assert.Equal(t, "Bearer captain marvel", r.Header["Authorization"][0])
+        }
+    }))
+    defer server.Close()
+
+    builder := NewRequestBuilder("GET").
+        ConstructHTTPURL(server.URL, nil, nil).
+        AddQuery("Version", "2018-22-09")
+    req, _ := builder.Build()
+
+    options := &ServiceOptions{
+        URL:       server.URL,
+        IAMApiKey: "xxxxx",
+        IAMURL:    server.URL,
+        IAMClientId: "foo",
+        IAMClientSecret: "bar",
+    }
+    service, _ := NewBaseService(options, "watson", "watson")
+
+    service.Request(req, new(Foo))
+}
+
+func TestIAMBasicAuthClientIdOnly(t *testing.T) {
+    options := &ServiceOptions{
+        URL:       "don't care",
+        IAMApiKey: "xxxxx",
+        IAMClientId: "foo",
+    }
+    _, err := NewBaseService(options, "watson", "watson")
+    assert.NotEqual(t, err, nil)
+}
+
+func TestIAMBasicAuthClientSecretOnly(t *testing.T) {
+    options := &ServiceOptions{
+        URL:       "don't care",
+        IAMApiKey: "xxxxx",
+        IAMClientSecret: "foo",
+    }
+    _, err := NewBaseService(options, "watson", "watson")
+    assert.NotEqual(t, err, nil)
+}
+
 func TestLoadingFromCredentialFile(t *testing.T) {
 	pwd, _ := os.Getwd()
 	credentialFilePath := path.Join(pwd, "/../resources/ibm-credentials.env")
