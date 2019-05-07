@@ -26,7 +26,7 @@ import (
 
 // for handling token management
 const (
-	DefaultIAMURL            = "https://iam.bluemix.net/identity/token"
+	DefaultIAMURL            = "https://iam.cloud.ibm.com/identity/token"
 	DefaultContentType       = "application/x-www-form-urlencoded"
 	DefaultAuthorization     = "Basic Yng6Yng="
 	RequestTokenGrantType    = "urn:ibm:params:oauth:grant-type:apikey"
