@@ -37,10 +37,16 @@ func TestRequestToken(t *testing.T) {
 			"expiration": 1524167011,
 			"refresh_token": "jy4gl91BQ"
 		}`)
+		username, password, ok := r.BasicAuth()
+		assert.Equal(t, ok, true)
+		assert.Equal(t, username, "bx")
+        assert.Equal(t, password, "bx")
 	}))
 	defer server.Close()
 
-	tokenManager := NewTokenManager("", server.URL, "")
+	tokenManager, err := NewTokenManager("", server.URL, "", "", "")
+	assert.Equal(t, err, nil)
+	
 	tokenInfo, err := tokenManager.requestToken()
 	assert.Equal(t, tokenInfo.AccessToken, "oAeisG8yqPY7sFR_x66Z15")
 	assert.Equal(t, err, nil)
@@ -53,8 +59,10 @@ func TestRequestTokenFail(t *testing.T) {
 	}))
 	defer server.Close()
 
-	tokenManager := NewTokenManager("", server.URL, "")
-	_, err := tokenManager.requestToken()
+	tokenManager, err := NewTokenManager("", server.URL, "", "", "")
+	assert.Equal(t, err, nil)
+	
+	_, err = tokenManager.requestToken()
 	assert.Equal(t, err.Error(), "Sorry you are forbidden")
 }
 
@@ -68,17 +76,26 @@ func TestRefreshToken(t *testing.T) {
 			"expiration": 1524167011,
 			"refresh_token": "jy4gl91BQ"
 		}`)
+
+        username, password, ok := r.BasicAuth()
+        assert.Equal(t, ok, true)
+        assert.Equal(t, username, "foo")
+        assert.Equal(t, password, "bar")
 	}))
 	defer server.Close()
 
-	tokenManager := NewTokenManager("", server.URL, "")
+	tokenManager, err := NewTokenManager("", server.URL, "", "foo", "bar")
+    assert.Equal(t, err, nil)
+	
 	tokenInfo, err := tokenManager.refreshToken()
 	assert.Equal(t, tokenInfo.AccessToken, "oAeisG8yqPY7sFR_x66Z15")
 	assert.Equal(t, err, nil)
 }
 
 func TestIsTokenExpired(t *testing.T) {
-	tokenManager := NewTokenManager("iamApiKey", "", "")
+	tokenManager, err := NewTokenManager("iamApiKey", "", "", "", "")
+	assert.Equal(t, err, nil)
+	
 	tokenManager.tokenInfo = &TokenInfo{
 		AccessToken:  "oAeisG8yqPY7sFR_x66Z15",
 		TokenType:    "Bearer",
@@ -93,7 +110,9 @@ func TestIsTokenExpired(t *testing.T) {
 }
 
 func TestIsRefreshTokenExpired(t *testing.T) {
-	tokenManager := NewTokenManager("iamApiKey", "", "")
+	tokenManager, err := NewTokenManager("iamApiKey", "", "", "", "")
+    assert.Equal(t, err, nil)
+    
 	tokenManager.tokenInfo = &TokenInfo{
 		AccessToken:  "oAeisG8yqPY7sFR_x66Z15",
 		TokenType:    "Bearer",
@@ -109,7 +128,9 @@ func TestIsRefreshTokenExpired(t *testing.T) {
 
 func TestGetToken(t *testing.T) {
 	// # Case 1:
-	tokenManager := NewTokenManager("iamApiKey", "", "")
+	tokenManager, err := NewTokenManager("iamApiKey", "", "", "", "")
+    assert.Equal(t, err, nil)
+    
 	tokenManager.SetAccessToken("user access token")
 	token, err := tokenManager.GetToken()
 	assert.Equal(t, token, "user access token")
@@ -127,7 +148,9 @@ func TestGetToken(t *testing.T) {
 		}`)
 	}))
 	defer server.Close()
-	tokenManager = NewTokenManager("", server.URL, "")
+	tokenManager, err = NewTokenManager("", server.URL, "", "", "")
+    assert.Equal(t, err, nil)
+
 	tokenManager.SetIAMAPIKey("iamApiKey")
 	token, err = tokenManager.GetToken()
 	assert.Equal(t, token, "hellohello")
@@ -148,7 +171,8 @@ func TestGetToken(t *testing.T) {
 	}))
 	defer server2.Close()
 
-	tokenManager = NewTokenManager("iamApiKey", server2.URL, "")
+	tokenManager, err = NewTokenManager("iamApiKey", server2.URL, "", "", "")
+    assert.Equal(t, err, nil)
 	tokenManager.tokenInfo = &TokenInfo{
 		AccessToken:  "oAeisG8yqPY7sFR_x66Z15",
 		TokenType:    "Bearer",
@@ -156,7 +180,9 @@ func TestGetToken(t *testing.T) {
 		Expiration:   time.Now().Unix(),
 		RefreshToken: "jy4gl91BQ",
 	}
+	
 	tokenManager.tokenInfo.Expiration = time.Now().Unix() - 3600
+	
 	// tokenManager.tokenInfo.Expiration = time.Now().Unix() - (20 * 24 * 3600)
 	tokenManager.GetToken()
 	assert.Equal(t, tokenManager.tokenInfo.AccessToken, "captain marvel")
@@ -176,7 +202,9 @@ func TestGetToken(t *testing.T) {
 	}))
 	defer server2.Close()
 
-	tokenManager = NewTokenManager("iamApiKey", server3.URL, "")
+	tokenManager, err = NewTokenManager("iamApiKey", server3.URL, "", "", "")
+    assert.Equal(t, err, nil)
+	
 	tokenManager.tokenInfo = &TokenInfo{
 		AccessToken:  "oAeisG8yqPY7sFR_x66Z15",
 		TokenType:    "Bearer",
@@ -197,4 +225,14 @@ func TestGetToken(t *testing.T) {
 	}
 	token, err = tokenManager.GetToken()
 	assert.Equal(t, token, tokenManager.tokenInfo.AccessToken)
+}
+
+func TestIamClientIdOnly(t *testing.T) {
+    _, err := NewTokenManager("iamApiKey", "", "", "foo", "")
+    assert.NotEqual(t, err, nil)
+}
+
+func TestIamClientSecretOnly(t *testing.T) {
+    _, err := NewTokenManager("iamApiKey", "", "", "", "bar")
+    assert.NotEqual(t, err, nil)
 }
