@@ -18,7 +18,6 @@ package core
 
 import (
 	"bufio"
-	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -309,7 +308,6 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (*Det
 		return nil, err
 	}
 
-	// handle the response
 	response := new(DetailedResponse)
 	response.Headers = resp.Header
 	response.StatusCode = resp.StatusCode
@@ -356,9 +354,7 @@ func getErrorMessage(response *http.Response) string {
 	var data map[string]interface{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		buff := new(bytes.Buffer)
-		buff.ReadFrom(response.Body)
-		return fmt.Sprint(buff.String())
+		return string(body)
 	}
 
 	if _, ok := data["errors"]; ok {
