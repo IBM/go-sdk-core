@@ -150,7 +150,7 @@ func (tm *ICP4DTokenManager) saveToken(tokenInfo *ICP4DTokenInfo) {
 	accessToken := tokenInfo.AccessToken
 
 	claims := jwt.StandardClaims{}
-	if token, _ := jwt.ParseWithClaims(accessToken, claims, nil); token != nil {
+	if token, _ := jwt.ParseWithClaims(accessToken, &claims, nil); token != nil {
 		timeToLive := claims.ExpiresAt - claims.IssuedAt
 		expireTime := claims.ExpiresAt
 		fractionOfTimeToLive := 0.8
