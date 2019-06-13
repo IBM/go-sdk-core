@@ -102,7 +102,8 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 
 	// 1. Credentials are passed in constructor
 	if options.AuthenticationType == IAM || hasIAMCredentials(options.IAMApiKey, options.IAMAccessToken) {
-		tokenManager, err := NewIAMTokenManager(options.IAMApiKey,
+		tokenManager, err := NewIAMTokenManager(
+			options.IAMApiKey,
 			options.IAMURL,
 			options.IAMAccessToken,
 			options.IAMClientId,
