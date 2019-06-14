@@ -156,9 +156,9 @@ func (requestBuilder *RequestBuilder) createMultipartWriter() *multipart.Writer 
 // a new form-data header with the provided field name and file name and contentType
 func createFormFile(formWriter *multipart.Writer, fieldname string, filename string, contentType string) (io.Writer, error) {
 	h := make(textproto.MIMEHeader)
-	contentDisposition := fmt.Sprintf(`form-data; name="%s";`, fieldname)
+	contentDisposition := fmt.Sprintf(`form-data; name="%s"`, fieldname)
 	if filename != "" {
-		contentDisposition += fmt.Sprintf(` filename="%s"`, filename)
+		contentDisposition += fmt.Sprintf(`; filename="%s"`, filename)
 	}
 
 	h.Set(CONTENT_DISPOSITION, contentDisposition)
