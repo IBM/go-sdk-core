@@ -25,6 +25,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 
 	validator "gopkg.in/go-playground/validator.v9"
 )
@@ -154,6 +155,7 @@ func UserHomeDir() string {
 	return os.Getenv("HOME")
 }
 
+// SystemInfo : returns the system information
 func SystemInfo() string {
 	return fmt.Sprintf("(arch=%s; os=%s; go.version=%s)", runtime.GOARCH, runtime.GOOS, runtime.Version())
 }
@@ -165,4 +167,9 @@ func PrettyPrint(result interface{}, resultName string) {
 	if err == nil {
 		fmt.Printf("%v:\n%+v\n\n", resultName, string(output))
 	}
+}
+
+// GetCurrentTime :
+func GetCurrentTime() int64 {
+	return time.Now().Unix()
 }

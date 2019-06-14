@@ -21,10 +21,12 @@ import (
 	"os"
 )
 
+// Service : The service
 type Service struct {
 	Credentials Credential `json:"credentials,omitempty"`
 }
 
+// Credential : The service credential
 type Credential struct {
 	URL      string `json:"url,omitempty"`
 	Username string `json:"username,omitempty"`
@@ -32,6 +34,7 @@ type Credential struct {
 	APIKey   string `json:"apikey,omitempty"`
 }
 
+// LoadFromVCAPServices : returns the credential of the service
 func LoadFromVCAPServices(serviceName string) *Credential {
 	vcapServices := os.Getenv("VCAP_SERVICES")
 	if vcapServices != "" {

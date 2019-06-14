@@ -18,7 +18,6 @@ package core
 
 import (
 	"bufio"
-	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -32,7 +31,7 @@ import (
 
 // common constants for core
 const (
-	API_KEY                      = "apikey"
+	APIKEY                       = "apikey"
 	ICP_PREFIX                   = "icp-"
 	USER_AGENT                   = "User-Agent"
 	AUTHORIZATION                = "Authorization"
@@ -42,32 +41,38 @@ const (
 	URL                          = "url"
 	USERNAME                     = "username"
 	PASSWORD                     = "password"
-	IAM_API_KEY                  = "iam_apikey"
+	IAM_APIKEY                   = "iam_apikey"
 	IAM_URL                      = "iam_url"
 	SDK_NAME                     = "ibm-go-sdk-core"
 	UNKNOWN_ERROR                = "Unknown Error"
+	ICP4D                        = "icp4d"
+	IAM                          = "iam"
 )
 
 // ServiceOptions Service options
 type ServiceOptions struct {
-	Version         string
-	URL             string
-	Username        string
-	Password        string
-	IAMApiKey       string
-	IAMAccessToken  string
-	IAMURL          string
-	IAMClientId     string
-	IAMClientSecret string
+	Version            string
+	URL                string
+	Username           string
+	Password           string
+	IAMApiKey          string
+	IAMAccessToken     string
+	IAMURL             string
+	IAMClientId        string
+	IAMClientSecret    string
+	ICP4DAccessToken   string
+	ICP4DURL           string
+	AuthenticationType string
 }
 
 // BaseService Base Service
 type BaseService struct {
-	Options        *ServiceOptions
-	DefaultHeaders http.Header
-	TokenManager   *TokenManager
-	Client         *http.Client
-	UserAgent      string
+	Options           *ServiceOptions
+	DefaultHeaders    http.Header
+	IAMTokenManager   *IAMTokenManager
+	ICP4DTokenManager *ICP4DTokenManager
+	Client            *http.Client
+	UserAgent         string
 }
 
 // NewBaseService Instantiate a Base Service
@@ -84,41 +89,66 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 		},
 	}
 
+	if service.Options.AuthenticationType != "" {
+		service.Options.AuthenticationType = strings.ToLower(service.Options.AuthenticationType)
+	}
+
+	err := service.checkCredentials()
+	if err != nil {
+		return nil, err
+	}
+
 	service.SetUserAgent(service.BuildUserAgent())
 
 	// 1. Credentials are passed in constructor
-	if options.Username != "" && options.Password != "" {
-		if options.Username == API_KEY && !strings.HasPrefix(options.Password, ICP_PREFIX) {
-			if err := service.SetTokenManager(options.Password, options.IAMAccessToken, options.IAMURL, 
-                options.IAMClientId, options.IAMClientSecret); err != nil {
-				return nil, err
-			}
-		} else {
-			if err := service.SetUsernameAndPassword(options.Username, options.Password); err != nil {
-				return nil, err
-			}
+	if options.AuthenticationType == IAM || hasIAMCredentials(options.IAMApiKey, options.IAMAccessToken) {
+		tokenManager, err := NewIAMTokenManager(
+			options.IAMApiKey,
+			options.IAMURL,
+			options.IAMAccessToken,
+			options.IAMClientId,
+			options.IAMClientSecret)
+		if err != nil {
+			return nil, err
 		}
-	} else if options.IAMAccessToken != "" || options.IAMApiKey != "" {
-		if options.IAMApiKey != "" && strings.HasPrefix(options.IAMApiKey, ICP_PREFIX) {
-			if err := service.SetUsernameAndPassword(API_KEY, options.IAMApiKey); err != nil {
-				return nil, err
-			}
-		} else {
-			if err := service.SetTokenManager(options.IAMApiKey, options.IAMAccessToken, options.IAMURL,
-                options.IAMClientId, options.IAMClientSecret); err != nil {
-				return nil, err
-			}
+		service.IAMTokenManager = tokenManager
+	} else if usesBasicForIAM(options.Username, options.Password) {
+		tokenManager, err := NewIAMTokenManager(
+			options.Password,
+			options.IAMURL,
+			options.IAMAccessToken,
+			options.IAMClientId,
+			options.IAMClientSecret)
+		if err != nil {
+			return nil, err
 		}
+		service.IAMTokenManager = tokenManager
+		service.Options.IAMApiKey = options.Password
+		service.Options.Username = ""
+		service.Options.Password = ""
+	} else if isForICP4D(options.AuthenticationType, options.ICP4DAccessToken) {
+		if options.ICP4DAccessToken == "" && options.ICP4DURL == "" {
+			return nil, fmt.Errorf("The ICP4DURL is mandatory for ICP4D")
+		}
+		service.ICP4DTokenManager = NewICP4DTokenManager(
+			options.ICP4DURL,
+			options.Username,
+			options.Password,
+			options.ICP4DAccessToken)
+	} else if isForICP(options.IAMApiKey) {
+		service.Options.Username = APIKEY
+		service.Options.Password = options.IAMApiKey
 	}
 
 	// 2. Credentials from credential file
-	if displayName != "" && service.Options.Username == "" && service.TokenManager == nil {
+	if displayName != "" && service.Options.Username == "" &&
+		service.IAMTokenManager == nil && service.ICP4DTokenManager == nil {
 		serviceName := strings.ToLower(strings.Replace(displayName, " ", "_", -1))
 		service.loadFromCredentialFile(serviceName, "=")
 	}
 
 	// 3. Try accessing VCAP_SERVICES env variable
-	if service.Options.Username == "" && service.TokenManager == nil {
+	if service.Options.Username == "" && service.IAMTokenManager == nil && service.ICP4DTokenManager == nil {
 		credential := LoadFromVCAPServices(serviceName)
 		if credential != nil {
 			if credential.URL != "" {
@@ -126,14 +156,16 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 			}
 
 			if credential.APIKey != "" {
-				service.SetTokenManager(credential.APIKey, "", "",
-				    service.Options.IAMClientId, service.Options.IAMClientSecret)
+				err := service.SetIAMAPIKey(credential.APIKey)
+				if err != nil {
+					return nil, err
+				}
 			} else if credential.Username != "" && credential.Password != "" {
 				service.SetUsernameAndPassword(credential.Username, credential.Password)
 			}
 		}
 
-		if service.Options.Username == "" && service.TokenManager == nil {
+		if service.Options.Username == "" && service.IAMTokenManager == nil && service.ICP4DTokenManager == nil {
 			return nil, fmt.Errorf("you must specify an IAM API key or username and password service credentials")
 		}
 	}
@@ -154,31 +186,26 @@ func (service *BaseService) SetUsernameAndPassword(username string, password str
 	return nil
 }
 
-// SetTokenManager Sets the Token Manager for IAM Authentication
-func (service *BaseService) SetTokenManager(iamAPIKey string, iamAccessToken string, iamURL string,
-    iamClientId string, iamClientSecret string) error {
-	if HasBadFirstOrLastChar(iamAPIKey) {
-		return fmt.Errorf("The credentials shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your credentials")
-	}
-	service.Options.IAMApiKey = iamAPIKey
-	service.Options.IAMAccessToken = iamAccessToken
-	service.Options.IAMURL = iamURL
-	service.Options.IAMClientId = iamClientId
-	service.Options.IAMClientSecret = iamClientSecret
-	tokenManager, err := NewTokenManager(iamAPIKey, iamURL, iamAccessToken, iamClientId, iamClientSecret)
-	service.TokenManager = tokenManager
-	return err
-}
-
 // SetIAMAccessToken Sets the IAM access token
 func (service *BaseService) SetIAMAccessToken(iamAccessToken string) {
-	if service.TokenManager != nil {
-		service.TokenManager.SetAccessToken(iamAccessToken)
+	if service.IAMTokenManager != nil {
+		service.IAMTokenManager.SetIAMAccessToken(iamAccessToken)
 	} else {
-		tokenManager, _ := NewTokenManager("", "", iamAccessToken, "", "")
-		service.TokenManager = tokenManager
+		tokenManager, _ := NewIAMTokenManager("", "", iamAccessToken, "", "")
+		service.IAMTokenManager = tokenManager
 	}
 	service.Options.IAMAccessToken = iamAccessToken
+}
+
+// SetICP4DAccessToken Sets the ICP4D access token
+func (service *BaseService) SetICP4DAccessToken(icp4dAccessToken string) {
+	if service.ICP4DTokenManager != nil {
+		service.ICP4DTokenManager.SetICP4DAccessToken(icp4dAccessToken)
+	} else {
+		tokenManager := NewICP4DTokenManager("", "", "", icp4dAccessToken)
+		service.ICP4DTokenManager = tokenManager
+	}
+	service.Options.ICP4DAccessToken = icp4dAccessToken
 }
 
 // SetIAMAPIKey Sets the IAM API key
@@ -186,15 +213,15 @@ func (service *BaseService) SetIAMAPIKey(iamAPIKey string) error {
 	if HasBadFirstOrLastChar(iamAPIKey) {
 		return fmt.Errorf("The credentials shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your credentials")
 	}
-	if service.TokenManager != nil {
-		service.TokenManager.SetIAMAPIKey(iamAPIKey)
+	if service.IAMTokenManager != nil {
+		service.IAMTokenManager.SetIAMAPIKey(iamAPIKey)
 	} else {
-		tokenManager, err := NewTokenManager(iamAPIKey, "", "",
-            service.Options.IAMClientId, service.Options.IAMClientSecret)
-        if err != nil {
-            return err
-        }
-		service.TokenManager = tokenManager
+		tokenManager, err := NewIAMTokenManager(iamAPIKey, "", "",
+			service.Options.IAMClientId, service.Options.IAMClientSecret)
+		if err != nil {
+			return err
+		}
+		service.IAMTokenManager = tokenManager
 	}
 	service.Options.IAMApiKey = iamAPIKey
 	return nil
@@ -225,6 +252,10 @@ func (service *BaseService) DisableSSLVerification() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	service.Client.Transport = tr
+
+	if service.ICP4DTokenManager != nil {
+		service.ICP4DTokenManager.DisableSSLVerification()
+	}
 }
 
 // BuildUserAgent : Builds the user agent string
@@ -256,8 +287,17 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (*Det
 	}
 
 	// Add authentication
-	if service.TokenManager != nil {
-		token, _ := service.TokenManager.GetToken()
+	if service.IAMTokenManager != nil {
+		token, err := service.IAMTokenManager.GetToken()
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Add(AUTHORIZATION, fmt.Sprintf(`%s %s`, BEARER, token))
+	} else if service.ICP4DTokenManager != nil {
+		token, err := service.ICP4DTokenManager.GetToken()
+		if err != nil {
+			return nil, err
+		}
 		req.Header.Add(AUTHORIZATION, fmt.Sprintf(`%s %s`, BEARER, token))
 	} else if service.Options.Username != "" && service.Options.Password != "" {
 		req.SetBasicAuth(service.Options.Username, service.Options.Password)
@@ -269,7 +309,6 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (*Det
 		return nil, err
 	}
 
-	// handle the response
 	response := new(DetailedResponse)
 	response.Headers = resp.Header
 	response.StatusCode = resp.StatusCode
@@ -297,10 +336,12 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (*Det
 	return response, nil
 }
 
+// Errors : a struct for errors array
 type Errors struct {
 	Errors []Error `json:"errors,omitempty"`
 }
 
+// Error : specifies the error
 type Error struct {
 	Message string `json:"message,omitempty"`
 }
@@ -314,9 +355,7 @@ func getErrorMessage(response *http.Response) string {
 	var data map[string]interface{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		buff := new(bytes.Buffer)
-		buff.ReadFrom(response.Body)
-		return fmt.Sprint(buff.String())
+		return string(body)
 	}
 
 	if _, ok := data["errors"]; ok {
@@ -338,6 +377,22 @@ func getErrorMessage(response *http.Response) string {
 	}
 
 	return UNKNOWN_ERROR
+}
+
+func isForICP(credential string) bool {
+	return strings.HasPrefix(credential, ICP_PREFIX)
+}
+
+func isForICP4D(authenticationType, icp4dAccessToken string) bool {
+	return authenticationType == ICP4D || icp4dAccessToken != ""
+}
+
+func usesBasicForIAM(username, password string) bool {
+	return username == APIKEY && !isForICP(password)
+}
+
+func hasIAMCredentials(iamAPIKey, iamAccessToken string) bool {
+	return (iamAPIKey != "" || iamAccessToken != "") && !isForICP(iamAPIKey)
 }
 
 func (service *BaseService) loadFromCredentialFile(serviceName string, separator string) error {
@@ -380,9 +435,25 @@ func (service *BaseService) loadFromCredentialFile(serviceName string, separator
 	return nil
 }
 
+func (service *BaseService) checkCredentials() error {
+	credentialsToCheck := map[string]string{
+		"URL":         service.Options.URL,
+		"username":    service.Options.Username,
+		"password":    service.Options.Password,
+		"credentials": service.Options.IAMApiKey,
+	}
+
+	for k, v := range credentialsToCheck {
+		if HasBadFirstOrLastChar(v) {
+			return fmt.Errorf("The %s shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your %s", k, k)
+		}
+	}
+	return nil
+}
+
 func (service *BaseService) setCredentialBasedOnType(serviceName, key, value string) {
 	if strings.Contains(key, serviceName) {
-		if strings.Contains(key, API_KEY) {
+		if strings.Contains(key, APIKEY) {
 			service.SetIAMAPIKey(value)
 		} else if strings.Contains(key, URL) {
 			service.SetURL(value)
@@ -390,7 +461,7 @@ func (service *BaseService) setCredentialBasedOnType(serviceName, key, value str
 			service.Options.Username = value
 		} else if strings.Contains(key, PASSWORD) {
 			service.Options.Password = value
-		} else if strings.Contains(key, IAM_API_KEY) {
+		} else if strings.Contains(key, IAM_APIKEY) {
 			service.SetIAMAPIKey(value)
 		}
 	}
