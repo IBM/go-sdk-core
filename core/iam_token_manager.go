@@ -34,6 +34,7 @@ const (
 	DEFAULT_CONTENT_TYPE        = "application/x-www-form-urlencoded"
 	REQUEST_TOKEN_GRANT_TYPE    = "urn:ibm:params:oauth:grant-type:apikey"
 	REQUEST_TOKEN_RESPONSE_TYPE = "cloud_iam"
+	FRACTION_OF_TIME_TO_LIVE    = 0.8
 )
 
 // IAMTokenInfo : Response struct from token request
@@ -171,10 +172,13 @@ func (tm *IAMTokenManager) saveToken(tokenInfo *IAMTokenInfo) {
 	if token, _ := jwt.ParseWithClaims(accessToken, &claims, nil); token != nil {
 		timeToLive := claims.ExpiresAt - claims.IssuedAt
 		expireTime := claims.ExpiresAt
-		fractionOfTimeToLive := 0.8
-		timeForNewToken := expireTime - (timeToLive * int64(1.0-fractionOfTimeToLive))
+		timeForNewToken := tm.calcTimeForNewToken(expireTime, timeToLive)
 		tm.timeForNewToken = timeForNewToken
 	}
 
 	tm.tokenInfo = tokenInfo
+}
+
+func (tm *IAMTokenManager) calcTimeForNewToken(expireTime int64, timeToLive int64) int64 {
+	return int64(float64(expireTime) - (float64(timeToLive) * (1.0-FRACTION_OF_TIME_TO_LIVE)))
 }

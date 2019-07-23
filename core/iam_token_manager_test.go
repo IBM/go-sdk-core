@@ -143,3 +143,15 @@ func TestIamClientSecretOnly(t *testing.T) {
 	_, err := NewIAMTokenManager("iamApiKey", "", "", "", "bar")
 	assert.NotEqual(t, err, nil)
 }
+
+func TestCalcTimeForNewToken(t *testing.T) {
+	const timeToLive int64 = 3600
+	const expireTime int64 = 1563911183
+	const expected int64 = expireTime - 720 // 720 is 20% of 3600
+
+	tokenManager, err := NewIAMTokenManager("iamApiKey", "", "", "", "")
+	assert.Equal(t, err, nil)
+
+	actual := tokenManager.calcTimeForNewToken(expireTime, timeToLive)
+	assert.Equal(t, expected, actual)
+}
