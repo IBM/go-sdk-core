@@ -17,7 +17,6 @@ package core
  */
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -45,7 +44,6 @@ func TestDetailedResponseJson(t *testing.T) {
 	assert.Equal(t, response.GetStatusCode(), 200)
 	assert.Equal(t, response.GetHeaders().Get("accept"), "application/json")
 	response.String()
-	PrettyPrint(response.GetResult(), "result: ")
 }
 
 func TestDetailedResponseNonJson(t *testing.T) {
@@ -54,5 +52,4 @@ func TestDetailedResponseNonJson(t *testing.T) {
 		Result:     make(chan int),
 	}
 	assert.Equal(t, response.GetStatusCode(), 200)
-	fmt.Println(response.String())
 }
