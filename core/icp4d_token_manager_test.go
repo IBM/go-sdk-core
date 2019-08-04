@@ -43,24 +43,38 @@ func TestGetTokenSuccess(t *testing.T) {
 			"_messageCode_":"success",
 			"message":"success"
 		}`)
-		username, password, ok := r.BasicAuth()
-		assert.Equal(t, ok, true)
-		assert.Equal(t, username, "john")
-		assert.Equal(t, password, "snow")
+		// fmt.Println("mock server Authorization: ", r.Header.Get("Authorization"))
+
+		// Note: the header value below reflects "john"/"snow" for username and password.
+		assert.Equal(t, "Basic am9objpzbm93", r.Header.Get("Authorization"))
 	}))
 	defer server.Close()
 
-	tokenManager := NewICP4DTokenManager(server.URL, "john", "snow", "")
-	tokenManager.DisableSSLVerification()
+	tokenManager, err := NewICP4DAuthenticator(&ICP4DConfig{
+		URL:      server.URL,
+		Username: "john",
+		Password: "snow",
+	})
+	assert.Nil(t, err)
 	assert.NotNil(t, tokenManager)
+	tokenManager.DisableSSLVerification()
 
 	// case 2a
 	accessToken, _ := tokenManager.GetToken()
 	assert.Equal(t, accessToken, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI")
 
 	// case 1
-	tokenManager.SetICP4DAccessToken("user access token")
-	accessToken, err := tokenManager.GetToken()
+	tokenManager, err = NewICP4DAuthenticator(&ICP4DConfig{
+		URL:         server.URL,
+		AccessToken: "user access token",
+		Username:    "john",
+		Password:    "snow",
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, tokenManager)
+	assert.Nil(t, tokenManager.tokenInfo)
+
+	accessToken, err = tokenManager.GetToken()
 	assert.Equal(t, accessToken, "user access token")
 	assert.Equal(t, err, nil)
 
@@ -78,21 +92,31 @@ func TestGetTokenFail(t *testing.T) {
 	}))
 	defer server.Close()
 
-	tokenManager := NewICP4DTokenManager(server.URL, "john", "snow", "")
+	tokenManager, err := NewICP4DAuthenticator(&ICP4DConfig{
+		URL:      server.URL,
+		Username: "john",
+		Password: "snow",
+	})
+	assert.Nil(t, err)
 	assert.NotNil(t, tokenManager)
 
-	_, err := tokenManager.GetToken()
+	_, err = tokenManager.GetToken()
 	assert.Equal(t, err.Error(), "Sorry you are forbidden")
 }
 
 func TestIsTokenExpired(t *testing.T) {
-	tokenManager := NewICP4DTokenManager("", "john", "snow", "")
+	tokenManager, err := NewICP4DAuthenticator(&ICP4DConfig{
+		URL:      "http://myhost/my/url",
+		Username: "john",
+		Password: "snow",
+	})
+	assert.Nil(t, err)
 	assert.NotNil(t, tokenManager)
 
 	isExpired := tokenManager.isTokenExpired()
-	assert.Equal(t, isExpired, true)
+	assert.True(t, isExpired)
 
 	tokenManager.timeForNewToken = GetCurrentTime() + 3000
 	isExpired = tokenManager.isTokenExpired()
-	assert.Equal(t, isExpired, false)
+	assert.False(t, isExpired)
 }

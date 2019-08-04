@@ -34,51 +34,71 @@ const (
 	APIKEY                       = "apikey"
 	ICP_PREFIX                   = "icp-"
 	USER_AGENT                   = "User-Agent"
-	AUTHORIZATION                = "Authorization"
-	BEARER                       = "Bearer"
 	IBM_CREDENTIAL_FILE_ENV      = "IBM_CREDENTIALS_FILE"
 	DEFAULT_CREDENTIAL_FILE_NAME = "ibm-credentials.env"
-	URL                          = "url"
-	USERNAME                     = "username"
-	PASSWORD                     = "password"
-	IAM_APIKEY                   = "iam_apikey"
-	IAM_URL                      = "iam_url"
 	SDK_NAME                     = "ibm-go-sdk-core"
 	UNKNOWN_ERROR                = "Unknown Error"
-	ICP4D                        = "icp4d"
-	IAM                          = "iam"
+
+	// Names of properties that can be defined in a credential file (e.g. "MYSERVICE_USERNAME=user1").
+	CREDPROP_URL                 = "URL"
+	CREDPROP_USERNAME            = "USERNAME"
+	CREDPROP_PASSWORD            = "PASSWORD"
+	CREDPROP_IAM_APIKEY          = "IAM_APIKEY"
+	CREDPROP_IAM_ACCESS_TOKEN    = "IAM_ACCESS_TOKEN"
+	CREDPROP_IAM_URL             = "IAM_URL"
+	CREDPROP_IAM_CLIENT_ID       = "IAM_CLIENT_ID"
+	CREDPROP_IAM_CLIENT_SECRET   = "IAM_CLIENT_SECRET"
+	CREDPROP_ICP4D_URL           = "ICP4D_URL"
+	CREDPROP_ICP4D_ACCESS_TOKEN  = "ICP4D_ACCESS_TOKEN"
+	CREDPROP_AUTHENTICATION_TYPE = "AUTHENTICATION_TYPE"
+
+	ERRORMSG_CONFIG_PROPERTY_INVALID = "The %s value shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding the %s value."
+	ERRORMSG_AUTH_NOT_CONFIGURED     = "Authentication information was not properly configured."
 )
 
 // ServiceOptions Service options
 type ServiceOptions struct {
-	Version            string
-	URL                string
-	Username           string
-	Password           string
-	IAMApiKey          string
-	IAMAccessToken     string
-	IAMURL             string
-	IAMClientId        string
-	IAMClientSecret    string
-	ICP4DAccessToken   string
-	ICP4DURL           string
+	Version    string
+	URL        string
+	AuthConfig AuthenticatorConfig
+
+	// Deprecated: use AuthConfig field to configure the desired authentication scheme.
+	Username string
+	// Deprecated: use AuthConfig field to configure the desired authentication scheme.
+	Password string
+	// Deprecated: use AuthConfig field to configure the desired authentication scheme.
+	IAMApiKey string
+	// Deprecated: use AuthConfig field to configure the desired authentication scheme.
+	IAMAccessToken string
+	// Deprecated: use AuthConfig field to configure the desired authentication scheme.
+	IAMURL string
+	// Deprecated: use AuthConfig field to configure the desired authentication scheme.
+	IAMClientId string
+	// Deprecated: use AuthConfig field to configure the desired authentication scheme.
+	IAMClientSecret string
+	// Deprecated: use AuthConfig field to configure the desired authentication scheme.
+	ICP4DAccessToken string
+	// Deprecated: use AuthConfig field to configure the desired authentication scheme.
+	ICP4DURL string
+	// Deprecated: use AuthConfig field to configure the desired authentication scheme.
 	AuthenticationType string
 }
 
 // BaseService Base Service
 type BaseService struct {
-	Options           *ServiceOptions
-	DefaultHeaders    http.Header
-	IAMTokenManager   *IAMTokenManager
-	ICP4DTokenManager *ICP4DTokenManager
-	Client            *http.Client
-	UserAgent         string
+	Options        *ServiceOptions
+	DefaultHeaders http.Header
+	Client         *http.Client
+	UserAgent      string
+	authenticator  Authenticator
 }
+
+type CredentialProps map[string]string
 
 // NewBaseService Instantiate a Base Service
 func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*BaseService, error) {
 	if HasBadFirstOrLastChar(options.URL) {
-		return nil, fmt.Errorf("The URL shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your URL")
+		return nil, fmt.Errorf(ERRORMSG_CONFIG_PROPERTY_INVALID, "URL", "URL")
 	}
 
 	service := BaseService{
@@ -89,149 +109,162 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 		},
 	}
 
-	if service.Options.AuthenticationType != "" {
-		service.Options.AuthenticationType = strings.ToLower(service.Options.AuthenticationType)
-	}
-
-	err := service.checkCredentials()
-	if err != nil {
-		return nil, err
-	}
-
+	// Set a default value for the User-Agent http header.
 	service.SetUserAgent(service.BuildUserAgent())
 
-	// 1. Credentials are passed in constructor
-	if options.AuthenticationType == IAM || hasIAMCredentials(options.IAMApiKey, options.IAMAccessToken) {
-		tokenManager, err := NewIAMTokenManager(
-			options.IAMApiKey,
-			options.IAMURL,
-			options.IAMAccessToken,
-			options.IAMClientId,
-			options.IAMClientSecret)
+	// If the AuthConfig property was specified, then use it to configure an Authenticator.
+	// Otherwise, we'll try to use the deprecated auth-related properties to configure one.
+	if options.AuthConfig != nil {
+		err := service.SetAuthenticator(options.AuthConfig)
 		if err != nil {
 			return nil, err
 		}
-		service.IAMTokenManager = tokenManager
-	} else if usesBasicForIAM(options.Username, options.Password) {
-		tokenManager, err := NewIAMTokenManager(
-			options.Password,
-			options.IAMURL,
-			options.IAMAccessToken,
-			options.IAMClientId,
-			options.IAMClientSecret)
+	} else {
+		// The AuthConfig property was not specified, so we'll support the deprecated auth-related properties.
+		var err error
+
+		if service.Options.AuthenticationType != "" {
+			service.Options.AuthenticationType = strings.ToLower(service.Options.AuthenticationType)
+		}
+
+		err = service.checkCredentials()
 		if err != nil {
 			return nil, err
 		}
-		service.IAMTokenManager = tokenManager
-		service.Options.IAMApiKey = options.Password
-		service.Options.Username = ""
-		service.Options.Password = ""
-	} else if isForICP4D(options.AuthenticationType, options.ICP4DAccessToken) {
-		if options.ICP4DAccessToken == "" && options.ICP4DURL == "" {
-			return nil, fmt.Errorf("The ICP4DURL is mandatory for ICP4D")
-		}
-		service.ICP4DTokenManager = NewICP4DTokenManager(
-			options.ICP4DURL,
-			options.Username,
-			options.Password,
-			options.ICP4DAccessToken)
-	} else if isForICP(options.IAMApiKey) {
-		service.Options.Username = APIKEY
-		service.Options.Password = options.IAMApiKey
-	}
 
-	// 2. Credentials from credential file
-	if displayName != "" && service.Options.Username == "" &&
-		service.IAMTokenManager == nil && service.ICP4DTokenManager == nil {
-		serviceName := strings.ToLower(strings.Replace(displayName, " ", "_", -1))
-		service.loadFromCredentialFile(serviceName, "=")
-	}
+		var authConfig AuthenticatorConfig
 
-	// 3. Try accessing VCAP_SERVICES env variable
-	if service.Options.Username == "" && service.IAMTokenManager == nil && service.ICP4DTokenManager == nil {
-		credential := LoadFromVCAPServices(serviceName)
-		if credential != nil {
-			if credential.URL != "" {
-				service.SetURL(credential.URL)
+		// 1. Credentials are passed in service options struct.
+		authConfig = service.getAuthConfigFromServiceOptions()
+
+		// 2. Credentials from credential file
+		if authConfig == nil && displayName != "" {
+			serviceName := strings.ToUpper(strings.Replace(displayName, " ", "_", -1))
+			credentialProps, err := service.loadFromCredentialFile(serviceName, "=")
+			if err != nil {
+				return nil, err
 			}
 
-			if credential.APIKey != "" {
-				err := service.SetIAMAPIKey(credential.APIKey)
-				if err != nil {
-					return nil, err
-				}
-			} else if credential.Username != "" && credential.Password != "" {
-				service.SetUsernameAndPassword(credential.Username, credential.Password)
+			if credentialProps != nil {
+				// Try to form an AuthenticatorConfig from the credential file properties.
+				authConfig = service.getAuthConfigFromCredentialProps(credentialProps)
 			}
 		}
 
-		if service.Options.Username == "" && service.IAMTokenManager == nil && service.ICP4DTokenManager == nil {
-			return nil, fmt.Errorf("you must specify an IAM API key or username and password service credentials")
+		// 3. Try accessing VCAP_SERVICES env variable
+		if authConfig == nil {
+			credential := LoadFromVCAPServices(serviceName)
+			if credential != nil {
+				// Create a map from the Credential object.
+				props := make(map[string]string)
+				props[CREDPROP_URL] = credential.URL
+				props[CREDPROP_IAM_APIKEY] = credential.APIKey
+				props[CREDPROP_USERNAME] = credential.Username
+				props[CREDPROP_PASSWORD] = credential.Password
+
+				// Obtain an AuthenticatorConfig from the map of properties.
+				authConfig = service.getAuthConfigFromCredentialProps(props)
+			}
+		}
+
+		// If we have a non-nil authConfig from one of the sources above, then create an Authenticator from it.
+		if authConfig != nil {
+			err = service.SetAuthenticator(authConfig)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
 	return &service, nil
 }
 
+// SetAuthenticator instantiates an Authenticator for the specified 'config' object
+// and stores the Authenticator instance on the BaseService.
+func (service *BaseService) SetAuthenticator(config AuthenticatorConfig) error {
+	if config == nil {
+		service.authenticator = nil
+	} else {
+		authObj, err := NewAuthenticator(config)
+		if err != nil {
+			return err
+		}
+		service.authenticator = authObj
+	}
+
+	return nil
+}
+
 // SetUsernameAndPassword Sets the Username and Password
+//
+// Deprecated: Use SetAuthenticator() instead.
 func (service *BaseService) SetUsernameAndPassword(username string, password string) error {
 	if HasBadFirstOrLastChar(username) {
-		return fmt.Errorf("The username shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your username")
+		return fmt.Errorf(ERRORMSG_CONFIG_PROPERTY_INVALID, "username", "username")
 	}
 	if HasBadFirstOrLastChar(password) {
-		return fmt.Errorf("The password shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your password")
+		return fmt.Errorf(ERRORMSG_CONFIG_PROPERTY_INVALID, "password", "password")
 	}
-	service.Options.Username = username
-	service.Options.Password = password
+
+	props := make(map[string]string)
+	props[CREDPROP_USERNAME] = username
+	props[CREDPROP_PASSWORD] = password
+
+	authConfig := service.getAuthConfigFromCredentialProps(props)
+	if authConfig != nil {
+		err := service.SetAuthenticator(authConfig)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 // SetIAMAccessToken Sets the IAM access token
+//
+// Deprecated: Use SetAuthenticator() instead.
 func (service *BaseService) SetIAMAccessToken(iamAccessToken string) {
-	if service.IAMTokenManager != nil {
-		service.IAMTokenManager.SetIAMAccessToken(iamAccessToken)
-	} else {
-		tokenManager, _ := NewIAMTokenManager("", "", iamAccessToken, "", "")
-		service.IAMTokenManager = tokenManager
+	authConfig := &IAMConfig{
+		AccessToken: iamAccessToken,
 	}
-	service.Options.IAMAccessToken = iamAccessToken
+	service.SetAuthenticator(authConfig)
 }
 
 // SetICP4DAccessToken Sets the ICP4D access token
+//
+// Deprecated: Use SetAuthenticator() instead.
 func (service *BaseService) SetICP4DAccessToken(icp4dAccessToken string) {
-	if service.ICP4DTokenManager != nil {
-		service.ICP4DTokenManager.SetICP4DAccessToken(icp4dAccessToken)
-	} else {
-		tokenManager := NewICP4DTokenManager("", "", "", icp4dAccessToken)
-		service.ICP4DTokenManager = tokenManager
+	authConfig := &ICP4DConfig{
+		AccessToken: icp4dAccessToken,
 	}
-	service.Options.ICP4DAccessToken = icp4dAccessToken
+	service.SetAuthenticator(authConfig)
 }
 
 // SetIAMAPIKey Sets the IAM API key
+//
+// Deprecated: Use SetAuthenticator() instead.
 func (service *BaseService) SetIAMAPIKey(iamAPIKey string) error {
-	if HasBadFirstOrLastChar(iamAPIKey) {
-		return fmt.Errorf("The credentials shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your credentials")
+	authConfig := &IAMConfig{
+		ApiKey:       iamAPIKey,
+		ClientId:     service.Options.IAMClientId,
+		ClientSecret: service.Options.IAMClientSecret,
 	}
-	if service.IAMTokenManager != nil {
-		service.IAMTokenManager.SetIAMAPIKey(iamAPIKey)
-	} else {
-		tokenManager, err := NewIAMTokenManager(iamAPIKey, "", "",
-			service.Options.IAMClientId, service.Options.IAMClientSecret)
-		if err != nil {
-			return err
-		}
-		service.IAMTokenManager = tokenManager
+
+	err := service.SetAuthenticator(authConfig)
+	if err == nil {
+		service.Options.IAMApiKey = iamAPIKey
 	}
-	service.Options.IAMApiKey = iamAPIKey
-	return nil
+
+	return err
 }
 
 // SetURL sets the service URL
 func (service *BaseService) SetURL(url string) error {
 	if HasBadFirstOrLastChar(url) {
-		return fmt.Errorf("The URL shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your URL")
+		return fmt.Errorf(ERRORMSG_CONFIG_PROPERTY_INVALID, "URL", "URL")
 	}
+
 	service.Options.URL = url
 	return nil
 }
@@ -252,10 +285,6 @@ func (service *BaseService) DisableSSLVerification() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	service.Client.Transport = tr
-
-	if service.ICP4DTokenManager != nil {
-		service.ICP4DTokenManager.DisableSSLVerification()
-	}
 }
 
 // BuildUserAgent : Builds the user agent string
@@ -280,30 +309,24 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (*Det
 		}
 	}
 
-	// Check if user agent is present
+	// Check if user agent is present.
 	userAgent := req.Header.Get(USER_AGENT)
 	if userAgent == "" {
 		req.Header.Add(USER_AGENT, service.UserAgent)
 	}
 
-	// Add authentication
-	if service.IAMTokenManager != nil {
-		token, err := service.IAMTokenManager.GetToken()
+	// Add authentication to the outbound request.
+	if service.authenticator != nil {
+		err := service.authenticator.Authenticate(req)
 		if err != nil {
 			return nil, err
 		}
-		req.Header.Add(AUTHORIZATION, fmt.Sprintf(`%s %s`, BEARER, token))
-	} else if service.ICP4DTokenManager != nil {
-		token, err := service.ICP4DTokenManager.GetToken()
-		if err != nil {
-			return nil, err
-		}
-		req.Header.Add(AUTHORIZATION, fmt.Sprintf(`%s %s`, BEARER, token))
-	} else if service.Options.Username != "" && service.Options.Password != "" {
-		req.SetBasicAuth(service.Options.Username, service.Options.Password)
+	} else {
+		// Otherwise, we have no Authenticator... ERROR.
+		return nil, fmt.Errorf(ERRORMSG_AUTH_NOT_CONFIGURED)
 	}
 
-	// Perform the request
+	// Perform the request.
 	resp, err := service.Client.Do(req)
 	if err != nil {
 		return nil, err
@@ -384,7 +407,7 @@ func isForICP(credential string) bool {
 }
 
 func isForICP4D(authenticationType, icp4dAccessToken string) bool {
-	return authenticationType == ICP4D || icp4dAccessToken != ""
+	return authenticationType == AUTHTYPE_ICP4D || icp4dAccessToken != ""
 }
 
 func usesBasicForIAM(username, password string) bool {
@@ -395,7 +418,9 @@ func hasIAMCredentials(iamAPIKey, iamAccessToken string) bool {
 	return (iamAPIKey != "" || iamAccessToken != "") && !isForICP(iamAPIKey)
 }
 
-func (service *BaseService) loadFromCredentialFile(serviceName string, separator string) error {
+func (service *BaseService) loadFromCredentialFile(serviceName string, separator string) (CredentialProps, error) {
+	var props map[string]string
+
 	// File path specified by env variable
 	credentialFilePath := os.Getenv(IBM_CREDENTIAL_FILE_ENV)
 
@@ -419,20 +444,34 @@ func (service *BaseService) loadFromCredentialFile(serviceName string, separator
 	if credentialFilePath != "" {
 		file, err := os.Open(credentialFilePath)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		defer file.Close()
 
+		// Parse the lines from the credential file and create a map of the properties related to this service.
+		props = make(map[string]string)
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			var line = scanner.Text()
-			var keyVal = strings.Split(line, separator)
-			if len(keyVal) == 2 {
-				service.setCredentialBasedOnType(serviceName, strings.ToLower(keyVal[0]), keyVal[1])
+
+			// Parse the line into <property>=<value>
+			var lineParts = strings.Split(line, separator)
+
+			// Do we have a property name and a value (separated by '=')?
+			if len(lineParts) == 2 {
+				// Does the property name contain the service name?
+				// If so, then compute the key by filtering out the service name,
+				// then store the key/value pair in the map.
+				index := strings.Index(lineParts[0], serviceName)
+				if (index == 0) && (len(lineParts[0]) > len(serviceName)+1) {
+					key := lineParts[0][len(serviceName)+1:]
+					value := lineParts[1]
+					props[key] = value
+				}
 			}
 		}
 	}
-	return nil
+	return props, nil
 }
 
 func (service *BaseService) checkCredentials() error {
@@ -445,24 +484,82 @@ func (service *BaseService) checkCredentials() error {
 
 	for k, v := range credentialsToCheck {
 		if HasBadFirstOrLastChar(v) {
-			return fmt.Errorf("The %s shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your %s", k, k)
+			return fmt.Errorf(ERRORMSG_CONFIG_PROPERTY_INVALID, k, k)
 		}
 	}
 	return nil
 }
 
-func (service *BaseService) setCredentialBasedOnType(serviceName, key, value string) {
-	if strings.Contains(key, serviceName) {
-		if strings.Contains(key, APIKEY) {
-			service.SetIAMAPIKey(value)
-		} else if strings.Contains(key, URL) {
-			service.SetURL(value)
-		} else if strings.Contains(key, USERNAME) {
-			service.Options.Username = value
-		} else if strings.Contains(key, PASSWORD) {
-			service.Options.Password = value
-		} else if strings.Contains(key, IAM_APIKEY) {
-			service.SetIAMAPIKey(value)
-		}
+// Inspect the various fields in the ServiceOptions struct and instantiate a suitable
+// AuthenticatorConfig.
+func (service *BaseService) getAuthConfigFromServiceOptions() AuthenticatorConfig {
+	var props CredentialProps
+
+	// First, set up a map containing all the properties.
+	// Note: this will similar to one obtained by loading credentials from a file.
+	props = make(map[string]string)
+	props[CREDPROP_URL] = service.Options.URL
+	props[CREDPROP_USERNAME] = service.Options.Username
+	props[CREDPROP_PASSWORD] = service.Options.Password
+	props[CREDPROP_IAM_APIKEY] = service.Options.IAMApiKey
+	props[CREDPROP_IAM_ACCESS_TOKEN] = service.Options.IAMAccessToken
+	props[CREDPROP_IAM_URL] = service.Options.IAMURL
+	props[CREDPROP_IAM_CLIENT_ID] = service.Options.IAMClientId
+	props[CREDPROP_IAM_CLIENT_SECRET] = service.Options.IAMClientSecret
+	props[CREDPROP_ICP4D_URL] = service.Options.ICP4DURL
+	props[CREDPROP_ICP4D_ACCESS_TOKEN] = service.Options.ICP4DAccessToken
+	props[CREDPROP_AUTHENTICATION_TYPE] = service.Options.AuthenticationType
+
+	// Now just return an AuthenticatorConfig instance from the properties in the map.
+	return service.getAuthConfigFromCredentialProps(props)
+}
+
+// This function will try to instantiate an AuthenticatorConfig from the properties found in "props".
+func (service *BaseService) getAuthConfigFromCredentialProps(props CredentialProps) AuthenticatorConfig {
+	var authConfig AuthenticatorConfig
+
+	// If the service's URL property was specified AND the service option URL field is empty,
+	// then set the URL on the service.
+	if props[CREDPROP_URL] != "" && service.Options != nil && service.Options.URL == "" {
+		service.SetURL(props[CREDPROP_URL])
 	}
+
+	if props[CREDPROP_AUTHENTICATION_TYPE] == AUTHTYPE_IAM || hasIAMCredentials(props[CREDPROP_IAM_APIKEY], props[CREDPROP_IAM_ACCESS_TOKEN]) {
+		authConfig = &IAMConfig{
+			URL:          props[CREDPROP_IAM_URL],
+			ApiKey:       props[CREDPROP_IAM_APIKEY],
+			AccessToken:  props[CREDPROP_IAM_ACCESS_TOKEN],
+			ClientId:     props[CREDPROP_IAM_CLIENT_ID],
+			ClientSecret: props[CREDPROP_IAM_CLIENT_SECRET],
+		}
+	} else if usesBasicForIAM(props[CREDPROP_USERNAME], props[CREDPROP_PASSWORD]) {
+		authConfig = &IAMConfig{
+			URL:          props[CREDPROP_IAM_URL],
+			ApiKey:       props[CREDPROP_PASSWORD],
+			AccessToken:  props[CREDPROP_IAM_ACCESS_TOKEN],
+			ClientId:     props[CREDPROP_IAM_CLIENT_ID],
+			ClientSecret: props[CREDPROP_IAM_CLIENT_SECRET],
+		}
+	} else if isForICP4D(props[CREDPROP_AUTHENTICATION_TYPE], props[CREDPROP_ICP4D_ACCESS_TOKEN]) {
+		authConfig = &ICP4DConfig{
+			URL:         props[CREDPROP_ICP4D_URL],
+			Username:    props[CREDPROP_USERNAME],
+			Password:    props[CREDPROP_PASSWORD],
+			AccessToken: props[CREDPROP_ICP4D_ACCESS_TOKEN],
+		}
+	} else if isForICP(props[CREDPROP_IAM_APIKEY]) {
+		authConfig = &BasicAuthConfig{
+			Username: APIKEY,
+			Password: props[CREDPROP_IAM_APIKEY],
+		}
+	} else if props[CREDPROP_USERNAME] != "" && props[CREDPROP_PASSWORD] != "" {
+		authConfig = &BasicAuthConfig{
+			Username: props[CREDPROP_USERNAME],
+			Password: props[CREDPROP_PASSWORD],
+		}
+	} else if props[CREDPROP_AUTHENTICATION_TYPE] == AUTHTYPE_NOAUTH {
+		authConfig = &NoauthConfig{}
+	}
+
+	return authConfig
 }

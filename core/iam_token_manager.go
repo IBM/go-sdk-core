@@ -34,8 +34,52 @@ const (
 	DEFAULT_CONTENT_TYPE        = "application/x-www-form-urlencoded"
 	REQUEST_TOKEN_GRANT_TYPE    = "urn:ibm:params:oauth:grant-type:apikey"
 	REQUEST_TOKEN_RESPONSE_TYPE = "cloud_iam"
-	FRACTION_OF_TIME_TO_LIVE    = 0.8
+
+	FRACTION_OF_TIME_TO_LIVE = 0.8
+
+	ERRORMSG_CLIENT_ID_SECRET = "You specified only one of 'ClientId' and 'ClientSecret', but those values must be supplied together."
+	ERRORMSG_APIKEY_MISSING   = "The ApiKey property is required if the AccessToken property is not specified."
 )
+
+// This struct contains the configuration associated with the IAM Authenticator.
+type IAMConfig struct {
+	AccessToken  string
+	ApiKey       string
+	ClientId     string
+	ClientSecret string
+	URL          string
+}
+
+// Validates the specified IAMConfig instance.
+func (config IAMConfig) Validate() error {
+	// If the AccessToken is specified, then we'll use that directly and no other validation is necessary.
+	if config.AccessToken != "" {
+		return nil
+	}
+
+	// If AccessToken is not specified, then ApiKey is required.
+	if config.ApiKey == "" {
+		return fmt.Errorf(ERRORMSG_APIKEY_MISSING)
+	}
+
+	if HasBadFirstOrLastChar(config.ApiKey) {
+		return fmt.Errorf(ERRORMSG_CONFIG_PROPERTY_INVALID, "ApiKey", "ApiKey")
+	}
+
+	// Validate ClientId and ClientSecret.  They must both be specified togther or neither should be specified.
+	if (config.ClientId == "" && config.ClientSecret == "") || (config.ClientId != "" && config.ClientSecret != "") {
+		// Do nothing as this is the valid scenario
+	} else {
+		// Only one of client id/secret was specified... error.
+		return fmt.Errorf(ERRORMSG_CLIENT_ID_SECRET)
+	}
+
+	return nil
+}
+
+func (IAMConfig) AuthenticationType() string {
+	return AUTHTYPE_IAM
+}
 
 // IAMTokenInfo : Response struct from token request
 type IAMTokenInfo struct {
@@ -46,46 +90,70 @@ type IAMTokenInfo struct {
 	Expiration   int64  `json:"expiration"`
 }
 
-// IAMTokenManager : IAM token manager
-type IAMTokenManager struct {
+// IAMAuthenticator : The IAM token manager
+type IAMAuthenticator struct {
 	userAccessToken string
-	iamAPIkey       string
-	iamURL          string
-	iamClientId     string
-	iamClientSecret string
+	apiKey          string
+	url             string
+	clientId        string
+	clientSecret    string
 	client          *http.Client
 	timeForNewToken int64
 	tokenInfo       *IAMTokenInfo
 }
 
-// NewIAMTokenManager : Instantiate IAMTokenManager
-func NewIAMTokenManager(iamAPIkey string, iamURL string, userAccessToken string,
-	iamClientId string, iamClientSecret string) (*IAMTokenManager, error) {
-	if iamURL == "" {
-		iamURL = DEFAULT_IAM_URL
+// NewIAMAuthenticator : Instantiate a new IAMAuthenticator.
+func NewIAMAuthenticator(config *IAMConfig) (*IAMAuthenticator, error) {
+	// Make sure the config is valid.
+	err := config.Validate()
+	if err != nil {
+		return nil, err
 	}
 
-	if iamClientId == "" && iamClientSecret == "" {
-		iamClientId = DEFAULT_IAM_CLIENT_ID
-		iamClientSecret = DEFAULT_IAM_CLIENT_SECRET
-	} else if iamClientId != "" && iamClientSecret != "" {
-		// Do nothing as this is the valid scenario
-	} else {
-		// Only one of client id/secret was specified... error.
-		return nil, fmt.Errorf("You specified only one of 'iamClientId' and 'iamClientSecret', but you must supply both values together or supply neither of them.")
+	// Use a default URL if not specified in the config.
+	url := config.URL
+	if url == "" {
+		url = DEFAULT_IAM_URL
 	}
 
-	tokenManager := IAMTokenManager{
-		userAccessToken: userAccessToken,
-		iamAPIkey:       iamAPIkey,
-		iamURL:          iamURL,
-		iamClientId:     iamClientId,
-		iamClientSecret: iamClientSecret,
+	// Use default values for clientId and clientSecret if not specified in the config.
+	clientId := config.ClientId
+	clientSecret := config.ClientSecret
+	if clientId == "" {
+		clientId = DEFAULT_IAM_CLIENT_ID
+	}
+	if clientSecret == "" {
+		clientSecret = DEFAULT_IAM_CLIENT_SECRET
+	}
+
+	authenticator := &IAMAuthenticator{
+		userAccessToken: config.AccessToken,
+		apiKey:          config.ApiKey,
+		url:             url,
+		clientId:        clientId,
+		clientSecret:    clientSecret,
 		client: &http.Client{
 			Timeout: time.Second * 30,
 		},
 	}
-	return &tokenManager, nil
+	return authenticator, nil
+}
+
+func (IAMAuthenticator) AuthenticationType() string {
+	return AUTHTYPE_IAM
+}
+
+// Perform the authentication by constructing the Authorization header
+// value from the IAM access token (either user-supplied or obtained from the token service).
+func (authenticator IAMAuthenticator) Authenticate(request *http.Request) error {
+	token, err := authenticator.GetToken()
+	if err != nil {
+		return err
+	}
+
+	authHeader := fmt.Sprintf(`%s %s`, TOKENTYPE_BEARER, token)
+	request.Header.Set(HEADER_NAME_AUTHORIZATION, authHeader)
+	return nil
 }
 
 // GetToken : Return token set by user or fresh token
@@ -94,7 +162,7 @@ func NewIAMTokenManager(iamAPIkey string, iamURL string, userAccessToken string,
 // 2.  a) If this class is managing tokens and does not yet have one, make a request for one
 //     b) If this class is managing tokens and the token has expired, request a new one
 // 3. If this class is managing tokens and has a valid token stored, send it
-func (tm *IAMTokenManager) GetToken() (string, error) {
+func (tm *IAMAuthenticator) GetToken() (string, error) {
 	if tm.userAccessToken != "" {
 		return tm.userAccessToken, nil
 	} else if tm.tokenInfo == nil || tm.isTokenExpired() {
@@ -104,37 +172,42 @@ func (tm *IAMTokenManager) GetToken() (string, error) {
 		}
 		tm.saveToken(tokenInfo)
 	}
+
 	return tm.tokenInfo.AccessToken, nil
 }
 
 // SetIAMAccessToken : sets a self-managed access token.
 // The access token should be valid and not yet expired.
-func (tm *IAMTokenManager) SetIAMAccessToken(userAccessToken string) {
+//
+// Deprecated: Use the IAMConfig struct to reconfigure the IAM Authenticator.
+func (tm *IAMAuthenticator) SetIAMAccessToken(userAccessToken string) {
 	tm.userAccessToken = userAccessToken
 }
 
 // SetIAMAPIKey : Set API key so that SDK manages token
-func (tm *IAMTokenManager) SetIAMAPIKey(key string) {
-	tm.iamAPIkey = key
+//
+// Deprecated: Use the IAMConfig struct to reconfigure the IAM Authenticator.
+func (tm *IAMAuthenticator) SetIAMAPIKey(key string) {
+	tm.apiKey = key
 }
 
 // Request an IAM token using an API key
-func (tm *IAMTokenManager) requestToken() (*IAMTokenInfo, error) {
+func (tm *IAMAuthenticator) requestToken() (*IAMTokenInfo, error) {
 	builder := NewRequestBuilder(POST).
-		ConstructHTTPURL(tm.iamURL, nil, nil)
+		ConstructHTTPURL(tm.url, nil, nil)
 
 	builder.AddHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE).
 		AddHeader(Accept, APPLICATION_JSON)
 
 	builder.AddFormData("grant_type", "", "", REQUEST_TOKEN_GRANT_TYPE).
-		AddFormData("apikey", "", "", tm.iamAPIkey).
+		AddFormData("apikey", "", "", tm.apiKey).
 		AddFormData("response_type", "", "", REQUEST_TOKEN_RESPONSE_TYPE)
 
 	req, err := builder.Build()
 	if err != nil {
 		return nil, err
 	}
-	req.SetBasicAuth(tm.iamClientId, tm.iamClientSecret)
+	req.SetBasicAuth(tm.clientId, tm.clientSecret)
 
 	resp, err := tm.client.Do(req)
 	if err != nil {
@@ -149,13 +222,13 @@ func (tm *IAMTokenManager) requestToken() (*IAMTokenInfo, error) {
 		}
 	}
 
-	tokenInfo := IAMTokenInfo{}
-	json.NewDecoder(resp.Body).Decode(&tokenInfo)
+	tokenInfo := &IAMTokenInfo{}
+	json.NewDecoder(resp.Body).Decode(tokenInfo)
 	defer resp.Body.Close()
-	return &tokenInfo, nil
+	return tokenInfo, nil
 }
 
-func (tm *IAMTokenManager) isTokenExpired() bool {
+func (tm *IAMAuthenticator) isTokenExpired() bool {
 	if tm.timeForNewToken == 0 {
 		return true
 	}
@@ -165,20 +238,15 @@ func (tm *IAMTokenManager) isTokenExpired() bool {
 }
 
 // Decode and saves the access token
-func (tm *IAMTokenManager) saveToken(tokenInfo *IAMTokenInfo) {
-	accessToken := tokenInfo.AccessToken
+func (tm *IAMAuthenticator) saveToken(tokenInfo *IAMTokenInfo) {
+	tm.tokenInfo = tokenInfo
 
 	claims := jwt.StandardClaims{}
-	if token, _ := jwt.ParseWithClaims(accessToken, &claims, nil); token != nil {
-		timeToLive := claims.ExpiresAt - claims.IssuedAt
-		expireTime := claims.ExpiresAt
-		timeForNewToken := tm.calcTimeForNewToken(expireTime, timeToLive)
-		tm.timeForNewToken = timeForNewToken
+	if token, _ := jwt.ParseWithClaims(tm.tokenInfo.AccessToken, &claims, nil); token != nil {
+		tm.timeForNewToken = tm.calcTimeForNewToken(claims.ExpiresAt, claims.ExpiresAt-claims.IssuedAt)
 	}
-
-	tm.tokenInfo = tokenInfo
 }
 
-func (tm *IAMTokenManager) calcTimeForNewToken(expireTime int64, timeToLive int64) int64 {
-	return int64(float64(expireTime) - (float64(timeToLive) * (1.0-FRACTION_OF_TIME_TO_LIVE)))
+func (tm *IAMAuthenticator) calcTimeForNewToken(expireTime int64, timeToLive int64) int64 {
+	return int64(float64(expireTime) - (float64(timeToLive) * (1.0 - FRACTION_OF_TIME_TO_LIVE)))
 }
