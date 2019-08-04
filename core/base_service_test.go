@@ -18,13 +18,10 @@ package core
 
 import (
 	"bytes"
-	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path"
 	"strings"
 	"testing"
 
@@ -48,12 +45,18 @@ func TestRequestResponseAsJSON(t *testing.T) {
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
+	authenticator, err := NewBasicAuthenticator("xxx", "yyy")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
 	options := &ServiceOptions{
-		URL:      server.URL,
-		Username: "xxx",
-		Password: "yyy",
+		URL:           server.URL,
+		Authenticator: authenticator,
 	}
-	service, _ := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options, "watson", "watson")
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
 	detailedResponse, _ := service.Request(req, new(Foo))
 	assert.Equal(t, "wonder woman", *detailedResponse.Result.(*Foo).Name)
 }
@@ -73,9 +76,8 @@ func TestRequestResponseJSONWithExtraFields(t *testing.T) {
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
-		URL:      server.URL,
-		Username: "xxx",
-		Password: "yyy",
+		URL:           server.URL,
+		Authenticator: &NoAuthAuthenticator{},
 	}
 	service, _ := NewBaseService(options, "watson", "watson")
 	detailedResponse, _ := service.Request(req, new(Foo))
@@ -97,19 +99,23 @@ func TestRequestFailure(t *testing.T) {
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
+	authenticator, err := NewBasicAuthenticator("xxx", "yyy")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
 	options := &ServiceOptions{
-		URL:      server.URL,
-		Username: "xxx",
-		Password: "yyy",
+		URL:           server.URL,
+		Authenticator: authenticator,
 	}
 	service, _ := NewBaseService(options, "watson", "watson")
-	_, err := service.Request(req, new(Foo))
+	_, err = service.Request(req, new(Foo))
 	assert.NotNil(t, err)
 }
 
 func TestClient(t *testing.T) {
 	mockClient := http.Client{}
-	service, _ := NewBaseService(&ServiceOptions{IAMApiKey: "test"}, "watson", "watson")
+	authenticator, _ := NewBasicAuthenticator("username", "password")
+	service, _ := NewBaseService(&ServiceOptions{Authenticator: authenticator}, "watson", "watson")
 	service.SetHTTPClient(&mockClient)
 	assert.ObjectsAreEqual(mockClient, service.Client)
 }
@@ -128,10 +134,10 @@ func TestRequestForDefaultUserAgent(t *testing.T) {
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
+	authenticator, _ := NewBasicAuthenticator("username", "password")
 	options := &ServiceOptions{
-		URL:      server.URL,
-		Username: "xxx",
-		Password: "yyy",
+		URL:           server.URL,
+		Authenticator: authenticator,
 	}
 	service, _ := NewBaseService(options, "watson", "watson")
 	service.Request(req, new(Foo))
@@ -151,10 +157,10 @@ func TestRequestForProvidedUserAgent(t *testing.T) {
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
+	authenticator := &NoAuthAuthenticator{}
 	options := &ServiceOptions{
-		URL:      server.URL,
-		Username: "xxx",
-		Password: "yyy",
+		URL:           server.URL,
+		Authenticator: authenticator,
 	}
 	service, _ := NewBaseService(options, "watson", "watson")
 	headers := http.Header{}
@@ -162,67 +168,76 @@ func TestRequestForProvidedUserAgent(t *testing.T) {
 	service.SetDefaultHeaders(headers)
 	service.Request(req, new(Foo))
 }
-func TestIncorrectCreds(t *testing.T) {
-	options := &ServiceOptions{
-		URL:      "xxx",
-		Username: "{yyy}",
-		Password: "zzz",
-	}
-	_, serviceErr := NewBaseService(options, "watson", "watson")
-	assert.Equal(t, "The username shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your username", serviceErr.Error())
-}
-
-func TestIncorrectUsernameAndPassword(t *testing.T) {
-	options := &ServiceOptions{
-		URL:      "xxx",
-		Username: "yyy",
-		Password: "zzz",
-	}
-	service, _ := NewBaseService(options, "watson", "watson")
-	err := service.SetUsernameAndPassword("{xxx}", "yyy")
-	assert.Equal(t, "The username shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your username", err.Error())
-
-	err = service.SetUsernameAndPassword("xxx", "{yyy}")
-	assert.Equal(t, "The password shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your password", err.Error())
-
-}
 
 func TestIncorrectURL(t *testing.T) {
+	authenticator, _ := NewNoAuthAuthenticator()
 	options := &ServiceOptions{
-		URL:      "{xxx}",
-		Username: "yyy",
-		Password: "zzz",
+		URL:           "{xxx}",
+		Authenticator: authenticator,
 	}
 	_, serviceErr := NewBaseService(options, "watson", "watson")
-	assert.Equal(t, "The URL shouldn't start or end with curly brackets or quotes. Be sure to remove any {} and \" characters surrounding your URL", serviceErr.Error())
+	expectedError := fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
+	assert.Equal(t, expectedError.Error(), serviceErr.Error())
 }
 
-func TestDisableSSLverification(t *testing.T) {
+func TestDisableSSLVerification(t *testing.T) {
 	options := &ServiceOptions{
-		URL:      "test.com",
-		Username: "xxx",
-		Password: "yyy",
+		URL:           "test.com",
+		Authenticator: &NoAuthAuthenticator{},
 	}
 	service, _ := NewBaseService(options, "watson", "watson")
 	assert.Nil(t, service.Client.Transport)
 	service.DisableSSLVerification()
 	assert.NotNil(t, service.Client.Transport)
-
-	options2 := &ServiceOptions{
-		ICP4DAccessToken: "icp4d token",
-	}
-	service2, _ := NewBaseService(options2, "watson", "watson")
-	assert.Nil(t, service2.Client.Transport)
-	service2.DisableSSLVerification()
-	assert.NotNil(t, service2.Client.Transport)
-	assert.NotNil(t, service2.ICP4DTokenManager.client.Transport)
 }
 
-func TestAuthenticationUserNamePassword(t *testing.T) {
-	encodedBasicAuth := base64.StdEncoding.EncodeToString([]byte("xxx:yyy"))
+func TestBasicAuth1(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		assert.Equal(t, "Basic "+encodedBasicAuth, r.Header["Authorization"][0])
+
+		username, password, ok := r.BasicAuth()
+		assert.Equal(t, ok, true)
+		assert.Equal(t, "mookie", username)
+		assert.Equal(t, "betts", password)
+	}))
+	defer server.Close()
+
+	options := &ServiceOptions{
+		URL: server.URL,
+		Authenticator: &BasicAuthenticator{
+			Username: "mookie",
+			Password: "betts",
+		},
+	}
+
+	service, _ := NewBaseService(options, "watson", "watson")
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
+
+	builder := NewRequestBuilder("GET").
+		ConstructHTTPURL(server.URL, nil, nil).
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	_, err := service.Request(req, new(Foo))
+	assert.Nil(t, err)
+}
+
+func TestBasicAuth2(t *testing.T) {
+	firstTime := true
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+
+		username, password, ok := r.BasicAuth()
+		assert.Equal(t, ok, true)
+		if firstTime {
+			assert.Equal(t, "foo", username)
+			assert.Equal(t, "bar", password)
+			firstTime = false
+		} else {
+			assert.Equal(t, "mookie", username)
+			assert.Equal(t, "betts", password)
+		}
 	}))
 	defer server.Close()
 
@@ -232,16 +247,106 @@ func TestAuthenticationUserNamePassword(t *testing.T) {
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
-		URL:      server.URL,
-		Username: "xxx",
-		Password: "yyy",
+		URL: server.URL,
+		Authenticator: &BasicAuthenticator{
+			Username: "foo",
+			Password: "bar",
+		},
 	}
-	service, _ := NewBaseService(options, "watson", "watson")
 
-	service.Request(req, new(Foo))
+	service, err := NewBaseService(options, "watson", "watson")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.NotNil(t, service.Options.Authenticator)
+
+	_, err = service.Request(req, new(Foo))
+	assert.Nil(t, err)
+
+	service.Options.Authenticator = &BasicAuthenticator{
+		Username: "mookie",
+		Password: "betts",
+	}
+
+	_, err = service.Request(req, new(Foo))
+	assert.Nil(t, err)
 }
 
-func TestIAMAuthentication(t *testing.T) {
+func TestBasicAuthConfigError(t *testing.T) {
+	options := &ServiceOptions{
+		URL: "https://myservice",
+		Authenticator: &BasicAuthenticator{
+			Username: "mookie",
+			Password: "",
+		},
+	}
+
+	service, err := NewBaseService(options, "watson", "watson")
+	assert.NotNil(t, err)
+	assert.Nil(t, service)
+}
+
+func TestNoAuth1(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		assert.Equal(t, "", r.Header.Get("Authorization"))
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET").
+		ConstructHTTPURL(server.URL, nil, nil).
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: &NoAuthAuthenticator{},
+	}
+
+	service, err := NewBaseService(options, "watson", "watson")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
+
+	_, err = service.Request(req, new(Foo))
+	assert.Nil(t, err)
+}
+
+func TestNoAuth2(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		assert.Equal(t, "", r.Header.Get("Authorization"))
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET").
+		ConstructHTTPURL(server.URL, nil, nil).
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	options := &ServiceOptions{
+		URL: server.URL,
+		Authenticator: &BasicAuthenticator{
+			Username: "foo",
+			Password: "bar",
+		},
+	}
+
+	service, err := NewBaseService(options, "watson", "watson")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
+
+	service.Options.Authenticator = &NoAuthAuthenticator{}
+	assert.Nil(t, err)
+	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
+
+	_, err = service.Request(req, new(Foo))
+	assert.Nil(t, err)
+}
+
+func TestIAMAuth(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		body, _ := ioutil.ReadAll(r.Body)
@@ -253,8 +358,9 @@ func TestIAMAuthentication(t *testing.T) {
 				"expiration": 1524167011,
 				"refresh_token": "jy4gl91BQ"
 			}`)
+			assert.Equal(t, "", r.Header.Get("Authorization"))
 		} else {
-			assert.Equal(t, "Bearer captain marvel", r.Header["Authorization"][0])
+			assert.Equal(t, "Bearer captain marvel", r.Header.Get("Authorization"))
 		}
 	}))
 	defer server.Close()
@@ -265,16 +371,26 @@ func TestIAMAuthentication(t *testing.T) {
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
-		URL:       server.URL,
-		IAMApiKey: "xxxxx",
-		IAMURL:    server.URL,
+		URL: server.URL,
+		Authenticator: &IamAuthenticator{
+			URL:    server.URL,
+			ApiKey: "xxxxx",
+		},
 	}
-	service, _ := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options, "watson", "watson")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_IAM, service.Options.Authenticator.AuthenticationType())
 
-	service.Request(req, new(Foo))
+	_, err = service.Request(req, new(Foo))
+	if err != nil {
+		fmt.Println("Error: ", err)
+	}
+	assert.Nil(t, err)
 }
 
-func TestIAMAuthenticationFail(t *testing.T) {
+func TestIAMFailure(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte("Sorry you are forbidden"))
@@ -287,17 +403,105 @@ func TestIAMAuthenticationFail(t *testing.T) {
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
-		URL:       server.URL,
-		IAMApiKey: "xxxxx",
-		IAMURL:    server.URL,
+		URL: server.URL,
+		Authenticator: &IamAuthenticator{
+			URL:    server.URL,
+			ApiKey: "xxxxx",
+		},
 	}
-	service, _ := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options, "watson", "watson")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.NotNil(t, service.Options.Authenticator)
 
-	_, err := service.Request(req, new(Foo))
+	_, err = service.Request(req, new(Foo))
+	assert.NotNil(t, err)
 	assert.Equal(t, "Sorry you are forbidden", err.Error())
 }
 
-func TestICP4DAuthenticationSuccess(t *testing.T) {
+func TestIAMWithIdSecret(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		body, _ := ioutil.ReadAll(r.Body)
+		if strings.Contains(string(body), "grant_type") {
+			fmt.Fprintf(w, `{
+                "access_token": "captain marvel",
+                "token_type": "Bearer",
+                "expires_in": 3600,
+                "expiration": 1524167011,
+                "refresh_token": "jy4gl91BQ"
+            }`)
+			username, password, ok := r.BasicAuth()
+			assert.Equal(t, true, ok)
+			assert.Equal(t, "mookie", username)
+			assert.Equal(t, "betts", password)
+		} else {
+			assert.Equal(t, "Bearer captain marvel", r.Header.Get("Authorization"))
+		}
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET").
+		ConstructHTTPURL(server.URL, nil, nil).
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	options := &ServiceOptions{
+		URL: server.URL,
+		Authenticator: &IamAuthenticator{
+			URL:          server.URL,
+			ApiKey:       "xxxxx",
+			ClientId:     "mookie",
+			ClientSecret: "betts",
+		},
+	}
+	service, err := NewBaseService(options, "watson", "watson")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.NotNil(t, service.Options.Authenticator)
+
+	_, err = service.Request(req, new(Foo))
+	assert.Nil(t, err)
+}
+
+func TestIAMErrorClientIdOnly(t *testing.T) {
+	_, err := NewBaseService(
+		&ServiceOptions{
+			URL: "don't care",
+			Authenticator: &IamAuthenticator{
+				ApiKey:   "xxxxx",
+				ClientId: "foo",
+			},
+		}, "watson", "watson")
+	assert.NotNil(t, err)
+}
+
+func TestIAMErrorClientSecretOnly(t *testing.T) {
+	_, err := NewBaseService(
+		&ServiceOptions{
+			URL: "don't care",
+			Authenticator: &IamAuthenticator{
+				ApiKey:       "xxxxx",
+				ClientSecret: "bar",
+			},
+		}, "watson", "watson")
+	assert.NotNil(t, err)
+}
+
+func TestIAMNoApiKey(t *testing.T) {
+	_, err := NewBaseService(
+		&ServiceOptions{
+			URL: "don't care",
+			Authenticator: &IamAuthenticator{
+				URL:          "don't care",
+				ClientId:     "foo",
+				ClientSecret: "bar",
+			},
+		}, "watson", "watson")
+	assert.NotNil(t, err)
+}
+
+func TestCP4DAuth(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if strings.Contains(r.URL.String(), "preauth") {
@@ -317,7 +521,7 @@ func TestICP4DAuthenticationSuccess(t *testing.T) {
 			"message":"success"
 		}`)
 		} else {
-			assert.Equal(t, "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI", r.Header["Authorization"][0])
+			assert.Equal(t, "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI", r.Header.Get("Authorization"))
 		}
 	}))
 	defer server.Close()
@@ -328,16 +532,23 @@ func TestICP4DAuthenticationSuccess(t *testing.T) {
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
-		Username:           "bogus",
-		Password:           "bogus",
-		ICP4DURL:           server.URL,
-		AuthenticationType: "icp4d",
+		URL: server.URL,
+		Authenticator: &CloudPakForDataAuthenticator{
+			URL:      server.URL,
+			Username: "bogus",
+			Password: "bogus",
+		},
 	}
-	service, _ := NewBaseService(options, "watson", "watson")
-	service.Request(req, new(Foo))
+
+	service, err := NewBaseService(options, "watson", "watson")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+
+	_, err = service.Request(req, new(Foo))
+	assert.Nil(t, err)
 }
 
-func TestICP4DAuthenticationFail(t *testing.T) {
+func TestCP4DFail(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte("Sorry you are forbidden"))
@@ -350,272 +561,40 @@ func TestICP4DAuthenticationFail(t *testing.T) {
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
-		Username:           "bogus",
-		Password:           "bogus",
-		ICP4DURL:           server.URL,
-		AuthenticationType: "icp4d",
+		URL: server.URL,
+		Authenticator: &CloudPakForDataAuthenticator{
+			URL:      server.URL,
+			Username: "bogus",
+			Password: "bogus",
+		},
 	}
-	service, _ := NewBaseService(options, "watson", "watson")
-
-	_, err := service.Request(req, new(Foo))
-	assert.Equal(t, "Sorry you are forbidden", err.Error())
-}
-
-func TestIAMBasicAuthDefault(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		body, _ := ioutil.ReadAll(r.Body)
-		if strings.Contains(string(body), "grant_type") {
-			fmt.Fprintf(w, `{
-                "access_token": "captain marvel",
-                "token_type": "Bearer",
-                "expires_in": 3600,
-                "expiration": 1524167011,
-                "refresh_token": "jy4gl91BQ"
-            }`)
-			username, password, ok := r.BasicAuth()
-			assert.Equal(t, ok, true)
-			assert.Equal(t, username, "bx")
-			assert.Equal(t, password, "bx")
-		} else {
-			assert.Equal(t, "Bearer captain marvel", r.Header["Authorization"][0])
-		}
-	}))
-	defer server.Close()
-
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddQuery("Version", "2018-22-09")
-	req, _ := builder.Build()
-
-	options := &ServiceOptions{
-		URL:       server.URL,
-		IAMApiKey: "xxxxx",
-		IAMURL:    server.URL,
-	}
-	service, _ := NewBaseService(options, "watson", "watson")
-
-	service.Request(req, new(Foo))
-}
-
-func TestIAMBasicAuthNonDefault(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		body, _ := ioutil.ReadAll(r.Body)
-		if strings.Contains(string(body), "grant_type") {
-			fmt.Fprintf(w, `{
-                "access_token": "captain marvel",
-                "token_type": "Bearer",
-                "expires_in": 3600,
-                "expiration": 1524167011,
-                "refresh_token": "jy4gl91BQ"
-            }`)
-			username, password, ok := r.BasicAuth()
-			assert.Equal(t, ok, true)
-			assert.Equal(t, username, "foo")
-			assert.Equal(t, password, "bar")
-		} else {
-			assert.Equal(t, "Bearer captain marvel", r.Header["Authorization"][0])
-		}
-	}))
-	defer server.Close()
-
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddQuery("Version", "2018-22-09")
-	req, _ := builder.Build()
-
-	options := &ServiceOptions{
-		URL:             server.URL,
-		IAMApiKey:       "xxxxx",
-		IAMURL:          server.URL,
-		IAMClientId:     "foo",
-		IAMClientSecret: "bar",
-	}
-	service, _ := NewBaseService(options, "watson", "watson")
-
-	service.Request(req, new(Foo))
-}
-
-func TestIAMBasicAuthClientIdOnly(t *testing.T) {
-	options := &ServiceOptions{
-		URL:         "don't care",
-		IAMApiKey:   "xxxxx",
-		IAMClientId: "foo",
-	}
-	_, err := NewBaseService(options, "watson", "watson")
-	assert.NotEqual(t, err, nil)
-}
-
-func TestIAMBasicAuthClientSecretOnly(t *testing.T) {
-	options := &ServiceOptions{
-		URL:             "don't care",
-		IAMApiKey:       "xxxxx",
-		IAMClientSecret: "foo",
-	}
-	_, err := NewBaseService(options, "watson", "watson")
-	assert.NotEqual(t, err, nil)
-}
-
-func TestLoadingFromCredentialFile(t *testing.T) {
-	pwd, _ := os.Getwd()
-	credentialFilePath := path.Join(pwd, "/../resources/ibm-credentials.env")
-	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
-	options := &ServiceOptions{}
-	service, _ := NewBaseService(options, "watson", "watson")
-	assert.Equal(t, service.Options.IAMApiKey, "5678efgh")
-	os.Unsetenv("IBM_CREDENTIALS_FILE")
-
-	options2 := &ServiceOptions{IAMApiKey: "xxx"}
-	service2, _ := NewBaseService(options2, "watson", "watson")
-	assert.Equal(t, service2.Options.IAMApiKey, "xxx")
-}
-
-func TestICPAuthentication(t *testing.T) {
-	options := &ServiceOptions{
-		IAMApiKey: "xxx",
-	}
-	service, _ := NewBaseService(options, "watson", "watson")
-	assert.Equal(t, "xxx", service.Options.IAMApiKey)
-
-	options2 := &ServiceOptions{
-		IAMApiKey: "icp-xxx",
-	}
-	service2, _ := NewBaseService(options2, "watson", "watson")
-	assert.Equal(t, "icp-xxx", service2.Options.Password)
-
-	options3 := &ServiceOptions{
-		Username: "apikey",
-		Password: "nobasicauth",
-	}
-	service3, _ := NewBaseService(options3, "watson", "watson")
-	assert.NotNil(t, service3.IAMTokenManager)
-	assert.Equal(t, "nobasicauth", service3.Options.IAMApiKey)
-
-	options4 := &ServiceOptions{
-		Username: "apikey",
-		Password: "{nobasicauth}",
-	}
-	_, err4 := NewBaseService(options4, "watson", "watson")
-	assert.NotNil(t, err4)
-
-	options5 := &ServiceOptions{
-		IAMApiKey: "icp-test}",
-	}
-	_, err5 := NewBaseService(options5, "watson", "watson")
-	assert.NotNil(t, err5)
-
-	options6 := &ServiceOptions{
-		IAMApiKey: "{test}",
-	}
-	_, err6 := NewBaseService(options6, "watson", "watson")
-	assert.NotNil(t, err6)
-}
-
-func TestSetIAMAccessToken(t *testing.T) {
-	options1 := &ServiceOptions{
-		IAMApiKey: "apikey",
-	}
-	service1, _ := NewBaseService(options1, "watson", "watson")
-	assert.Equal(t, "apikey", service1.Options.IAMApiKey)
-	service1.SetIAMAccessToken("newIAMAccessToken")
-
-	options2 := &ServiceOptions{
-		Username: "hello",
-		Password: "pwd",
-	}
-	service2, _ := NewBaseService(options2, "watson", "watson")
-	assert.Nil(t, service2.IAMTokenManager)
-	service2.SetIAMAccessToken("new token")
-	assert.Equal(t, "new token", service2.Options.IAMAccessToken)
-}
-
-func TestSetIAMAPIKey(t *testing.T) {
-	options := &ServiceOptions{
-		IAMApiKey: "test",
-	}
-	service, _ := NewBaseService(options, "watson", "watson")
-	err := service.SetIAMAPIKey("{bad}")
-	assert.NotNil(t, err)
-
-	service, _ = NewBaseService(options, "watson", "watson")
-	service.SetIAMAPIKey("good")
-	assert.Equal(t, "good", service.Options.IAMApiKey)
-}
-
-func TestSetURL(t *testing.T) {
-	options := &ServiceOptions{
-		IAMApiKey: "test",
-	}
-	service, _ := NewBaseService(options, "watson", "watson")
-	err := service.SetURL("{bad url}")
-	assert.NotNil(t, err)
-}
-
-func TestSetICP4DAccessToken(t *testing.T) {
-	options := &ServiceOptions{
-		Username: "bogus",
-		Password: "bogus",
-	}
-	service, _ := NewBaseService(options, "watson", "watson")
-	assert.Nil(t, service.ICP4DTokenManager)
-	service.SetICP4DAccessToken("some icp4d token")
-	assert.NotNil(t, service.ICP4DTokenManager)
-	assert.Equal(t, "some icp4d token", service.ICP4DTokenManager.userAccessToken)
-	service.SetICP4DAccessToken("resetting some icp4d token")
-	assert.Equal(t, "resetting some icp4d token", service.ICP4DTokenManager.userAccessToken)
-}
-
-func TestICP4DAuthentication(t *testing.T) {
-	options := &ServiceOptions{
-		AuthenticationType: "ICP4D",
-		Username:           "bogus",
-		Password:           "bogus",
-	}
-	_, err := NewBaseService(options, "watson", "watson")
-	assert.NotNil(t, err)
-	assert.Equal(t, "The ICP4DURL is mandatory for ICP4D", err.Error())
-
-	options.ICP4DURL = "test.com"
 	service, err := NewBaseService(options, "watson", "watson")
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
+	assert.NotNil(t, service.Options.Authenticator)
+
+	_, err = service.Request(req, new(Foo))
+	assert.Equal(t, "Sorry you are forbidden", err.Error())
 }
 
-func TestLoadingFromVCAPServices(t *testing.T) {
-	vcapServices := `{
-		"watson": [{
-			"credentials": {
-				"url": "https://gateway.watsonplatform.net/compare-comply/api",
-				"username": "bogus username",
-				"password": "bogus password",
-				"apikey": "bogus apikey"
-			}
-		}]
-	}`
-	os.Setenv("VCAP_SERVICES", vcapServices)
-	service, _ := NewBaseService(&ServiceOptions{}, "watson", "watson")
-	assert.Equal(t, "bogus apikey", service.Options.IAMApiKey)
-	os.Unsetenv("VCAP_SERVICES")
+func TestSetURL(t *testing.T) {
+	service, err := NewBaseService(
+		&ServiceOptions{
+			Authenticator: &IamAuthenticator{
+				ApiKey: "xxxxx",
+			},
+		}, "watson", "watson")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
 
-	vcapServices2 := `{
-		"watson": [{
-			"credentials": {
-				"url": "https://gateway.watsonplatform.net/compare-comply/api",
-				"username": "bogus username",
-				"password": "bogus password"
-			}
-		}]
-	}`
-	os.Setenv("VCAP_SERVICES", vcapServices2)
-	service2, _ := NewBaseService(&ServiceOptions{}, "watson", "watson")
-	assert.Equal(t, "bogus username", service2.Options.Username)
-	os.Unsetenv("VCAP_SERVICES")
-}
-
-func TestNoAuth(t *testing.T) {
-	_, err := NewBaseService(&ServiceOptions{}, "watson", "watson")
+	err = service.SetURL("{bad url}")
 	assert.NotNil(t, err)
+}
+
+func TestAuthNotConfigured(t *testing.T) {
+	service, err := NewBaseService(&ServiceOptions{}, "noauth_service", "noauth_service")
+	assert.NotNil(t, err)
+	assert.Nil(t, service)
 }
 
 func TestErrorMessage(t *testing.T) {
@@ -624,33 +603,33 @@ func TestErrorMessage(t *testing.T) {
 		Body: ioutil.NopCloser(bytes.NewBuffer(msg1)),
 	}
 	message1 := getErrorMessage(&response1)
-	assert.Equal(t, message1, "error1")
+	assert.Equal(t, "error1", message1)
 
 	msg2 := []byte(`{"message":"error2"}`)
 	response2 := http.Response{
 		Body: ioutil.NopCloser(bytes.NewBuffer(msg2)),
 	}
 	message2 := getErrorMessage(&response2)
-	assert.Equal(t, message2, "error2")
+	assert.Equal(t, "error2", message2)
 
 	msg3 := []byte(`{"errors":[{"message":"error3"}]}`)
 	response3 := http.Response{
 		Body: ioutil.NopCloser(bytes.NewBuffer(msg3)),
 	}
 	message3 := getErrorMessage(&response3)
-	assert.Equal(t, message3, "error3")
+	assert.Equal(t, "error3", message3)
 
 	msg4 := []byte(`{"msg":"error4"}`)
 	response4 := http.Response{
 		Body: ioutil.NopCloser(bytes.NewBuffer(msg4)),
 	}
 	message4 := getErrorMessage(&response4)
-	assert.Equal(t, message4, "Unknown Error")
+	assert.Equal(t, "Unknown Error", message4)
 
 	msg5 := []byte(`{"errorMessage":"error5"}`)
 	response5 := http.Response{
 		Body: ioutil.NopCloser(bytes.NewBuffer(msg5)),
 	}
 	message5 := getErrorMessage(&response5)
-	assert.Equal(t, message5, "error5")
+	assert.Equal(t, "error5", message5)
 }
