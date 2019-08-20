@@ -58,6 +58,33 @@ func TestRequestResponseAsJSON(t *testing.T) {
 	assert.Equal(t, "wonder woman", *detailedResponse.Result.(*Foo).Name)
 }
 
+// Verify that extra fields in result are silently ignored
+func TestRequestResponseJSONWithExtraFields(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		fmt.Fprintf(w, `{"name": "wonder woman", "age": 42}`)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET").
+		ConstructHTTPURL(server.URL, nil, nil).
+		AddHeader("Content-Type", "Application/json").
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	options := &ServiceOptions{
+		URL:      server.URL,
+		Username: "xxx",
+		Password: "yyy",
+	}
+	service, _ := NewBaseService(options, "watson", "watson")
+	detailedResponse, _ := service.Request(req, new(Foo))
+	result, ok := detailedResponse.Result.(*Foo)
+	assert.Equal(t, ok, true)
+	assert.NotNil(t, result)
+	assert.Equal(t, "wonder woman", *result.Name)
+}
+
 func TestRequestFailure(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
@@ -277,7 +304,7 @@ func TestICP4DAuthenticationSuccess(t *testing.T) {
 			fmt.Fprintf(w, `{
 			"username":"hello",
 			"role":"user",
-			"permissions":[  
+			"permissions":[
 				"administrator",
 				"deployment_admin"
 			],
