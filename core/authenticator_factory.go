@@ -18,6 +18,7 @@ package core
 
 import (
 	"fmt"
+	"strings"
 )
 
 // GetAuthenticatorFromEnvironment: instantiates an Authenticator using service properties
@@ -34,17 +35,19 @@ func GetAuthenticatorFromEnvironment(credentialKey string) (authenticator Authen
 		authType = AUTHTYPE_IAM
 	}
 
+	authType = strings.ToUpper(authType)
+
 	// Construct the appropriate authenticator according to the authentication type.
 	switch authType {
-	case AUTHTYPE_BASIC:
+	case strings.ToUpper(AUTHTYPE_BASIC):
 		authenticator, err = NewBasicAuthenticatorFromMap(properties)
-	case AUTHTYPE_BEARER_TOKEN:
+	case strings.ToUpper(AUTHTYPE_BEARER_TOKEN):
 		authenticator, err = NewBearerTokenAuthenticatorFromMap(properties)
-	case AUTHTYPE_IAM:
+	case strings.ToUpper(AUTHTYPE_IAM):
 		authenticator, err = NewIamAuthenticatorFromMap(properties)
-	case AUTHTYPE_CP4D:
+	case strings.ToUpper(AUTHTYPE_CP4D):
 		authenticator, err = NewCloudPakForDataAuthenticatorFromMap(properties)
-	case AUTHTYPE_NOAUTH:
+	case strings.ToUpper(AUTHTYPE_NOAUTH):
 		authenticator, err = NewNoAuthAuthenticator()
 	default:
 		err = fmt.Errorf(ERRORMSG_AUTHTYPE_UNKNOWN, authType)
