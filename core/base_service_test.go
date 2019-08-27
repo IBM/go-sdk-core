@@ -22,6 +22,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path"
 	"strings"
 	"testing"
 
@@ -589,6 +591,72 @@ func TestSetURL(t *testing.T) {
 
 	err = service.SetURL("{bad url}")
 	assert.NotNil(t, err)
+}
+
+func TestExtConfigFromCredentialFile(t *testing.T) {
+	pwd, _ := os.Getwd()
+	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
+	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
+
+	service, err := NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+			URL:           "bad url",
+		}, "service1", "service1")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.Equal(t, "https://service1/api", service.Options.URL)
+	assert.NotNil(t, service.Client.Transport)
+
+	os.Unsetenv("IBM_CREDENTIALS_FILE")
+}
+
+func TestExtConfigError(t *testing.T) {
+	pwd, _ := os.Getwd()
+	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
+	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
+
+	service, err := NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+			URL:           "bad url",
+		}, "error4", "error4")
+	assert.NotNil(t, err)
+	assert.Nil(t, service)
+
+	os.Unsetenv("IBM_CREDENTIALS_FILE")
+}
+
+func TestExtConfigFromEnvironment(t *testing.T) {
+	setTestEnvironment()
+
+	service, err := NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+			URL:           "bad url",
+		}, "service3", "service3")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.Equal(t, "https://service3/api", service.Options.URL)
+	assert.Nil(t, service.Client.Transport)
+
+	clearTestEnvironment()
+}
+
+func TestExtConfigFromVCAP(t *testing.T) {
+	setTestVCAP()
+
+	service, err := NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+			URL:           "bad url",
+		}, "service2", "service2")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.Equal(t, "https://service2/api", service.Options.URL)
+	assert.Nil(t, service.Client.Transport)
+
+	clearTestVCAP()
 }
 
 func TestAuthNotConfigured(t *testing.T) {

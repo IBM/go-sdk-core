@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -48,8 +49,6 @@ type BaseService struct {
 	UserAgent      string
 }
 
-type CredentialProps map[string]string
-
 // NewBaseService Instantiate a Base Service
 func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*BaseService, error) {
 	if HasBadFirstOrLastChar(options.URL) {
@@ -75,7 +74,38 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 	// Set a default value for the User-Agent http header.
 	service.SetUserAgent(service.BuildUserAgent())
 
-	// TODO: try to load service properties from external config (url, disable-ssl).
+	// Try to load service properties from external config.
+	serviceProps, err := GetServiceProperties(serviceName)
+	if err != nil {
+		return nil, err
+	}
+
+	// If we were able to load any properties for this service, then check to see if the
+	// service-level properties were present and set them on the service if so.
+	if serviceProps != nil {
+
+		// URL
+		if url, ok := serviceProps[PROPNAME_SVC_URL]; ok && url != "" {
+			err := service.SetURL(url)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// DISABLE_SSL
+		if disableSSL, ok := serviceProps[PROPNAME_SVC_DISABLE_SSL]; ok && disableSSL != "" {
+			// Convert the config string to bool.
+			boolValue, err := strconv.ParseBool(disableSSL)
+			if err != nil {
+				boolValue = false
+			}
+
+			// If requested, disable SSL.
+			if boolValue {
+				service.DisableSSLVerification()
+			}
+		}
+	}
 
 	return &service, nil
 }
