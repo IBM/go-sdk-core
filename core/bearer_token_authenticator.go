@@ -40,8 +40,8 @@ func NewBearerTokenAuthenticator(bearerToken string) (*BearerTokenAuthenticator,
 	return obj, nil
 }
 
-// NewBearerTokenAuthenticator : Constructs a new BearerTokenAuthenticator instance from a map.
-func NewBearerTokenAuthenticatorFromMap(properties map[string]string) (*BearerTokenAuthenticator, error) {
+// newBearerTokenAuthenticator : Constructs a new BearerTokenAuthenticator instance from a map.
+func newBearerTokenAuthenticatorFromMap(properties map[string]string) (*BearerTokenAuthenticator, error) {
 	if properties == nil {
 		return nil, fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
 	}

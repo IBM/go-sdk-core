@@ -54,19 +54,19 @@ func TestBearerTokenAuthenticate(t *testing.T) {
 }
 
 func TestNewBearerTokenAuthenticatorFromMap(t *testing.T) {
-	_, err := NewBearerTokenAuthenticatorFromMap(nil)
+	_, err := newBearerTokenAuthenticatorFromMap(nil)
 	assert.NotNil(t, err)
 
 	var props = map[string]string{
 		PROPNAME_BEARER_TOKEN: "",
 	}
-	_, err = NewBearerTokenAuthenticatorFromMap(props)
+	_, err = newBearerTokenAuthenticatorFromMap(props)
 	assert.NotNil(t, err)
 
 	props = map[string]string{
 		PROPNAME_BEARER_TOKEN: "my-token",
 	}
-	authenticator, err := NewBearerTokenAuthenticatorFromMap(props)
+	authenticator, err := newBearerTokenAuthenticatorFromMap(props)
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
 	assert.Equal(t, "my-token", authenticator.BearerToken)

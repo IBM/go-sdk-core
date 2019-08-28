@@ -93,7 +93,7 @@ func NewIamAuthenticator(apikey string, url string, clientId string, clientSecre
 }
 
 // NewIamAuthenticatorFromMap : Constructs a new IamAuthenticator instance from a map.
-func NewIamAuthenticatorFromMap(properties map[string]string) (*IamAuthenticator, error) {
+func newIamAuthenticatorFromMap(properties map[string]string) (*IamAuthenticator, error) {
 	if properties == nil {
 		return nil, fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
 	}

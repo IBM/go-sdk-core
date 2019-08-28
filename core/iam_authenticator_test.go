@@ -216,25 +216,25 @@ func TestIamGetTokenFailure(t *testing.T) {
 }
 
 func TestNewIamAuthenticatorFromMap(t *testing.T) {
-	_, err := NewIamAuthenticatorFromMap(nil)
+	_, err := newIamAuthenticatorFromMap(nil)
 	assert.NotNil(t, err)
 
 	var props = map[string]string{
 		PROPNAME_AUTH_URL: "iam-url",
 	}
-	_, err = NewIamAuthenticatorFromMap(props)
+	_, err = newIamAuthenticatorFromMap(props)
 	assert.NotNil(t, err)
 
 	props = map[string]string{
 		PROPNAME_APIKEY: "",
 	}
-	_, err = NewIamAuthenticatorFromMap(props)
+	_, err = newIamAuthenticatorFromMap(props)
 	assert.NotNil(t, err)
 
 	props = map[string]string{
 		PROPNAME_APIKEY: "my-apikey",
 	}
-	authenticator, err := NewIamAuthenticatorFromMap(props)
+	authenticator, err := newIamAuthenticatorFromMap(props)
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
 	assert.Equal(t, "my-apikey", authenticator.ApiKey)
@@ -245,7 +245,7 @@ func TestNewIamAuthenticatorFromMap(t *testing.T) {
 		PROPNAME_CLIENT_ID:        "mookie",
 		PROPNAME_CLIENT_SECRET:    "betts",
 	}
-	authenticator, err = NewIamAuthenticatorFromMap(props)
+	authenticator, err = newIamAuthenticatorFromMap(props)
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
 	assert.Equal(t, "my-apikey", authenticator.ApiKey)

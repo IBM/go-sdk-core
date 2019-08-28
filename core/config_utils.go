@@ -219,15 +219,13 @@ func loadFromVCAPServices(serviceName string) *credential {
 	vcapServices := os.Getenv("VCAP_SERVICES")
 	if vcapServices != "" {
 		var rawServices map[string][]service
-		if vcapServices != "" {
-			if err := json.Unmarshal([]byte(vcapServices), &rawServices); err != nil {
-				return nil
-			}
-			for name, instances := range rawServices {
-				if name == serviceName {
-					creds := &instances[0].Credentials
-					return creds
-				}
+		if err := json.Unmarshal([]byte(vcapServices), &rawServices); err != nil {
+			return nil
+		}
+		for name, instances := range rawServices {
+			if name == serviceName {
+				creds := &instances[0].Credentials
+				return creds
 			}
 		}
 	}

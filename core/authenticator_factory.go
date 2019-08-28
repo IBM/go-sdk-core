@@ -35,21 +35,18 @@ func GetAuthenticatorFromEnvironment(credentialKey string) (authenticator Authen
 		authType = AUTHTYPE_IAM
 	}
 
-	authType = strings.ToUpper(authType)
-
-	// Construct the appropriate authenticator according to the authentication type.
-	switch authType {
-	case strings.ToUpper(AUTHTYPE_BASIC):
-		authenticator, err = NewBasicAuthenticatorFromMap(properties)
-	case strings.ToUpper(AUTHTYPE_BEARER_TOKEN):
-		authenticator, err = NewBearerTokenAuthenticatorFromMap(properties)
-	case strings.ToUpper(AUTHTYPE_IAM):
-		authenticator, err = NewIamAuthenticatorFromMap(properties)
-	case strings.ToUpper(AUTHTYPE_CP4D):
-		authenticator, err = NewCloudPakForDataAuthenticatorFromMap(properties)
-	case strings.ToUpper(AUTHTYPE_NOAUTH):
+	// Create the authenticator appropriate for the auth type.
+	if strings.EqualFold(authType, AUTHTYPE_BASIC) {
+		authenticator, err = newBasicAuthenticatorFromMap(properties)
+	} else if strings.EqualFold(authType, AUTHTYPE_BEARER_TOKEN) {
+		authenticator, err = newBearerTokenAuthenticatorFromMap(properties)
+	} else if strings.EqualFold(authType, AUTHTYPE_IAM) {
+		authenticator, err = newIamAuthenticatorFromMap(properties)
+	} else if strings.EqualFold(authType, AUTHTYPE_CP4D) {
+		authenticator, err = newCloudPakForDataAuthenticatorFromMap(properties)
+	} else if strings.EqualFold(authType, AUTHTYPE_NOAUTH) {
 		authenticator, err = NewNoAuthAuthenticator()
-	default:
+	} else {
 		err = fmt.Errorf(ERRORMSG_AUTHTYPE_UNKNOWN, authType)
 	}
 
