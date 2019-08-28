@@ -187,27 +187,27 @@ func TestGetTokenFailure(t *testing.T) {
 }
 
 func TestNewCloudPakForDataAuthenticatorFromMap(t *testing.T) {
-	_, err := NewCloudPakForDataAuthenticatorFromMap(nil)
+	_, err := newCloudPakForDataAuthenticatorFromMap(nil)
 	assert.NotNil(t, err)
 
 	var props = map[string]string{
 		PROPNAME_AUTH_URL: "cp4d-url",
 	}
-	_, err = NewCloudPakForDataAuthenticatorFromMap(props)
+	_, err = newCloudPakForDataAuthenticatorFromMap(props)
 	assert.NotNil(t, err)
 
 	props = map[string]string{
 		PROPNAME_AUTH_URL: "cp4d-url",
 		PROPNAME_USERNAME: "mookie",
 	}
-	_, err = NewCloudPakForDataAuthenticatorFromMap(props)
+	_, err = newCloudPakForDataAuthenticatorFromMap(props)
 	assert.NotNil(t, err)
 
 	props = map[string]string{
 		PROPNAME_AUTH_URL: "cp4d-url",
 		PROPNAME_PASSWORD: "betts",
 	}
-	_, err = NewCloudPakForDataAuthenticatorFromMap(props)
+	_, err = newCloudPakForDataAuthenticatorFromMap(props)
 	assert.NotNil(t, err)
 
 	props = map[string]string{
@@ -216,7 +216,7 @@ func TestNewCloudPakForDataAuthenticatorFromMap(t *testing.T) {
 		PROPNAME_PASSWORD:         "betts",
 		PROPNAME_AUTH_DISABLE_SSL: "true",
 	}
-	authenticator, err := NewCloudPakForDataAuthenticatorFromMap(props)
+	authenticator, err := newCloudPakForDataAuthenticatorFromMap(props)
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
 	assert.Equal(t, "cp4d-url", authenticator.URL)

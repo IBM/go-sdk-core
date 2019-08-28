@@ -83,28 +83,28 @@ func TestBasicAuthAuthenticate(t *testing.T) {
 }
 
 func TestNewBasicAuthenticatorFromMap(t *testing.T) {
-	_, err := NewBasicAuthenticatorFromMap(nil)
+	_, err := newBasicAuthenticatorFromMap(nil)
 	assert.NotNil(t, err)
 
 	var props = map[string]string{
 		PROPNAME_USERNAME: "my-user",
 		PROPNAME_PASSWORD: "",
 	}
-	_, err = NewBasicAuthenticatorFromMap(props)
+	_, err = newBasicAuthenticatorFromMap(props)
 	assert.NotNil(t, err)
 
 	props = map[string]string{
 		PROPNAME_USERNAME: "",
 		PROPNAME_PASSWORD: "my-password",
 	}
-	_, err = NewBasicAuthenticatorFromMap(props)
+	_, err = newBasicAuthenticatorFromMap(props)
 	assert.NotNil(t, err)
 
 	props = map[string]string{
 		PROPNAME_USERNAME: "mookie",
 		PROPNAME_PASSWORD: "betts",
 	}
-	authenticator, err := NewBasicAuthenticatorFromMap(props)
+	authenticator, err := newBasicAuthenticatorFromMap(props)
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
 	assert.Equal(t, "mookie", authenticator.Username)

@@ -41,8 +41,8 @@ func NewBasicAuthenticator(username string, password string) (*BasicAuthenticato
 	return obj, nil
 }
 
-// NewBasicAuthenticatorFromMap: Constructs a new BasicAuthenticator instance from a map.
-func NewBasicAuthenticatorFromMap(properties map[string]string) (*BasicAuthenticator, error) {
+// newBasicAuthenticatorFromMap: Constructs a new BasicAuthenticator instance from a map.
+func newBasicAuthenticatorFromMap(properties map[string]string) (*BasicAuthenticator, error) {
 	if properties == nil {
 		return nil, fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
 	}
