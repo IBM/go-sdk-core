@@ -1,20 +1,18 @@
 package core
 
-/**
- * Copyright 2019 IBM All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// (C) Copyright IBM Corp. 2019.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import (
 	"bytes"
@@ -67,7 +65,7 @@ type IamAuthenticator struct {
 	Client *http.Client
 
 	// The cached token and expiration time.
-	tokenData *IamTokenData
+	tokenData *iamTokenData
 }
 
 // NewIamAuthenticator : Constructs a new IamAuthenticator instance.
@@ -160,7 +158,7 @@ func (authenticator *IamAuthenticator) getToken() (string, error) {
 			return "", err
 		}
 
-		authenticator.tokenData, err = NewIamTokenData(tokenResponse)
+		authenticator.tokenData, err = newIamTokenData(tokenResponse)
 		if err != nil {
 			return "", err
 		}
@@ -170,7 +168,7 @@ func (authenticator *IamAuthenticator) getToken() (string, error) {
 }
 
 // requestToken: fetches a new access token from the token server.
-func (authenticator *IamAuthenticator) requestToken() (*IamTokenServerResponse, error) {
+func (authenticator *IamAuthenticator) requestToken() (*iamTokenServerResponse, error) {
 	// Use the default IAM URL if one was not specified by the user.
 	url := authenticator.URL
 	if url == "" {
@@ -229,14 +227,14 @@ func (authenticator *IamAuthenticator) requestToken() (*IamTokenServerResponse, 
 		}
 	}
 
-	tokenResponse := &IamTokenServerResponse{}
+	tokenResponse := &iamTokenServerResponse{}
 	json.NewDecoder(resp.Body).Decode(tokenResponse)
 	defer resp.Body.Close()
 	return tokenResponse, nil
 }
 
-// IamTokenServerResponse : This struct models a response received from the token server.
-type IamTokenServerResponse struct {
+// iamTokenServerResponse : This struct models a response received from the token server.
+type iamTokenServerResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 	TokenType    string `json:"token_type"`
@@ -244,20 +242,20 @@ type IamTokenServerResponse struct {
 	Expiration   int64  `json:"expiration"`
 }
 
-// IamTokenData : This struct represents the cached information related to a fetched access token.
-type IamTokenData struct {
+// iamTokenData : This struct represents the cached information related to a fetched access token.
+type iamTokenData struct {
 	AccessToken string
 	RefreshTime int64
 }
 
-// NewIamTokenData: constructs a new IamTokenData instance from the specified IamTokenServerResponse instance.
-func NewIamTokenData(tokenResponse *IamTokenServerResponse) (*IamTokenData, error) {
+// newIamTokenData: constructs a new IamTokenData instance from the specified IamTokenServerResponse instance.
+func newIamTokenData(tokenResponse *iamTokenServerResponse) (*iamTokenData, error) {
 	// Compute the adjusted refresh time (expiration time - 20% of timeToLive)
 	timeToLive := tokenResponse.ExpiresIn
 	expireTime := tokenResponse.Expiration
 	refreshTime := expireTime - int64(float64(timeToLive)*0.2)
 
-	tokenData := &IamTokenData{
+	tokenData := &iamTokenData{
 		AccessToken: tokenResponse.AccessToken,
 		RefreshTime: refreshTime,
 	}
@@ -266,7 +264,7 @@ func NewIamTokenData(tokenResponse *IamTokenServerResponse) (*IamTokenData, erro
 }
 
 // isTokenValid: returns true iff the IamTokenData instance represents a valid (non-expired) access token.
-func (this *IamTokenData) isTokenValid() bool {
+func (this *iamTokenData) isTokenValid() bool {
 	if this.AccessToken != "" && GetCurrentTime() < this.RefreshTime {
 		return true
 	}

@@ -1,5 +1,19 @@
 package core
 
+// (C) Copyright IBM Corp. 2019.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 import (
 	"bytes"
 	"crypto/tls"
@@ -12,23 +26,7 @@ import (
 	"time"
 )
 
-/**
- * Copyright 2019 IBM All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-// constants for ICP4D
+// Constants for CP4D
 const (
 	PRE_AUTH_PATH = "/v1/preauth/validateAuth"
 )
@@ -58,7 +56,7 @@ type CloudPakForDataAuthenticator struct {
 	Client *http.Client
 
 	// The cached token and expiration time.
-	tokenData *Cp4dTokenData
+	tokenData *cp4dTokenData
 }
 
 // NewCloudPakForDataAuthenticator : Constructs a new CloudPakForDataAuthenticator instance.
@@ -141,7 +139,7 @@ func (authenticator *CloudPakForDataAuthenticator) getToken() (string, error) {
 			return "", err
 		}
 
-		authenticator.tokenData, err = NewCp4dTokenData(tokenResponse)
+		authenticator.tokenData, err = newCp4dTokenData(tokenResponse)
 		if err != nil {
 			return "", err
 		}
@@ -151,7 +149,7 @@ func (authenticator *CloudPakForDataAuthenticator) getToken() (string, error) {
 }
 
 // requestToken: fetches a new access token from the token server.
-func (authenticator *CloudPakForDataAuthenticator) requestToken() (*Cp4dTokenServerResponse, error) {
+func (authenticator *CloudPakForDataAuthenticator) requestToken() (*cp4dTokenServerResponse, error) {
 	// If the user-specified URL does not end with the required path,
 	// then add it now.
 	url := authenticator.URL
@@ -201,14 +199,14 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (*Cp4dTokenSer
 		}
 	}
 
-	tokenResponse := &Cp4dTokenServerResponse{}
+	tokenResponse := &cp4dTokenServerResponse{}
 	json.NewDecoder(resp.Body).Decode(tokenResponse)
 	defer resp.Body.Close()
 	return tokenResponse, nil
 }
 
-// Cp4dTokenServerResponse : This struct models a response received from the token server.
-type Cp4dTokenServerResponse struct {
+// cp4dTokenServerResponse : This struct models a response received from the token server.
+type cp4dTokenServerResponse struct {
 	Username    string   `json:"username,omitempty"`
 	Role        string   `json:"role,omitempty"`
 	Permissions []string `json:"permissions,omitempty"`
@@ -221,14 +219,14 @@ type Cp4dTokenServerResponse struct {
 	Message     string   `json:"message,omitempty"`
 }
 
-// Cp4dTokenData : This struct represents the cached information related to a fetched access token.
-type Cp4dTokenData struct {
+// cp4dTokenData : This struct represents the cached information related to a fetched access token.
+type cp4dTokenData struct {
 	AccessToken string
 	RefreshTime int64
 }
 
-// NewCp4dTokenData: constructs a new Cp4dTokenData instance from the specified Cp4dTokenServerResponse instance.
-func NewCp4dTokenData(tokenResponse *Cp4dTokenServerResponse) (*Cp4dTokenData, error) {
+// newCp4dTokenData: constructs a new Cp4dTokenData instance from the specified Cp4dTokenServerResponse instance.
+func newCp4dTokenData(tokenResponse *cp4dTokenServerResponse) (*cp4dTokenData, error) {
 	// Need to crack open the access token (a JWToken) to get the expiration and issued-at times.
 	claims := &jwt.StandardClaims{}
 	if token, _ := jwt.ParseWithClaims(tokenResponse.AccessToken, claims, nil); token == nil {
@@ -240,7 +238,7 @@ func NewCp4dTokenData(tokenResponse *Cp4dTokenServerResponse) (*Cp4dTokenData, e
 	expireTime := claims.ExpiresAt
 	refreshTime := expireTime - int64(float64(timeToLive)*0.2)
 
-	tokenData := &Cp4dTokenData{
+	tokenData := &cp4dTokenData{
 		AccessToken: tokenResponse.AccessToken,
 		RefreshTime: refreshTime,
 	}
@@ -248,7 +246,7 @@ func NewCp4dTokenData(tokenResponse *Cp4dTokenServerResponse) (*Cp4dTokenData, e
 }
 
 // isTokenValid: returns true iff the Cp4dTokenData instance represents a valid (non-expired) access token.
-func (this *Cp4dTokenData) isTokenValid() bool {
+func (this *cp4dTokenData) isTokenValid() bool {
 	if this.AccessToken != "" && GetCurrentTime() < this.RefreshTime {
 		return true
 	}
