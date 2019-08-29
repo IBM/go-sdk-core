@@ -1,20 +1,18 @@
 package core
 
-/**
- * Copyright 2019 IBM All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// (C) Copyright IBM Corp. 2019.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import (
 	"os"
@@ -98,12 +96,12 @@ func clearTestVCAP() {
 }
 
 func TestGetServicePropertiesError(t *testing.T) {
-	_, err := GetServiceProperties("")
+	_, err := getServiceProperties("")
 	assert.NotNil(t, err)
 }
 
 func TestGetServicePropertiesNoConfig(t *testing.T) {
-	props, err := GetServiceProperties("not_a_service")
+	props, err := getServiceProperties("not_a_service")
 	assert.Nil(t, err)
 	assert.Nil(t, props)
 }
@@ -113,7 +111,7 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
 	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
 
-	props, err := GetServiceProperties("service1")
+	props, err := getServiceProperties("service1")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://service1/api", props[PROPNAME_SVC_URL])
@@ -125,7 +123,7 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 	assert.Equal(t, "https://iamhost/iam/api", props[PROPNAME_AUTH_URL])
 	assert.Equal(t, "true", props[PROPNAME_AUTH_DISABLE_SSL])
 
-	props, err = GetServiceProperties("service2")
+	props, err = getServiceProperties("service2")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://service2/api", props[PROPNAME_SVC_URL])
@@ -134,7 +132,7 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 	assert.Equal(t, "my-user", props[PROPNAME_USERNAME])
 	assert.Equal(t, "my-password", props[PROPNAME_PASSWORD])
 
-	props, err = GetServiceProperties("service3")
+	props, err = getServiceProperties("service3")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://service3/api", props[PROPNAME_SVC_URL])
@@ -145,7 +143,7 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 	assert.Equal(t, "https://cp4dhost/cp4d/api", props[PROPNAME_AUTH_URL])
 	assert.Equal(t, "false", props[PROPNAME_AUTH_DISABLE_SSL])
 
-	props, err = GetServiceProperties("not_a_service")
+	props, err = getServiceProperties("not_a_service")
 	assert.Nil(t, err)
 	assert.Nil(t, props)
 
@@ -155,7 +153,7 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 func TestGetServicePropertiesFromEnvironment(t *testing.T) {
 	setTestEnvironment()
 
-	props, err := GetServiceProperties("service1")
+	props, err := getServiceProperties("service1")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://service1/api", props[PROPNAME_SVC_URL])
@@ -167,7 +165,7 @@ func TestGetServicePropertiesFromEnvironment(t *testing.T) {
 	assert.Equal(t, "https://iamhost/iam/api", props[PROPNAME_AUTH_URL])
 	assert.Equal(t, "true", props[PROPNAME_AUTH_DISABLE_SSL])
 
-	props, err = GetServiceProperties("service2")
+	props, err = getServiceProperties("service2")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://service2/api", props[PROPNAME_SVC_URL])
@@ -176,7 +174,7 @@ func TestGetServicePropertiesFromEnvironment(t *testing.T) {
 	assert.Equal(t, "my-user", props[PROPNAME_USERNAME])
 	assert.Equal(t, "my-password", props[PROPNAME_PASSWORD])
 
-	props, err = GetServiceProperties("service3")
+	props, err = getServiceProperties("service3")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://service3/api", props[PROPNAME_SVC_URL])
@@ -187,7 +185,7 @@ func TestGetServicePropertiesFromEnvironment(t *testing.T) {
 	assert.Equal(t, "https://cp4dhost/cp4d/api", props[PROPNAME_AUTH_URL])
 	assert.Equal(t, "false", props[PROPNAME_AUTH_DISABLE_SSL])
 
-	props, err = GetServiceProperties("not_a_service")
+	props, err = getServiceProperties("not_a_service")
 	assert.Nil(t, err)
 	assert.Nil(t, props)
 
@@ -198,7 +196,7 @@ func TestGetServicePropertiesFromEnvironment(t *testing.T) {
 func TestGetServicePropertiesFromVCAP(t *testing.T) {
 	setTestVCAP()
 
-	props, err := GetServiceProperties("service1")
+	props, err := getServiceProperties("service1")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://service1/api", props[PROPNAME_SVC_URL])
@@ -207,7 +205,7 @@ func TestGetServicePropertiesFromVCAP(t *testing.T) {
 	assert.Equal(t, "my-vcap-password", props[PROPNAME_PASSWORD])
 	assert.Equal(t, strings.ToUpper(AUTHTYPE_IAM), strings.ToUpper(props[PROPNAME_AUTH_TYPE]))
 
-	props, err = GetServiceProperties("service2")
+	props, err = getServiceProperties("service2")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://service2/api", props[PROPNAME_SVC_URL])
@@ -216,7 +214,7 @@ func TestGetServicePropertiesFromVCAP(t *testing.T) {
 	assert.Equal(t, "my-vcap-password", props[PROPNAME_PASSWORD])
 	assert.Equal(t, strings.ToUpper(AUTHTYPE_BASIC), strings.ToUpper(props[PROPNAME_AUTH_TYPE]))
 
-	props, err = GetServiceProperties("service3")
+	props, err = getServiceProperties("service3")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://service3/api", props[PROPNAME_SVC_URL])

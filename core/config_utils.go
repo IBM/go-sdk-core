@@ -1,20 +1,18 @@
 package core
 
-/**
- * Copyright 2019 IBM All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// (C) Copyright IBM Corp. 2019.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import (
 	"bufio"
@@ -30,12 +28,12 @@ const (
 	DEFAULT_CREDENTIAL_FILE_NAME = "ibm-credentials.env"
 )
 
-// GetServiceProperties: This function will retrieve configuration properties for the specified service
+// getServiceProperties: This function will retrieve configuration properties for the specified service
 // from external config sources in the following precedence order:
 // 1) credential file
 // 2) environment variables
 // 3) VCAP_SERVICES
-func GetServiceProperties(serviceName string) (serviceProps map[string]string, err error) {
+func getServiceProperties(serviceName string) (serviceProps map[string]string, err error) {
 
 	if serviceName == "" {
 		err = fmt.Errorf("serviceName was not specified")
@@ -43,28 +41,28 @@ func GetServiceProperties(serviceName string) (serviceProps map[string]string, e
 	}
 
 	// First try to retrieve service properties from a credential file.
-	serviceProps = GetServicePropertiesFromCredentialFile(serviceName)
+	serviceProps = getServicePropertiesFromCredentialFile(serviceName)
 
 	// Next, try to retrieve them from environment variables.
 	if serviceProps == nil {
-		serviceProps = GetServicePropertiesFromEnvironment(serviceName)
+		serviceProps = getServicePropertiesFromEnvironment(serviceName)
 	}
 
 	// Finally, try to retrieve them from VCAP_SERVICES.
 	if serviceProps == nil {
-		serviceProps = GetServicePropertiesFromVCAP(serviceName)
+		serviceProps = getServicePropertiesFromVCAP(serviceName)
 	}
 
 	return
 }
 
-// GetServicePropertiesFromCredentialFile: returns a map containing properties found within a credential file
+// getServicePropertiesFromCredentialFile: returns a map containing properties found within a credential file
 // that are associated with the specified credentialKey.  Returns a nil map if no properties are found.
 // Credential file search order:
 // 1) ${IBM_CREDENTIALS_FILE}
 // 2) <user-home-dir>/ibm-credentials.env
 // 3) <current-working-directory>/ibm-credentials.env
-func GetServicePropertiesFromCredentialFile(credentialKey string) map[string]string {
+func getServicePropertiesFromCredentialFile(credentialKey string) map[string]string {
 
 	// Check the search order for the credential file that we'll attempt to load:
 	var credentialFilePath string
@@ -114,15 +112,15 @@ func GetServicePropertiesFromCredentialFile(credentialKey string) map[string]str
 	return nil
 }
 
-// GetServicePropertiesFromEnvironment: returns a map containing properties found within the environment
+// getServicePropertiesFromEnvironment: returns a map containing properties found within the environment
 // that are associated with the specified credentialKey.  Returns a nil map if no properties are found.
-func GetServicePropertiesFromEnvironment(credentialKey string) map[string]string {
+func getServicePropertiesFromEnvironment(credentialKey string) map[string]string {
 	return parsePropertyStrings(credentialKey, os.Environ())
 }
 
 // GetServicePropertiesFromVCAP: returns a map containing properties found within the VCAP_SERVICES
 // environment variable for the specified credentialKey (service name). Returns a nil map if no properties are found.
-func GetServicePropertiesFromVCAP(credentialKey string) map[string]string {
+func getServicePropertiesFromVCAP(credentialKey string) map[string]string {
 	credentials := loadFromVCAPServices(credentialKey)
 	if credentials != nil {
 		props := make(map[string]string)
