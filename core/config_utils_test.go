@@ -25,26 +25,26 @@ import (
 
 // Map containing environment variables used in testing.
 var testEnvironment = map[string]string{
-	"SERVICE1_URL":              "https://service1/api",
-	"SERVICE1_DISABLE_SSL":      "true",
-	"SERVICE1_AUTH_TYPE":        "IaM",
-	"SERVICE1_APIKEY":           "my-api-key",
-	"SERVICE1_CLIENT_ID":        "my-client-id",
-	"SERVICE1_CLIENT_SECRET":    "my-client-secret",
-	"SERVICE1_AUTH_URL":         "https://iamhost/iam/api",
-	"SERVICE1_AUTH_DISABLE_SSL": "true",
-	"SERVICE2_URL":              "https://service2/api",
-	"SERVICE2_DISABLE_SSL":      "false",
-	"SERVICE2_AUTH_TYPE":        "bAsIC",
-	"SERVICE2_USERNAME":         "my-user",
-	"SERVICE2_PASSWORD":         "my-password",
-	"SERVICE3_URL":              "https://service3/api",
-	"SERVICE3_DISABLE_SSL":      "false",
-	"SERVICE3_AUTH_TYPE":        "Cp4D",
-	"SERVICE3_AUTH_URL":         "https://cp4dhost/cp4d/api",
-	"SERVICE3_USERNAME":         "my-cp4d-user",
-	"SERVICE3_PASSWORD":         "my-cp4d-password",
-	"SERVICE3_AUTH_DISABLE_SSL": "false",
+	"SERVICE_1_URL":              "https://service1/api",
+	"SERVICE_1_DISABLE_SSL":      "true",
+	"SERVICE_1_AUTH_TYPE":        "IaM",
+	"SERVICE_1_APIKEY":           "my-api-key",
+	"SERVICE_1_CLIENT_ID":        "my-client-id",
+	"SERVICE_1_CLIENT_SECRET":    "my-client-secret",
+	"SERVICE_1_AUTH_URL":         "https://iamhost/iam/api",
+	"SERVICE_1_AUTH_DISABLE_SSL": "true",
+	"SERVICE2_URL":               "https://service2/api",
+	"SERVICE2_DISABLE_SSL":       "false",
+	"SERVICE2_AUTH_TYPE":         "bAsIC",
+	"SERVICE2_USERNAME":          "my-user",
+	"SERVICE2_PASSWORD":          "my-password",
+	"SERVICE3_URL":               "https://service3/api",
+	"SERVICE3_DISABLE_SSL":       "false",
+	"SERVICE3_AUTH_TYPE":         "Cp4D",
+	"SERVICE3_AUTH_URL":          "https://cp4dhost/cp4d/api",
+	"SERVICE3_USERNAME":          "my-cp4d-user",
+	"SERVICE3_PASSWORD":          "my-cp4d-password",
+	"SERVICE3_AUTH_DISABLE_SSL":  "false",
 }
 
 // Set the environment variables described in our map.
@@ -65,7 +65,7 @@ func clearTestEnvironment() {
 func setTestVCAP() {
 	vcapServices := `
 	{
-		"service1":[{
+		"service-1":[{
 			"credentials":{
 				"url":"https://service1/api",
 				"username":"my-vcap-user",
@@ -111,7 +111,7 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
 	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
 
-	props, err := getServiceProperties("service1")
+	props, err := getServiceProperties("service-1")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://service1/api", props[PROPNAME_SVC_URL])
@@ -153,7 +153,7 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 func TestGetServicePropertiesFromEnvironment(t *testing.T) {
 	setTestEnvironment()
 
-	props, err := getServiceProperties("service1")
+	props, err := getServiceProperties("service-1")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://service1/api", props[PROPNAME_SVC_URL])
@@ -190,13 +190,13 @@ func TestGetServicePropertiesFromEnvironment(t *testing.T) {
 	assert.Nil(t, props)
 
 	clearTestEnvironment()
-	assert.Equal(t, "", os.Getenv("SERVICE1_URL"))
+	assert.Equal(t, "", os.Getenv("SERVICE_1_URL"))
 }
 
 func TestGetServicePropertiesFromVCAP(t *testing.T) {
 	setTestVCAP()
 
-	props, err := getServiceProperties("service1")
+	props, err := getServiceProperties("service-1")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://service1/api", props[PROPNAME_SVC_URL])
