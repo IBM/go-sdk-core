@@ -171,6 +171,8 @@ func parsePropertyStrings(credentialKey string, propertyStrings []string) map[st
 
 	props := make(map[string]string)
 	credentialKey = strings.ToUpper(credentialKey)
+	credentialKey = strings.Replace(credentialKey, "-", "_", -1)
+	credentialKey += "_"
 	for _, propertyString := range propertyStrings {
 
 		// Trim the property string and ignore any blank or comment lines.
@@ -185,8 +187,8 @@ func parsePropertyStrings(credentialKey string, propertyStrings []string) map[st
 			// Does the name start with the credential key?
 			// If so, then extract the property name by filtering out the credential key,
 			// then store the name/value pair in the map.
-			if strings.HasPrefix(tokens[0], credentialKey) && (len(tokens[0]) > len(credentialKey)+1) {
-				name := tokens[0][len(credentialKey)+1:]
+			if strings.HasPrefix(tokens[0], credentialKey) && (len(tokens[0]) > len(credentialKey)) {
+				name := tokens[0][len(credentialKey):]
 				value := strings.TrimSpace(tokens[1])
 				props[name] = value
 			}

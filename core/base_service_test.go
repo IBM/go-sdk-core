@@ -600,7 +600,7 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
-		}, "service1", "service1")
+		}, "service-1", "service-1")
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service1/api", service.Options.URL)

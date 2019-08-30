@@ -33,7 +33,7 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
 	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
 
-	authenticator, err := GetAuthenticatorFromEnvironment("service1")
+	authenticator, err := GetAuthenticatorFromEnvironment("service-1")
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
 	assert.Equal(t, AUTHTYPE_IAM, authenticator.AuthenticationType())
@@ -54,7 +54,7 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 	setTestEnvironment()
 
-	authenticator, err := GetAuthenticatorFromEnvironment("service1")
+	authenticator, err := GetAuthenticatorFromEnvironment("service-1")
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
 	assert.Equal(t, AUTHTYPE_IAM, authenticator.AuthenticationType())
@@ -79,7 +79,7 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 func TestGetAuthenticatorFromEnvironment3(t *testing.T) {
 	setTestVCAP()
 
-	authenticator, err := GetAuthenticatorFromEnvironment("service1")
+	authenticator, err := GetAuthenticatorFromEnvironment("service-1")
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
 	assert.Equal(t, AUTHTYPE_IAM, authenticator.AuthenticationType())
