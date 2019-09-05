@@ -31,23 +31,58 @@ func TestDetailedResponseJson(t *testing.T) {
 	}
 
 	headers := http.Header{}
-	headers.Add("accept", "application/json")
+	headers.Add("Content-Type", "application/json")
 
 	response := &DetailedResponse{
 		StatusCode: 200,
 		Result:     testStructure,
 		Headers:    headers,
 	}
-	assert.Equal(t, response.GetResult(), testStructure)
-	assert.Equal(t, response.GetStatusCode(), 200)
-	assert.Equal(t, response.GetHeaders().Get("accept"), "application/json")
-	response.String()
+	assert.Equal(t, 200, response.GetStatusCode())
+	assert.Equal(t, "application/json", response.GetHeaders().Get("Content-Type"))
+	assert.Equal(t, testStructure, response.GetResult())
+	assert.Nil(t, response.GetRawResult())
+	m, ok := response.GetResultAsMap()
+	assert.Equal(t, false, ok)
+	assert.Nil(t, m)
 }
 
 func TestDetailedResponseNonJson(t *testing.T) {
+	responseBody := []byte(`This is a non-json response body.`)
+
+	headers := http.Header{}
+	headers.Add("Content-Type", "application/octet-stream")
+
 	response := &DetailedResponse{
 		StatusCode: 200,
-		Result:     make(chan int),
+		RawResult:  responseBody,
+		Headers:    headers,
 	}
-	assert.Equal(t, response.GetStatusCode(), 200)
+	assert.Equal(t, 200, response.GetStatusCode())
+	assert.Equal(t, "application/octet-stream", response.GetHeaders().Get("Content-Type"))
+	assert.Equal(t, responseBody, response.GetRawResult())
+	assert.Nil(t, response.GetResult())
+	m, ok := response.GetResultAsMap()
+	assert.Equal(t, false, ok)
+	assert.Nil(t, m)
+}
+
+func TestDetailedResponseJsonMap(t *testing.T) {
+	errorMap := make(map[string]interface{})
+	errorMap["message"] = "An error message."
+
+	headers := http.Header{}
+	headers.Add("Content-Type", "application/json")
+
+	response := &DetailedResponse{
+		StatusCode: 400,
+		Result:     errorMap,
+		Headers:    headers,
+	}
+	assert.Equal(t, 400, response.GetStatusCode())
+	assert.Equal(t, "application/json", response.GetHeaders().Get("Content-Type"))
+	m, ok := response.GetResultAsMap()
+	assert.Equal(t, true, ok)
+	assert.Equal(t, errorMap, m)
+	assert.Nil(t, response.GetRawResult())
 }
