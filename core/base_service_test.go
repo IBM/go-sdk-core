@@ -15,8 +15,8 @@ package core
 // limitations under the License.
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -32,14 +32,16 @@ type Foo struct {
 	Name *string `json:"name,omitempty"`
 }
 
-func TestRequestResponseAsJSON(t *testing.T) {
+// Test a normal JSON-based response.
+func TestGoodResponseJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusCreated)
 		fmt.Fprintf(w, `{"name": "wonder woman"}`)
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
+	builder := NewRequestBuilder("POST").
 		ConstructHTTPURL(server.URL, nil, nil).
 		AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
@@ -57,14 +59,24 @@ func TestRequestResponseAsJSON(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
-	detailedResponse, _ := service.Request(req, new(Foo))
-	assert.Equal(t, "wonder woman", *detailedResponse.Result.(*Foo).Name)
+
+	detailedResponse, err := service.Request(req, new(Foo))
+	assert.Nil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, http.StatusCreated, detailedResponse.StatusCode)
+	assert.Equal(t, "application/json", detailedResponse.Headers.Get("Content-Type"))
+
+	result, ok := detailedResponse.Result.(*Foo)
+	assert.Equal(t, true, ok)
+	assert.NotNil(t, result)
+	assert.Equal(t, "wonder woman", *(result.Name))
 }
 
-// Verify that extra fields in result are silently ignored
-func TestRequestResponseJSONWithExtraFields(t *testing.T) {
+// Verify that extra fields in result are silently ignored.
+func TestGoodResponseJSONExtraFields(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-type", "application/json")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `{"name": "wonder woman", "age": 42}`)
 	}))
 	defer server.Close()
@@ -82,18 +94,131 @@ func TestRequestResponseJSONWithExtraFields(t *testing.T) {
 	service, _ := NewBaseService(options, "watson", "watson")
 	detailedResponse, _ := service.Request(req, new(Foo))
 	result, ok := detailedResponse.Result.(*Foo)
-	assert.Equal(t, ok, true)
+	assert.Equal(t, true, ok)
 	assert.NotNil(t, result)
 	assert.Equal(t, "wonder woman", *result.Name)
 }
 
-func TestRequestFailure(t *testing.T) {
+// Test a non-JSON response.
+func TestGoodResponseNonJSON(t *testing.T) {
+	expectedResponse := []byte("This is a non-json response.")
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-type", "application/octet-stream")
+		w.Write(expectedResponse)
 	}))
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET").
+		ConstructHTTPURL(server.URL, nil, nil).
+		AddHeader("Content-Type", "Application/json").
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	authenticator := &NoAuthAuthenticator{}
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options, "watson", "watson")
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
+	detailedResponse, _ := service.Request(req, new(io.ReadCloser))
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, "application/octet-stream", detailedResponse.GetHeaders().Get("Content-Type"))
+	assert.Equal(t, http.StatusOK, detailedResponse.GetStatusCode())
+	assert.NotNil(t, detailedResponse.Result)
+	result, ok := detailedResponse.Result.(io.ReadCloser)
+	assert.Equal(t, true, ok)
+	assert.NotNil(t, result)
+
+	// Read the bytes from the response body and verify.
+	actualResponse, err := ioutil.ReadAll(result)
+	assert.Nil(t, err)
+	assert.NotNil(t, actualResponse)
+	assert.Equal(t, expectedResponse, actualResponse)
+}
+
+// Test a non-JSON response with no Content-Type set.
+func TestGoodResponseNonJSONNoContentType(t *testing.T) {
+	expectedResponse := []byte("This is a non-json response.")
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "")
+		w.Write(expectedResponse)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET").
+		ConstructHTTPURL(server.URL, nil, nil).
+		AddHeader("Content-Type", "Application/json").
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	authenticator := &NoAuthAuthenticator{}
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options, "watson", "watson")
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
+	detailedResponse, _ := service.Request(req, new(io.ReadCloser))
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, "", detailedResponse.GetHeaders().Get("Content-Type"))
+	assert.Equal(t, http.StatusOK, detailedResponse.GetStatusCode())
+	assert.NotNil(t, detailedResponse.Result)
+	result, ok := detailedResponse.Result.(io.ReadCloser)
+	assert.Equal(t, true, ok)
+	assert.NotNil(t, result)
+
+	// Read the bytes from the response body and verify.
+	actualResponse, err := ioutil.ReadAll(result)
+	assert.Nil(t, err)
+	assert.NotNil(t, actualResponse)
+	assert.Equal(t, expectedResponse, actualResponse)
+}
+
+// Test a JSON response that causes a deserialization error.
+func TestGoodResponseJSONDeserFailure(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		fmt.Fprintf(w, `{"name": {"unknown_object_id": "abc123"}}`)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET").
+		ConstructHTTPURL(server.URL, nil, nil).
+		AddHeader("Content-Type", "Application/json").
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: &NoAuthAuthenticator{},
+	}
+	service, _ := NewBaseService(options, "watson", "watson")
+	detailedResponse, err := service.Request(req, new(Foo))
+	assert.NotNil(t, detailedResponse)
+	assert.NotNil(t, err)
+	assert.NotNil(t, detailedResponse.RawResult)
+	assert.Nil(t, detailedResponse.Result)
+	assert.Equal(t,
+		true,
+		strings.HasPrefix(err.Error(), "An error occurred while unmarshalling the response body:"))
+	// t.Log("Decode error:\n", err.Error())
+}
+
+// Test a good response with no response body.
+func TestGoodResponseNoBody(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("POST").
 		ConstructHTTPURL(server.URL, nil, nil).
 		AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
@@ -107,9 +232,186 @@ func TestRequestFailure(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
+	service, err := NewBaseService(options, "watson", "watson")
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
+
+	detailedResponse, err := service.Request(req, nil)
+	assert.Nil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, 201, detailedResponse.StatusCode)
+	assert.Equal(t, "", detailedResponse.Headers.Get("Content-Type"))
+	assert.Nil(t, detailedResponse.Result)
+	assert.Nil(t, detailedResponse.RawResult)
+}
+
+// Example of a JSON error structure.
+var jsonErrorResponse string = `{
+    "errors":[
+        {
+            "code":"error-vpc-1",
+            "message":"Invalid value for 'param-1': bad value",
+            "more_info":"https://myservice.com/more/info/about/the/error",
+            "target":{
+                "name":"param-1",
+                "type":"parameter",
+                "value":"bad value"
+            }
+        },
+        {
+            "code":"error-vpc-2",
+            "message":"A validation error occurred for field 'field-1'.",
+            "more_info":"https://myservice.com/more/info/about/the/error",
+            "target":{
+                "name":"field-1",
+                "type":"field",
+                "value":"invalid-field-1-value"
+            }
+        },
+        {
+            "code":"error-vpc-3",
+            "message":"Unrecognized header found in request: X-CUSTOM-HEADER",
+            "more_info":"https://myservice.com/more/info/about/the/error",
+            "target":{
+                "name":"X-CUSTOM-HEADER",
+                "type":"header"
+            }
+        }
+    ],
+    "trace":"unique-error-identifier"
+}`
+
+// Example of a non-JSON error response body.
+var nonJsonErrorResponse string = `This is a non-JSON error response body.`
+
+// Test an error response with a JSON response body.
+func TestErrorResponseJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, jsonErrorResponse)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET").
+		ConstructHTTPURL(server.URL, nil, nil).
+		AddHeader("Content-Type", "Application/json").
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: &NoAuthAuthenticator{},
+	}
 	service, _ := NewBaseService(options, "watson", "watson")
-	_, err = service.Request(req, new(Foo))
+	response, err := service.Request(req, new(Foo))
 	assert.NotNil(t, err)
+	assert.NotNil(t, response)
+	assert.NotNil(t, response.Result)
+	assert.Nil(t, response.RawResult)
+	errorMap, ok := response.GetResultAsMap()
+	assert.Equal(t, true, ok)
+	assert.NotNil(t, errorMap)
+	assert.Equal(t, "Invalid value for 'param-1': bad value", err.Error())
+	// t.Log("Error map contents:\n", errorMap)
+}
+
+// Test an error response with an invalid JSON response body.
+func TestErrorResponseJSONDeserError(t *testing.T) {
+	var expectedResponse = []byte(`"{"this is a malformed": "json object".......`)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		w.Write(expectedResponse)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET").
+		ConstructHTTPURL(server.URL, nil, nil).
+		AddHeader("Content-Type", "Application/json").
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: &NoAuthAuthenticator{},
+	}
+	service, _ := NewBaseService(options, "watson", "watson")
+	response, err := service.Request(req, new(Foo))
+	assert.NotNil(t, err)
+	assert.NotNil(t, response)
+	assert.Nil(t, response.Result)
+	assert.NotNil(t, response.RawResult)
+	assert.Equal(t, expectedResponse, response.RawResult)
+	assert.Equal(t, http.StatusText(http.StatusForbidden), err.Error())
+}
+
+// Test error response with a non-JSON response body.
+func TestErrorResponseNotJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "text/plain")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, nonJsonErrorResponse)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET").
+		ConstructHTTPURL(server.URL, nil, nil).
+		AddHeader("Content-Type", "Application/json").
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: &NoAuthAuthenticator{},
+	}
+	service, _ := NewBaseService(options, "watson", "watson")
+	response, err := service.Request(req, new(Foo))
+	assert.NotNil(t, err)
+	assert.NotNil(t, response)
+	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
+	assert.Nil(t, response.Result)
+	assert.NotNil(t, response.RawResult)
+	s := string(response.RawResult)
+	assert.Equal(t, nonJsonErrorResponse, s)
+	assert.Equal(t, http.StatusText(http.StatusBadRequest), err.Error())
+}
+
+// Test an error response with no response body.
+func TestErrorResponseNoBody(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("POST").
+		ConstructHTTPURL(server.URL, nil, nil).
+		AddHeader("Content-Type", "Application/json").
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	authenticator, err := NewBasicAuthenticator("xxx", "yyy")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options, "watson", "watson")
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
+
+	detailedResponse, err := service.Request(req, new(Foo))
+	assert.NotNil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, http.StatusInternalServerError, detailedResponse.StatusCode)
+	assert.Equal(t, "", detailedResponse.Headers.Get("Content-Type"))
+	assert.Nil(t, detailedResponse.Result)
+	assert.Nil(t, detailedResponse.RawResult)
+	assert.Equal(t, http.StatusText(http.StatusInternalServerError), err.Error())
 }
 
 func TestClient(t *testing.T) {
@@ -663,39 +965,23 @@ func TestAuthNotConfigured(t *testing.T) {
 	assert.Nil(t, service)
 }
 
+func testGetErrorMessage(t *testing.T, statusCode int, jsonString string, expectedErrorMsg string) {
+	body := []byte(jsonString)
+	responseMap, err := decodeAsMap(body)
+	assert.Nil(t, err)
+
+	actualErrorMsg := getErrorMessage(responseMap, statusCode)
+	assert.Equal(t, expectedErrorMsg, actualErrorMsg)
+}
+
 func TestErrorMessage(t *testing.T) {
-	msg1 := []byte(`{"error":"error1"}`)
-	response1 := http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer(msg1)),
-	}
-	message1 := getErrorMessage(&response1)
-	assert.Equal(t, "error1", message1)
+	testGetErrorMessage(t, http.StatusBadRequest, `{"error":"error1"}`, "error1")
 
-	msg2 := []byte(`{"message":"error2"}`)
-	response2 := http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer(msg2)),
-	}
-	message2 := getErrorMessage(&response2)
-	assert.Equal(t, "error2", message2)
+	testGetErrorMessage(t, http.StatusBadRequest, `{"message":"error2"}`, "error2")
 
-	msg3 := []byte(`{"errors":[{"message":"error3"}]}`)
-	response3 := http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer(msg3)),
-	}
-	message3 := getErrorMessage(&response3)
-	assert.Equal(t, "error3", message3)
+	testGetErrorMessage(t, http.StatusBadRequest, `{"errors":[{"message":"error3"}]}`, "error3")
 
-	msg4 := []byte(`{"msg":"error4"}`)
-	response4 := http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer(msg4)),
-	}
-	message4 := getErrorMessage(&response4)
-	assert.Equal(t, "Unknown Error", message4)
+	testGetErrorMessage(t, http.StatusForbidden, `{"msg":"error4"}`, http.StatusText(http.StatusForbidden))
 
-	msg5 := []byte(`{"errorMessage":"error5"}`)
-	response5 := http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer(msg5)),
-	}
-	message5 := getErrorMessage(&response5)
-	assert.Equal(t, "error5", message5)
+	testGetErrorMessage(t, http.StatusBadRequest, `{"errorMessage":"error5"}`, "error5")
 }

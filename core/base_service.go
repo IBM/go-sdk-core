@@ -15,6 +15,7 @@ package core
 // limitations under the License.
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -150,15 +151,15 @@ func (service *BaseService) SetUserAgent(userAgentString string) {
 }
 
 // Request performs the HTTP request
-func (service *BaseService) Request(req *http.Request, result interface{}) (*DetailedResponse, error) {
-	// Add default headers
+func (service *BaseService) Request(req *http.Request, result interface{}) (detailedResponse *DetailedResponse, err error) {
+	// Add default headers.
 	if service.DefaultHeaders != nil {
 		for k, v := range service.DefaultHeaders {
 			req.Header.Add(k, strings.Join(v, ""))
 		}
 	}
 
-	// Check if user agent is present.
+	// Add the default User-Agent header if not already present.
 	userAgent := req.Header.Get(USER_AGENT)
 	if userAgent == "" {
 		req.Header.Add(USER_AGENT, service.UserAgent)
@@ -166,44 +167,106 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (*Det
 
 	// Add authentication to the outbound request.
 	if service.Options.Authenticator == nil {
-		return nil, fmt.Errorf(ERRORMSG_NO_AUTHENTICATOR)
+		err = fmt.Errorf(ERRORMSG_NO_AUTHENTICATOR)
+		return
 	}
-	err := service.Options.Authenticator.Authenticate(req)
+
+	err = service.Options.Authenticator.Authenticate(req)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	// Perform the request.
-	resp, err := service.Client.Do(req)
+	// Invoke the request.
+	httpResponse, err := service.Client.Do(req)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	response := new(DetailedResponse)
-	response.Headers = resp.Header
-	response.StatusCode = resp.StatusCode
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		if resp != nil {
-			response.Result = resp
-			message := getErrorMessage(resp)
-			return response, fmt.Errorf(message)
+	// Start to populate the DetailedResponse.
+	detailedResponse = &DetailedResponse{
+		StatusCode: httpResponse.StatusCode,
+		Headers:    httpResponse.Header,
+	}
+
+	contentType := httpResponse.Header.Get(CONTENT_TYPE)
+
+	// If the operation was unsuccessful, then set up the DetailedResponse
+	// and error objects appropriately.
+	if httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300 {
+
+		var responseBody []byte
+
+		// First, read the response body into a byte array.
+		if httpResponse.Body != nil {
+			var readErr error
+
+			defer httpResponse.Body.Close()
+			responseBody, readErr = ioutil.ReadAll(httpResponse.Body)
+			if readErr != nil {
+				err = fmt.Errorf("An error occurred while reading the response body: '%s'", readErr.Error())
+				return
+			}
 		}
-	}
 
-	contentType := resp.Header.Get(CONTENT_TYPE)
-	if contentType != "" {
-		if IsJSONMimeType(contentType) && result != nil {
-			json.NewDecoder(resp.Body).Decode(&result)
-			response.Result = result
-			defer resp.Body.Close()
+		// If the responseBody is empty, then just return a generic error based on the status code.
+		if len(responseBody) == 0 {
+			err = fmt.Errorf(http.StatusText(httpResponse.StatusCode))
+			return
 		}
+
+		// For a JSON-based error response body, decode it into a map (generic JSON object).
+		if IsJSONMimeType(contentType) {
+			// Return the error response body as a map, along with an
+			// error object containing our best guess at an error message.
+			responseMap, decodeErr := decodeAsMap(responseBody)
+			if decodeErr == nil {
+				detailedResponse.Result = responseMap
+				err = fmt.Errorf(getErrorMessage(responseMap, detailedResponse.StatusCode))
+				return
+			}
+		}
+
+		// For a non-JSON response or if we tripped while decoding the JSON response,
+		// just return the response body byte array in the RawResult field along with
+		// an error object that contains the generic error message for the status code.
+		detailedResponse.RawResult = responseBody
+		err = fmt.Errorf(http.StatusText(httpResponse.StatusCode))
+		return
 	}
 
-	if response.Result == nil && result != nil {
-		response.Result = resp.Body
+	// Operation was successful and we are expecting a response, so deserialize the response.
+	if result != nil {
+		// For a JSON response, decode it into the response object.
+		if IsJSONMimeType(contentType) {
+
+			// First, read the response body into a byte array.
+			defer httpResponse.Body.Close()
+			responseBody, readErr := ioutil.ReadAll(httpResponse.Body)
+			if readErr != nil {
+				err = fmt.Errorf("An error occurred while reading the response body: '%s'", readErr.Error())
+				return
+			}
+
+			// Decode the byte array as JSON.
+			decodeErr := json.NewDecoder(bytes.NewReader(responseBody)).Decode(&result)
+			if decodeErr != nil {
+				// Error decoding the response body.
+				// Return the response body in RawResult, along with an error.
+				err = fmt.Errorf("An error occurred while unmarshalling the response body: '%s'", decodeErr.Error())
+				detailedResponse.RawResult = responseBody
+				return
+			}
+
+			// Decode step was successful. Return the decoded response object in the Result field.
+			detailedResponse.Result = result
+			return
+		}
+
+		// For a non-JSON response body, just return it as an io.Reader in the Result field.
+		detailedResponse.Result = httpResponse.Body
 	}
 
-	return response, nil
+	return
 }
 
 // Errors : a struct for errors array
@@ -216,35 +279,49 @@ type Error struct {
 	Message string `json:"message,omitempty"`
 }
 
-func getErrorMessage(response *http.Response) string {
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return UNKNOWN_ERROR
-	}
+// decodeAsMap: Decode the specified JSON byte-stream into a map (akin to a generic JSON object).
+// Notes:
+// 1) This function will return the map (result of decoding the byte-stream) as well as the raw
+// byte buffer.  We return the byte buffer in addition to the decoded map so that the caller can
+// re-use (if necessary) the stream of bytes after we've consumed them via the JSON decode step.
+// 2) The primary return value of this function will be:
+//    a) an instance of map[string]interface{} if the specified byte-stream was successfully
+//       decoded as JSON.
+//    b) the string form of the byte-stream if the byte-stream could not be successfully
+//       decoded as JSON.
+// 3) This function will close the io.ReadCloser before returning.
+func decodeAsMap(byteBuffer []byte) (result map[string]interface{}, err error) {
+	err = json.NewDecoder(bytes.NewReader(byteBuffer)).Decode(&result)
+	return
+}
 
-	var data map[string]interface{}
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		return string(body)
-	}
+// getErrorMessage: try to retrieve an error message from the decoded response body (map).
+func getErrorMessage(responseMap map[string]interface{}, statusCode int) string {
 
-	if _, ok := data["errors"]; ok {
+	// If the response contained the "errors" field, then try to deserialize responseMap
+	// into an array of Error structs, then return the first entry's "Message" field.
+	if _, ok := responseMap["errors"]; ok {
 		var errors Errors
-		json.Unmarshal(body, &errors)
-		return errors.Errors[0].Message
+		responseBuffer, _ := json.Marshal(responseMap)
+		if err := json.Unmarshal(responseBuffer, &errors); err == nil {
+			return errors.Errors[0].Message
+		}
 	}
 
-	if val, ok := data["error"]; ok {
+	// Return the "error" field if present.
+	if val, ok := responseMap["error"]; ok {
 		return val.(string)
 	}
 
-	if val, ok := data["message"]; ok {
+	// Return the "message" field if present.
+	if val, ok := responseMap["message"]; ok {
 		return val.(string)
 	}
 
-	if val, ok := data["errorMessage"]; ok {
+	// Finally, return the "errorMessage" field if present.
+	if val, ok := responseMap["errorMessage"]; ok {
 		return val.(string)
 	}
 
-	return UNKNOWN_ERROR
+	return http.StatusText(statusCode)
 }
