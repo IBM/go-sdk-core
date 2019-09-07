@@ -157,7 +157,10 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (*cp4dTokenSer
 		url = fmt.Sprintf("%s%s", url, PRE_AUTH_PATH)
 	}
 
-	builder := NewRequestBuilder(GET).ConstructHTTPURL(url, nil, nil)
+	builder, err := NewRequestBuilder(GET).ConstructHTTPURL(url, nil, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	// Add user-defined headers to request.
 	for headerName, headerValue := range authenticator.Headers {

@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"strings"
 	"testing"
 
 	assert "github.com/stretchr/testify/assert"
@@ -38,8 +39,9 @@ func TestConstructHTTPURL(t *testing.T) {
 	pathParameters := []string{"xxxxx"}
 	request := setup()
 	want := "https://gateway.watsonplatform.net/assistant/api/v1/workspaces/xxxxx/message"
-	request.ConstructHTTPURL(endPoint, pathSegments, pathParameters)
-	assert.Equal(t, want, request.URL.String(), "Invalid comstruction of url")
+	_, err := request.ConstructHTTPURL(endPoint, pathSegments, pathParameters)
+	assert.Nil(t, err)
+	assert.Equal(t, want, request.URL.String(), "Invalid construction of url")
 }
 
 func TestConstructHTTPURLWithNoPathParam(t *testing.T) {
@@ -47,8 +49,23 @@ func TestConstructHTTPURLWithNoPathParam(t *testing.T) {
 	pathSegments := []string{"v1/workspaces"}
 	request := setup()
 	want := "https://gateway.watsonplatform.net/assistant/api/v1/workspaces"
-	request.ConstructHTTPURL(endPoint, pathSegments, nil)
-	assert.Equal(t, want, request.URL.String(), "Invalid comstruction of url")
+	_, err := request.ConstructHTTPURL(endPoint, pathSegments, nil)
+	assert.Nil(t, err)
+	assert.Equal(t, want, request.URL.String(), "Invalid construction of url")
+}
+
+func TestConstructHTTPURLMissingURL(t *testing.T) {
+	request := setup()
+	_, err := request.ConstructHTTPURL("", nil, nil)
+	assert.NotNil(t, err)
+	assert.Equal(t, ERRORMSG_SERVICE_URL_MISSING, err.Error())
+}
+
+func TestConstructHTTPURLInvalidURL(t *testing.T) {
+	request := setup()
+	_, err := request.ConstructHTTPURL(":<badscheme>", nil, nil)
+	assert.NotNil(t, err)
+	assert.Equal(t, true, strings.HasPrefix(err.Error(), "There was an error parsing the service URL:"))
 }
 
 func TestAddQuery(t *testing.T) {
@@ -148,14 +165,16 @@ func TestSetBodyContentError(t *testing.T) {
 }
 
 func TestBuildWithMultipartFormEmptyFileName(t *testing.T) {
-	request := NewRequestBuilder("POST").
-		ConstructHTTPURL("test.com", nil, nil).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("POST")
+	_, err := builder.ConstructHTTPURL("test.com", nil, nil)
+	assert.Nil(t, err)
+
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09").
 		AddFormData("hello1", "", "text/plain", "Hello GO SDK").
 		AddFormData("hello2", "", "", "Hello GO SDK again")
-	req, _ := request.Build()
-	assert.NotNil(t, req.Body, "Couldnt build successfully")
+	request, _ := builder.Build()
+	assert.NotNil(t, request.Body, "Couldnt build successfully")
 }
 
 func TestBuildWithMultipartForm(t *testing.T) {
@@ -166,9 +185,11 @@ func TestBuildWithMultipartForm(t *testing.T) {
 	json2 := make(map[string]interface{})
 	json2["name2"] = "test name2"
 
-	request := NewRequestBuilder("POST").
-		ConstructHTTPURL("test.com", nil, nil).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("POST")
+	_, err := builder.ConstructHTTPURL("test.com", nil, nil)
+	assert.Nil(t, err)
+
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09").
 		AddFormData("name1", "json1.json", "application/json", json1).
 		AddFormData("name2", "json2.json", "application/json", json2).
@@ -177,29 +198,31 @@ func TestBuildWithMultipartForm(t *testing.T) {
 
 	pwd, _ := os.Getwd()
 	var testFile io.ReadCloser
-	testFile, err := os.Open(pwd + "/../resources/test_file.txt")
+	testFile, err = os.Open(pwd + "/../resources/test_file.txt")
 	assert.Nil(t, err, "Could not open file")
-	request.AddFormData("test_file1", "test_file.txt", "application/octet-stream", testFile)
-	request.AddFormData("test_file2", "test_file.txt", "application/octet-stream", &testFile)
+	builder.AddFormData("test_file1", "test_file.txt", "application/octet-stream", testFile)
+	builder.AddFormData("test_file2", "test_file.txt", "application/octet-stream", &testFile)
 
-	_, err = request.Build()
+	request, err := builder.Build()
 	assert.Nil(t, err, "Couldnt build successfully")
+	assert.NotNil(t, request)
 	assert.NotNil(t, request.Body)
 	defer testFile.Close()
 }
 
 func TestURLEncodedForm(t *testing.T) {
-	request := NewRequestBuilder("POST").
-		ConstructHTTPURL("test.com", nil, nil).
-		AddHeader("Content-Type", FORM_URL_ENCODED_HEADER).
+	builder := NewRequestBuilder("POST")
+	_, err := builder.ConstructHTTPURL("test.com", nil, nil)
+	assert.Nil(t, err)
+
+	builder.AddHeader("Content-Type", FORM_URL_ENCODED_HEADER).
 		AddQuery("Version", "2018-22-09").
 		AddFormData("grant_type", "", "", "lalalala").
 		AddFormData("apikey", "", "", "xxxx")
 
-	_, err := request.Build()
-	if err != nil {
-		t.Errorf("Couldnt build successfully")
-	}
+	request, err := builder.Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, request)
 }
 
 func TestBuild(t *testing.T) {
@@ -214,17 +237,17 @@ func TestBuild(t *testing.T) {
 	body := make(map[string]interface{})
 	body["name"] = testStructure.Name
 
-	request := NewRequestBuilder("POST").
-		ConstructHTTPURL(endPoint, pathParameters, pathSegments).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("POST")
+	_, err := builder.ConstructHTTPURL(endPoint, pathParameters, pathSegments)
+	assert.Nil(t, err)
+
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
 
-	request, _ = request.SetBodyContentJSON(body)
-	req, err := request.Build()
-	if err != nil {
-		t.Errorf("Couldnt build successfully")
-	}
-
-	assert.Equal(t, req.URL.String(), wantURL)
-	assert.Equal(t, req.Header["Content-Type"][0], "Application/json")
+	_, _ = builder.SetBodyContentJSON(body)
+	request, err := builder.Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, request)
+	assert.Equal(t, wantURL, request.URL.String())
+	assert.Equal(t, "Application/json", request.Header["Content-Type"][0])
 }

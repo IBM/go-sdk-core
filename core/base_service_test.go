@@ -41,9 +41,10 @@ func TestGoodResponseJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("POST").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("POST")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
@@ -81,9 +82,10 @@ func TestGoodResponseJSONExtraFields(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
@@ -108,9 +110,10 @@ func TestGoodResponseNonJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
@@ -149,9 +152,10 @@ func TestGoodResponseNonJSONNoContentType(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
@@ -189,9 +193,10 @@ func TestGoodResponseJSONDeserFailure(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
@@ -218,9 +223,10 @@ func TestGoodResponseNoBody(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("POST").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
@@ -294,9 +300,10 @@ func TestErrorResponseJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
@@ -327,9 +334,10 @@ func TestErrorResponseJSONDeserError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
@@ -356,9 +364,10 @@ func TestErrorResponseNotJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
@@ -385,9 +394,10 @@ func TestErrorResponseNoBody(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("POST").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
@@ -430,9 +440,10 @@ func TestRequestForDefaultUserAgent(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
@@ -453,9 +464,10 @@ func TestRequestForProvidedUserAgent(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddHeader("Content-Type", "Application/json").
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
@@ -516,12 +528,13 @@ func TestBasicAuth1(t *testing.T) {
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddQuery("Version", "2018-22-09")
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
-	_, err := service.Request(req, new(Foo))
+	_, err = service.Request(req, new(Foo))
 	assert.Nil(t, err)
 }
 
@@ -543,9 +556,10 @@ func TestBasicAuth2(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddQuery("Version", "2018-22-09")
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
@@ -594,9 +608,10 @@ func TestNoAuth1(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddQuery("Version", "2018-22-09")
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
@@ -621,9 +636,10 @@ func TestNoAuth2(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddQuery("Version", "2018-22-09")
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
@@ -667,9 +683,10 @@ func TestIAMAuth(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddQuery("Version", "2018-22-09")
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
@@ -699,9 +716,10 @@ func TestIAMFailure(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddQuery("Version", "2018-22-09")
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
@@ -743,9 +761,10 @@ func TestIAMWithIdSecret(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddQuery("Version", "2018-22-09")
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
@@ -828,9 +847,10 @@ func TestCP4DAuth(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddQuery("Version", "2018-22-09")
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
@@ -857,9 +877,10 @@ func TestCP4DFail(t *testing.T) {
 	}))
 	defer server.Close()
 
-	builder := NewRequestBuilder("GET").
-		ConstructHTTPURL(server.URL, nil, nil).
-		AddQuery("Version", "2018-22-09")
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
@@ -879,6 +900,7 @@ func TestCP4DFail(t *testing.T) {
 	assert.Equal(t, "Sorry you are forbidden", err.Error())
 }
 
+// Test for the deprecated SetURL method.
 func TestSetURL(t *testing.T) {
 	service, err := NewBaseService(
 		&ServiceOptions{
@@ -891,6 +913,28 @@ func TestSetURL(t *testing.T) {
 
 	err = service.SetURL("{bad url}")
 	assert.NotNil(t, err)
+}
+
+func TestSetServiceURL(t *testing.T) {
+	service, err := NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+		}, "watson", "watson")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+
+	err = service.SetServiceURL("{bad url}")
+	assert.NotNil(t, err)
+
+	err = service.SetServiceURL("")
+	assert.Nil(t, err)
+	assert.Equal(t, "", service.Options.URL)
+	assert.Equal(t, "", service.GetServiceURL())
+
+	err = service.SetServiceURL("https://myserver.com/api/baseurl")
+	assert.Nil(t, err)
+	assert.Equal(t, "https://myserver.com/api/baseurl", service.Options.URL)
+	assert.Equal(t, "https://myserver.com/api/baseurl", service.GetServiceURL())
 }
 
 func TestExtConfigFromCredentialFile(t *testing.T) {
