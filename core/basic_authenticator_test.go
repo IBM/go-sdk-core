@@ -69,9 +69,10 @@ func TestBasicAuthAuthenticate(t *testing.T) {
 	assert.Equal(t, authenticator.AuthenticationType(), AUTHTYPE_BASIC)
 
 	// Create a new Request object.
-	request, err := NewRequestBuilder("GET").
-		ConstructHTTPURL("https://localhost/placeholder/url", nil, nil).
-		Build()
+	builder, err := NewRequestBuilder("GET").ConstructHTTPURL("https://localhost/placeholder/url", nil, nil)
+	assert.Nil(t, err)
+
+	request, err := builder.Build()
 	assert.Nil(t, err)
 	assert.NotNil(t, request)
 

@@ -26,29 +26,44 @@ import (
 	"time"
 )
 
-// common constants for core
 const (
-	USER_AGENT    = "User-Agent"
-	SDK_NAME      = "ibm-go-sdk-core"
-	UNKNOWN_ERROR = "Unknown Error"
+	header_name_USER_AGENT = "User-Agent"
+	sdk_name               = "ibm-go-sdk-core"
 )
 
-// ServiceOptions Service options
+// ServiceOptions : This struct contains the options supported by the BaseService methods.
 type ServiceOptions struct {
-	Version       string
-	URL           string
+	// This is the base URL associated with the service instance.
+	// This value will be combined with the path for each operation to form the request URL.
+	URL string
+
+	// This field holds the authenticator for the service instance.
+	// The authenticator will "authenticate" each outbound request by adding additional
+	// information to the request, typically in the form of the "Authorization" http header.
 	Authenticator Authenticator
 }
 
-// BaseService Base Service
+// BaseService : This struct defines a common "service" object that is used by each generated service
+// to manage requests and responses, perform authentication, etc.
 type BaseService struct {
-	Options        *ServiceOptions
+
+	// The options related to the base service.
+	Options *ServiceOptions
+
+	// A set of "default" http headers to be included with each outbound request.
+	// This can be set by the SDK user.
 	DefaultHeaders http.Header
-	Client         *http.Client
-	UserAgent      string
+
+	// The HTTP Client used to send requests and receive responses.
+	Client *http.Client
+
+	// The value to be used for the "User-Agent" HTTP header that is added to each outbound request.
+	// If this value is not set, then a default value will be used for the header.
+	UserAgent string
 }
 
-// NewBaseService Instantiate a Base Service
+// NewBaseService : This function will construct a new instance of the BaseService struct, while
+// performing validation on input parameters and service options.
 func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*BaseService, error) {
 	if HasBadFirstOrLastChar(options.URL) {
 		return nil, fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
@@ -71,7 +86,7 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 	}
 
 	// Set a default value for the User-Agent http header.
-	service.SetUserAgent(service.BuildUserAgent())
+	service.SetUserAgent(service.buildUserAgent())
 
 	// Try to load service properties from external config.
 	serviceProps, err := getServiceProperties(serviceName)
@@ -110,13 +125,25 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 }
 
 // SetURL sets the service URL
+//
+// Deprecated: use SetServiceURL instead.
 func (service *BaseService) SetURL(url string) error {
+	return service.SetServiceURL(url)
+}
+
+// SetServiceURL sets the service URL
+func (service *BaseService) SetServiceURL(url string) error {
 	if HasBadFirstOrLastChar(url) {
 		return fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
 	}
 
 	service.Options.URL = url
 	return nil
+}
+
+// GetServiceURL returns the service URL
+func (service *BaseService) GetServiceURL() string {
+	return service.Options.URL
 }
 
 // SetDefaultHeaders sets HTTP headers to be sent in every request.
@@ -138,14 +165,14 @@ func (service *BaseService) DisableSSLVerification() {
 }
 
 // BuildUserAgent : Builds the user agent string
-func (service *BaseService) BuildUserAgent() string {
-	return fmt.Sprintf("%s-%s %s", SDK_NAME, __VERSION__, SystemInfo())
+func (service *BaseService) buildUserAgent() string {
+	return fmt.Sprintf("%s-%s %s", sdk_name, __VERSION__, SystemInfo())
 }
 
 // SetUserAgent : Sets the user agent value
 func (service *BaseService) SetUserAgent(userAgentString string) {
 	if userAgentString == "" {
-		service.UserAgent = service.BuildUserAgent()
+		service.UserAgent = service.buildUserAgent()
 	}
 	service.UserAgent = userAgentString
 }
@@ -160,9 +187,9 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	}
 
 	// Add the default User-Agent header if not already present.
-	userAgent := req.Header.Get(USER_AGENT)
+	userAgent := req.Header.Get(header_name_USER_AGENT)
 	if userAgent == "" {
-		req.Header.Add(USER_AGENT, service.UserAgent)
+		req.Header.Add(header_name_USER_AGENT, service.UserAgent)
 	}
 
 	// Add authentication to the outbound request.

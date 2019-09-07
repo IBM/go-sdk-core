@@ -176,8 +176,12 @@ func (authenticator *IamAuthenticator) requestToken() (*iamTokenServerResponse, 
 	}
 
 	builder := NewRequestBuilder(POST)
-	builder.ConstructHTTPURL(url, nil, nil).
-		AddHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE).
+	_, err := builder.ConstructHTTPURL(url, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	builder.AddHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE).
 		AddHeader(Accept, APPLICATION_JSON).
 		AddFormData("grant_type", "", "", REQUEST_TOKEN_GRANT_TYPE).
 		AddFormData("apikey", "", "", authenticator.ApiKey).
