@@ -16,6 +16,7 @@ install:
 - pip install --user bumpversion
 - npm install @semantic-release/exec
 - npm install @semantic-release/git
+- npm install @semantic-release/changelog
 notifications:
   email: false
 script:
