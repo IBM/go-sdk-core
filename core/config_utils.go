@@ -67,24 +67,24 @@ func getServicePropertiesFromCredentialFile(credentialKey string) map[string]str
 	// Check the search order for the credential file that we'll attempt to load:
 	var credentialFilePath string
 
-	// 1) <user-home-dir>/ibm-credentials.env
-	if credentialFilePath == "" {
-		var filePath = path.Join(UserHomeDir(), DEFAULT_CREDENTIAL_FILE_NAME)
-		if _, err := os.Stat(filePath); err == nil {
-			credentialFilePath = filePath
-		}
-	}
-
-	// 2) ${IBM_CREDENTIALS_FILE}
+	// 1) ${IBM_CREDENTIALS_FILE}
 	envPath := os.Getenv(IBM_CREDENTIAL_FILE_ENVVAR)
 	if _, err := os.Stat(envPath); err == nil {
 		credentialFilePath = envPath
 	}
 
-	// 3) <current-working-directory>/ibm-credentials.env
+	// 2) <current-working-directory>/ibm-credentials.env
 	if credentialFilePath == "" {
 		dir, _ := os.Getwd()
 		var filePath = path.Join(dir, DEFAULT_CREDENTIAL_FILE_NAME)
+		if _, err := os.Stat(filePath); err == nil {
+			credentialFilePath = filePath
+		}
+	}
+
+	// 3) <user-home-dir>/ibm-credentials.env
+	if credentialFilePath == "" {
+		var filePath = path.Join(UserHomeDir(), DEFAULT_CREDENTIAL_FILE_NAME)
 		if _, err := os.Stat(filePath); err == nil {
 			credentialFilePath = filePath
 		}
