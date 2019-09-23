@@ -206,6 +206,9 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	// Invoke the request.
 	httpResponse, err := service.Client.Do(req)
 	if err != nil {
+		if strings.Contains(err.Error(), SSL_CERTIFICATION_ERROR) {
+			err = fmt.Errorf(ERRORMSG_SSL_VERIFICATION_FAILED + "\n" + err.Error())
+		}
 		return
 	}
 

@@ -40,10 +40,14 @@ const (
 	PROPNAME_CLIENT_ID        = "CLIENT_ID"
 	PROPNAME_CLIENT_SECRET    = "CLIENT_SECRET"
 
+	// SSL error
+	SSL_CERTIFICATION_ERROR = "x509: certificate"
+
 	// Common error messages.
-	ERRORMSG_PROP_MISSING     = "The %s property is required but was not specified."
-	ERRORMSG_PROP_INVALID     = "The %s property is invalid. Please remove any surrounding {, }, or \" characters."
-	ERRORMSG_NO_AUTHENTICATOR = "Authentication information was not properly configured."
-	ERRORMSG_AUTHTYPE_UNKNOWN = "Unrecognized authentication type: %s"
-	ERRORMSG_PROPS_MAP_NIL    = "The 'properties' map cannot be nil."
+	ERRORMSG_PROP_MISSING            = "The %s property is required but was not specified."
+	ERRORMSG_PROP_INVALID            = "The %s property is invalid. Please remove any surrounding {, }, or \" characters."
+	ERRORMSG_NO_AUTHENTICATOR        = "Authentication information was not properly configured."
+	ERRORMSG_AUTHTYPE_UNKNOWN        = "Unrecognized authentication type: %s"
+	ERRORMSG_PROPS_MAP_NIL           = "The 'properties' map cannot be nil."
+	ERRORMSG_SSL_VERIFICATION_FAILED = "If you're trying to call a service on ICP or Cloud Pak for Data, you may not have a valid SSL certificate. If you need to access the service without setting that up, try using the DisableSSLVerification option in your authentication configuration and/or calling DisableSSLVerification() on your service."
 )
