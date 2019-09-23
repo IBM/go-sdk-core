@@ -27,10 +27,8 @@ import (
 )
 
 const (
-	header_name_USER_AGENT  = "User-Agent"
-	sdk_name                = "ibm-go-sdk-core"
-	ERROR_MSG_DISABLE_SSL   = "If you're trying to call a service on ICP or Cloud Pak for Data, you may not have a valid SSL certificate. If you need to access the service without setting that up, try using the DisableSSLVerification option in your authentication configuration and/or calling DisableSSLVerification() on your service."
-	SSL_CERTIFICATION_ERROR = "x509: certificate"
+	header_name_USER_AGENT = "User-Agent"
+	sdk_name               = "ibm-go-sdk-core"
 )
 
 // ServiceOptions : This struct contains the options supported by the BaseService methods.
@@ -209,7 +207,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	httpResponse, err := service.Client.Do(req)
 	if err != nil {
 		if strings.Contains(err.Error(), SSL_CERTIFICATION_ERROR) {
-			err = fmt.Errorf(ERROR_MSG_DISABLE_SSL + "\n" + err.Error())
+			err = fmt.Errorf(ERRORMSG_SSL_VERIFICATION_FAILED + "\n" + err.Error())
 		}
 		return
 	}
