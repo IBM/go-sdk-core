@@ -63,8 +63,8 @@ type RequestBuilder struct {
 	URL    *url.URL
 	Header http.Header
 	Body   io.Reader
-	Query  map[string]string
-	Form   map[string]FormData
+	Query  map[string][]string
+	Form   map[string][]FormData
 }
 
 // NewRequestBuilder : Initiates a new request
@@ -72,8 +72,8 @@ func NewRequestBuilder(method string) *RequestBuilder {
 	return &RequestBuilder{
 		Method: method,
 		Header: make(http.Header),
-		Query:  make(map[string]string),
-		Form:   make(map[string]FormData),
+		Query:  make(map[string][]string),
+		Form:   make(map[string][]FormData),
 	}
 }
 
@@ -103,7 +103,7 @@ func (requestBuilder *RequestBuilder) ConstructHTTPURL(serviceURL string, pathSe
 
 // AddQuery adds Query name and value
 func (requestBuilder *RequestBuilder) AddQuery(name string, value string) *RequestBuilder {
-	requestBuilder.Query[name] = value
+	requestBuilder.Query[name] = append(requestBuilder.Query[name], value)
 	return requestBuilder
 }
 
@@ -124,11 +124,11 @@ func (requestBuilder *RequestBuilder) AddFormData(fieldName string, fileName str
 			}
 		}
 	}
-	requestBuilder.Form[fieldName] = FormData{
+	requestBuilder.Form[fieldName] = append(requestBuilder.Form[fieldName], FormData{
 		fileName:    fileName,
 		contentType: contentType,
 		contents:    contents,
-	}
+	})
 	return requestBuilder
 }
 
@@ -202,20 +202,24 @@ func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
 		contentType := requestBuilder.Header.Get(CONTENT_TYPE)
 		if contentType == FORM_URL_ENCODED_HEADER {
 			data := url.Values{}
-			for fieldName, v := range requestBuilder.Form {
-				data.Add(fieldName, v.contents.(string))
+			for fieldName, l := range requestBuilder.Form {
+				for _, v := range l {
+					data.Add(fieldName, v.contents.(string))
+				}
 			}
 			requestBuilder.SetBodyContentString(data.Encode())
 		} else {
 			formWriter := requestBuilder.createMultipartWriter()
-			for fieldName, v := range requestBuilder.Form {
-				dataPartWriter, err := createFormFile(formWriter, fieldName, v.fileName, v.contentType)
-				if err != nil {
-					return nil, err
-				}
-				if err = requestBuilder.SetBodyContentForMultipart(v.contentType,
-					v.contents, dataPartWriter); err != nil {
-					return nil, err
+			for fieldName, l := range requestBuilder.Form {
+				for _, v := range l {
+					dataPartWriter, err := createFormFile(formWriter, fieldName, v.fileName, v.contentType)
+					if err != nil {
+						return nil, err
+					}
+					if err = requestBuilder.SetBodyContentForMultipart(v.contentType,
+						v.contents, dataPartWriter); err != nil {
+						return nil, err
+					}
 				}
 			}
 
@@ -238,8 +242,10 @@ func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
 
 	// Query
 	query := req.URL.Query()
-	for k, v := range requestBuilder.Query {
-		query.Add(k, v)
+	for k, l := range requestBuilder.Query {
+		for _, v := range l {
+			query.Add(k, v)
+		}
 	}
 	// Encode query
 	req.URL.RawQuery = query.Encode()
