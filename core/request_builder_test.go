@@ -225,6 +225,45 @@ func TestURLEncodedForm(t *testing.T) {
 	assert.NotNil(t, request)
 }
 
+func TestBuildWithMultipartFormWithRepeatedKeys(t *testing.T) {
+	var str = "hello"
+	json1 := make(map[string]interface{})
+	json1["name1"] = "test name1"
+
+	json2 := make(map[string]interface{})
+	json2["name2"] = "test name2"
+
+	builder := NewRequestBuilder("POST")
+	_, err := builder.ConstructHTTPURL("test.com", nil, nil)
+	assert.Nil(t, err)
+
+	builder.AddHeader("Content-Type", "Application/json").
+		AddQuery("Version", "2018-22-09").
+		AddFormData("name", "json1.json", "application/json", json1).
+		AddFormData("name", "json2.json", "application/json", json2).
+		AddFormData("hello", "", "text/plain", "Hello GO SDK").
+		AddFormData("hello", "", "text/plain", &str)
+
+	pwd, _ := os.Getwd()
+	var testFile io.ReadCloser
+	testFile, err = os.Open(pwd + "/../resources/test_file.txt")
+	assert.Nil(t, err, "Could not open file")
+	builder.AddFormData("test_file", "test_file1.txt", "application/octet-stream", &testFile)
+	builder.AddFormData("test_file", "test_file2.txt", "application/octet-stream", &testFile)
+
+	request, err := builder.Build()
+	assert.Nil(t, err, "Couldnt build successfully")
+	assert.NotNil(t, request)
+	assert.NotNil(t, request.Body)
+	err = request.ParseMultipartForm(32 << 20)
+	assert.Nil(t, err, "Couldnt parts multipart form successfully")
+	vs := request.MultipartForm.File["name"]
+	assert.Equal(t, 2, len(vs))
+	vs = request.MultipartForm.File["test_file"]
+	assert.Equal(t, 2, len(vs))
+	defer testFile.Close()
+}
+
 func TestBuild(t *testing.T) {
 	endPoint := "https://gateway.watsonplatform.net/assistant/api"
 	pathSegments := []string{"v1/workspaces", "message"}
