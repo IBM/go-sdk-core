@@ -49,5 +49,8 @@ const (
 	ERRORMSG_NO_AUTHENTICATOR        = "Authentication information was not properly configured."
 	ERRORMSG_AUTHTYPE_UNKNOWN        = "Unrecognized authentication type: %s"
 	ERRORMSG_PROPS_MAP_NIL           = "The 'properties' map cannot be nil."
-	ERRORMSG_SSL_VERIFICATION_FAILED = "If you're trying to call a service on ICP or Cloud Pak for Data, you may not have a valid SSL certificate. If you need to access the service without setting that up, try using the DisableSSLVerification option in your authentication configuration and/or calling DisableSSLVerification() on your service."
+	ERRORMSG_SSL_VERIFICATION_FAILED = "The connection failed because the SSL certificate is not valid. To use a " +
+		"self-signed certificate, disable verification of the server's SSL certificate " +
+		"by invoking the DisableSSLVerification() function on your service instance " +
+		"and/or use the DisableSSLVerification option of the authenticator."
 )
