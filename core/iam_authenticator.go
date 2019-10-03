@@ -40,7 +40,7 @@ type IamAuthenticator struct {
 	// [Required] The apikey used to fetch the access token from the IAM token server.
 	ApiKey string
 
-	// [Optional] The URL representing the IAM token server's endpoing.
+	// [Optional] The URL representing the IAM token server's endpoint.
 	// If not specified, a suitable default value is used.
 	URL string
 
@@ -52,7 +52,7 @@ type IamAuthenticator struct {
 	ClientId     string
 	ClientSecret string
 
-	// [Optional] A flag that indicates whether SSL hostname verification should be disabled or not.
+	// [Optional] A flag that indicates whether verificaton of the server's SSL certificate should be disabled or not.
 	// Default: false
 	DisableSSLVerification bool
 
