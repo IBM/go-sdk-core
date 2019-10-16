@@ -226,13 +226,13 @@ func (authenticator *IamAuthenticator) requestToken() (*iamTokenServerResponse, 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		if resp != nil {
 			buff := new(bytes.Buffer)
-			buff.ReadFrom(resp.Body)
+			_, _ = buff.ReadFrom(resp.Body)
 			return nil, fmt.Errorf(buff.String())
 		}
 	}
 
 	tokenResponse := &iamTokenServerResponse{}
-	json.NewDecoder(resp.Body).Decode(tokenResponse)
+	_ = json.NewDecoder(resp.Body).Decode(tokenResponse)
 	defer resp.Body.Close()
 	return tokenResponse, nil
 }

@@ -170,7 +170,7 @@ func TestCp4dUserHeaders(t *testing.T) {
 func TestGetTokenFailure(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte("Sorry you are forbidden"))
+		_, _ = w.Write([]byte("Sorry you are forbidden"))
 	}))
 	defer server.Close()
 

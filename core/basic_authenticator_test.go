@@ -16,8 +16,9 @@ package core
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBasicAuthUsername(t *testing.T) {
@@ -29,11 +30,11 @@ func TestBasicAuthUsername(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf(ERRORMSG_PROP_INVALID, "Username").Error(), err.Error())
 
-	authenticator, err = NewBasicAuthenticator("\"username\"", "password")
+	_, err = NewBasicAuthenticator("\"username\"", "password")
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf(ERRORMSG_PROP_INVALID, "Username").Error(), err.Error())
 
-	authenticator, err = NewBasicAuthenticator("", "password")
+	_, err = NewBasicAuthenticator("", "password")
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf(ERRORMSG_PROP_MISSING, "Username").Error(), err.Error())
 
@@ -43,19 +44,19 @@ func TestBasicAuthUsername(t *testing.T) {
 }
 
 func TestBasicAuthPassword(t *testing.T) {
-	authenticator, err := NewBasicAuthenticator("username", "{password}")
+	_, err := NewBasicAuthenticator("username", "{password}")
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf(ERRORMSG_PROP_INVALID, "Password").Error(), err.Error())
 
-	authenticator, err = NewBasicAuthenticator("username", "\"password\"")
+	_, err = NewBasicAuthenticator("username", "\"password\"")
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf(ERRORMSG_PROP_INVALID, "Password").Error(), err.Error())
 
-	authenticator, err = NewBasicAuthenticator("username", "")
+	_, err = NewBasicAuthenticator("username", "")
 	assert.NotNil(t, err)
 	assert.Equal(t, fmt.Errorf(ERRORMSG_PROP_MISSING, "Password").Error(), err.Error())
 
-	authenticator, err = NewBasicAuthenticator("username", "password")
+	authenticator, err := NewBasicAuthenticator("username", "password")
 	assert.NotNil(t, authenticator)
 	assert.Nil(t, err)
 }
@@ -77,7 +78,7 @@ func TestBasicAuthAuthenticate(t *testing.T) {
 	assert.NotNil(t, request)
 
 	// Test the "Authenticate" method to make sure the correct header is added to the Request.
-	authenticator.Authenticate(request)
+	_ = authenticator.Authenticate(request)
 	assert.Equal(t, request.Header.Get("Authorization"), "Basic Zm9vOmJhcg==")
 }
 

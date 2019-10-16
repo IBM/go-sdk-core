@@ -56,7 +56,7 @@ func setTestEnvironment() {
 
 // Clear the test-related environment variables.
 func clearTestEnvironment() {
-	for key, _ := range testEnvironment {
+	for key := range testEnvironment {
 		os.Unsetenv(key)
 	}
 }

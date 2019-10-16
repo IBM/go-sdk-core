@@ -35,7 +35,7 @@ func TestNoAuthAuthenticate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, request)
 
-	// Test the "Authenticate" method to make sure the correct header is added to the Request.
-	authenticator.Authenticate(request)
+	// Test the "Authenticate" method to make sure the Authorization header is not added to the Request.
+	_ = authenticator.Authenticate(request)
 	assert.Equal(t, request.Header.Get("Authorization"), "")
 }
