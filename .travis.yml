@@ -1,27 +1,37 @@
 language: go
+
 node_js: '8.3'
+
 dist: xenial
+
 go:
 - 1.12.x
+
+notifications:
+  email: false
+
+env:
+  global:
+    - GO111MODULE=on
+
 before_install:
 - nvm install 8.3
 - npm install -g npm@6.x
 - sudo apt-get update
 - sudo apt-get install python
-- go get -u github.com/golang/dep/cmd/dep
-- go get -u gopkg.in/alecthomas/gometalinter.v2
-- go get -u golang.org/x/lint/golint
+
 install:
-- dep ensure
 - pip install --user bumpversion
 - npm install @semantic-release/exec
 - npm install @semantic-release/git
 - npm install @semantic-release/changelog
-notifications:
-  email: false
+- curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.21.0
+
 script:
+- env | grep GO
 - go test ./...
-- gometalinter.v2 --errors ./...
+- golangci-lint run
+
 deploy:
 - provider: script
   skip_cleanup: true

@@ -37,7 +37,7 @@ func TestGoodResponseJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		fmt.Fprintf(w, `{"name": "wonder woman"}`)
+		fmt.Fprint(w, `{"name": "wonder woman"}`)
 	}))
 	defer server.Close()
 
@@ -78,7 +78,7 @@ func TestGoodResponseJSONExtraFields(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{"name": "wonder woman", "age": 42}`)
+		fmt.Fprint(w, `{"name": "wonder woman", "age": 42}`)
 	}))
 	defer server.Close()
 
@@ -106,7 +106,7 @@ func TestGoodResponseNonJSON(t *testing.T) {
 	expectedResponse := []byte("This is a non-json response.")
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/octet-stream")
-		w.Write(expectedResponse)
+		_, _ = w.Write(expectedResponse)
 	}))
 	defer server.Close()
 
@@ -148,7 +148,7 @@ func TestGoodResponseNonJSONNoContentType(t *testing.T) {
 	expectedResponse := []byte("This is a non-json response.")
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "")
-		w.Write(expectedResponse)
+		_, _ = w.Write(expectedResponse)
 	}))
 	defer server.Close()
 
@@ -189,7 +189,7 @@ func TestGoodResponseNonJSONNoContentType(t *testing.T) {
 func TestGoodResponseJSONDeserFailure(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
-		fmt.Fprintf(w, `{"name": {"unknown_object_id": "abc123"}}`)
+		fmt.Fprint(w, `{"name": {"unknown_object_id": "abc123"}}`)
 	}))
 	defer server.Close()
 
@@ -296,7 +296,7 @@ func TestErrorResponseJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, jsonErrorResponse)
+		fmt.Fprint(w, jsonErrorResponse)
 	}))
 	defer server.Close()
 
@@ -330,7 +330,7 @@ func TestErrorResponseJSONDeserError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
-		w.Write(expectedResponse)
+		_, _ = w.Write(expectedResponse)
 	}))
 	defer server.Close()
 
@@ -360,7 +360,7 @@ func TestErrorResponseNotJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "text/plain")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, nonJsonErrorResponse)
+		fmt.Fprint(w, nonJsonErrorResponse)
 	}))
 	defer server.Close()
 
@@ -435,7 +435,7 @@ func TestClient(t *testing.T) {
 func TestRequestForDefaultUserAgent(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
-		fmt.Fprintf(w, `{"name": "wonder woman"}`)
+		fmt.Fprint(w, `{"name": "wonder woman"}`)
 		assert.Contains(t, r.Header.Get("User-Agent"), "ibm-go-sdk-core")
 	}))
 	defer server.Close()
@@ -453,13 +453,13 @@ func TestRequestForDefaultUserAgent(t *testing.T) {
 		Authenticator: authenticator,
 	}
 	service, _ := NewBaseService(options, "watson", "watson")
-	service.Request(req, new(Foo))
+	_, _ = service.Request(req, new(Foo))
 }
 
 func TestRequestForProvidedUserAgent(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
-		fmt.Fprintf(w, `{"name": "wonder woman"}`)
+		fmt.Fprint(w, `{"name": "wonder woman"}`)
 		assert.Contains(t, r.Header.Get("User-Agent"), "provided user agent")
 	}))
 	defer server.Close()
@@ -480,7 +480,7 @@ func TestRequestForProvidedUserAgent(t *testing.T) {
 	headers := http.Header{}
 	headers.Add("User-Agent", "provided user agent")
 	service.SetDefaultHeaders(headers)
-	service.Request(req, new(Foo))
+	_, _ = service.Request(req, new(Foo))
 }
 
 func TestIncorrectURL(t *testing.T) {
@@ -669,7 +669,7 @@ func TestIAMAuth(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		body, _ := ioutil.ReadAll(r.Body)
 		if strings.Contains(string(body), "grant_type") {
-			fmt.Fprintf(w, `{
+			fmt.Fprint(w, `{
 				"access_token": "captain marvel",
 				"token_type": "Bearer",
 				"expires_in": 3600,
@@ -712,7 +712,7 @@ func TestIAMAuth(t *testing.T) {
 func TestIAMFailure(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte("Sorry you are forbidden"))
+		_, _ = w.Write([]byte("Sorry you are forbidden"))
 	}))
 	defer server.Close()
 
@@ -744,7 +744,7 @@ func TestIAMWithIdSecret(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		body, _ := ioutil.ReadAll(r.Body)
 		if strings.Contains(string(body), "grant_type") {
-			fmt.Fprintf(w, `{
+			fmt.Fprint(w, `{
                 "access_token": "captain marvel",
                 "token_type": "Bearer",
                 "expires_in": 3600,
@@ -826,7 +826,7 @@ func TestCP4DAuth(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if strings.Contains(r.URL.String(), "preauth") {
-			fmt.Fprintf(w, `{
+			fmt.Fprint(w, `{
 			"username":"hello",
 			"role":"user",
 			"permissions":[
@@ -873,7 +873,7 @@ func TestCP4DAuth(t *testing.T) {
 func TestCP4DFail(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte("Sorry you are forbidden"))
+		_, _ = w.Write([]byte("Sorry you are forbidden"))
 	}))
 	defer server.Close()
 

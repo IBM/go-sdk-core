@@ -19,11 +19,11 @@ import (
 	"strings"
 )
 
-// GetAuthenticatorFromEnvironment: instantiates an Authenticator using service properties
+// GetAuthenticatorFromEnvironment instantiates an Authenticator using service properties
 // retrieved from external config sources.
 func GetAuthenticatorFromEnvironment(credentialKey string) (authenticator Authenticator, err error) {
 	properties, err := getServiceProperties(credentialKey)
-	if properties == nil || len(properties) == 0 {
+	if len(properties) == 0 {
 		return
 	}
 

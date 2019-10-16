@@ -82,7 +82,7 @@ func TestAddHeader(t *testing.T) {
 
 func readStream(body io.Reader) string {
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(body)
+	_, _ = buf.ReadFrom(body)
 	return buf.String()
 }
 
@@ -95,17 +95,17 @@ func TestSetBodyContentJSON(t *testing.T) {
 	want := "{\"name\":\"wonder woman\"}\n"
 
 	request := setup()
-	request.SetBodyContentJSON(body)
+	_, _ = request.SetBodyContentJSON(body)
 	assert.NotNil(t, request.Body)
 	assert.Equal(t, want, readStream(request.Body))
 
 	request.Body = nil
-	request.SetBodyContent("", body, "", "")
+	_, _ = request.SetBodyContent("", body, "", "")
 	assert.NotNil(t, request.Body)
 	assert.Equal(t, want, readStream(request.Body))
 
 	request.Body = nil
-	request.SetBodyContent("", nil, body, "")
+	_, _ = request.SetBodyContent("", nil, body, "")
 	assert.NotNil(t, request.Body)
 	assert.Equal(t, want, readStream(request.Body))
 
@@ -119,7 +119,7 @@ func TestSetBodyContentJSON(t *testing.T) {
 func TestSetBodyContentString(t *testing.T) {
 	var str = "hello GO SDK"
 	request := setup()
-	request.SetBodyContentString(str)
+	_, _ = request.SetBodyContentString(str)
 	assert.NotNil(t, request.Body)
 	assert.Equal(t, str, readStream(request.Body))
 }
@@ -131,20 +131,20 @@ func TestSetBodyContentStream(t *testing.T) {
 	assert.Nil(t, err)
 
 	request := setup()
-	request.SetBodyContent("", nil, nil, testFile)
+	_, _ = request.SetBodyContent("", nil, nil, testFile)
 	assert.NotNil(t, request.Body)
 	assert.Equal(t, "hello world from text file", readStream(request.Body))
 
 	request.Body = nil
 	testFile, _ = os.Open(pwd + "/../resources/test_file.txt")
-	request.SetBodyContent("", nil, nil, &testFile)
+	_, _ = request.SetBodyContent("", nil, nil, &testFile)
 	assert.Equal(t, "hello world from text file", readStream(request.Body))
 }
 
 func TestSetBodyContent1(t *testing.T) {
 	var str = "hello GO SDK"
 	request := setup()
-	request.SetBodyContent("text/plain", nil, nil, str)
+	_, _ = request.SetBodyContent("text/plain", nil, nil, str)
 	assert.NotNil(t, request.Body)
 	assert.Equal(t, str, readStream(request.Body))
 }
@@ -152,7 +152,7 @@ func TestSetBodyContent1(t *testing.T) {
 func TestSetBodyContent2(t *testing.T) {
 	var str = "hello GO SDK"
 	request := setup()
-	request.SetBodyContent("text/plain", nil, nil, &str)
+	_, _ = request.SetBodyContent("text/plain", nil, nil, &str)
 	assert.NotNil(t, request.Body)
 	assert.Equal(t, str, readStream(request.Body))
 }

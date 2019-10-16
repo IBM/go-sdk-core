@@ -19,11 +19,12 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	jwt "github.com/dgrijalva/jwt-go"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	jwt "github.com/dgrijalva/jwt-go"
 )
 
 // Constants for CP4D
@@ -197,13 +198,13 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (*cp4dTokenSer
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		if resp != nil {
 			buff := new(bytes.Buffer)
-			buff.ReadFrom(resp.Body)
+			_, _ = buff.ReadFrom(resp.Body)
 			return nil, fmt.Errorf(buff.String())
 		}
 	}
 
 	tokenResponse := &cp4dTokenServerResponse{}
-	json.NewDecoder(resp.Body).Decode(tokenResponse)
+	_ = json.NewDecoder(resp.Body).Decode(tokenResponse)
 	defer resp.Body.Close()
 	return tokenResponse, nil
 }

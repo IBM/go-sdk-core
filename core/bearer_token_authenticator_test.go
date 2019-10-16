@@ -16,8 +16,9 @@ package core
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBearerToken(t *testing.T) {
@@ -48,7 +49,7 @@ func TestBearerTokenAuthenticate(t *testing.T) {
 	assert.NotNil(t, request)
 
 	// Test the "Authenticate" method to make sure the correct header is added to the Request.
-	authenticator.Authenticate(request)
+	_ = authenticator.Authenticate(request)
 	assert.Equal(t, request.Header.Get("Authorization"), "Bearer my-bearer-token")
 }
 
