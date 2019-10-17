@@ -17,3 +17,4 @@ core/coverage.out
 .pre-commit-config.yaml
 .secrets.baseline
 /.settings/
+/.vscode/
