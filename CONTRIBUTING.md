@@ -14,11 +14,11 @@ If you want to contribute to the repository, here's a quick guide:
   ```sh
   curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.21.0
   ```  
-    * Note: As of this writing, the 1.21.0 version of `golangci-lint` is being used by this project.
-  Please check the `curl` command found in the `.travis.yml` file to see the version of this tool that is currently 
-  being used at the time you are planning to commit changes. This will ensure that you are using the same version 
-  of the linter as the Travis build automation, which will ensure that you are using the same set of linter checks
-  that the automated build uses.  
+      Note: As of this writing, the 1.21.0 version of `golangci-lint` is being used by this project.
+      Please check the `curl` command found in the `.travis.yml` file to see the version of this tool that is currently 
+      being used at the time you are planning to commit changes. This will ensure that you are using the same version 
+      of the linter as the Travis build automation, which will ensure that you are using the same set of linter checks
+      that the automated build uses.  
   
   5. Make your code changes as needed.  Be sure to add new tests for any new or modified functionality.  
   6. Test your changes:
