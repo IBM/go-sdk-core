@@ -6,35 +6,42 @@ Before that, please search for similar issues. It's possible somebody has encoun
 # Pull Requests
 
 If you want to contribute to the repository, here's a quick guide:
-  1. Fork the repository
+  1. Fork the repository  
+  
   2. The `go-sdk-core` project uses Go modules for dependency management, so do NOT set the `GOPATH` environment 
-  variable to include your local `go-sdk-core` project directory.
-  3. Clone the respository into a local directory.
+  variable to include your local `go-sdk-core` project directory.  
+  
+  3. Clone the respository into a local directory.  
+  
   4. Install the `golangci-lint` tool:
   ```sh
   curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.21.0
   ```  
-      Note: As of this writing, the 1.21.0 version of `golangci-lint` is being used by this project.
-      Please check the `curl` command found in the `.travis.yml` file to see the version of this tool that is currently 
-      being used at the time you are planning to commit changes. This will ensure that you are using the same version 
-      of the linter as the Travis build automation, which will ensure that you are using the same set of linter checks
-      that the automated build uses.  
+  * Note: As of this writing, the 1.21.0 version of `golangci-lint` is being used by this project.
+  Please check the `curl` command found in the `.travis.yml` file to see the version of this tool that is currently 
+  being used at the time you are planning to commit changes. This will ensure that you are using the same version 
+  of the linter as the Travis build automation, which will ensure that you are using the same set of linter checks
+  that the automated build uses.  
   
   5. Make your code changes as needed.  Be sure to add new tests for any new or modified functionality.  
+  
   6. Test your changes:
   ```sh
   go test ./...
-  ```
+  ```  
+  
   7. Check your code for lint issues
   ```sh
   golangci-lint run
-  ```
+  ```  
+  
   8. Commit your changes:
   * Commit messages should follow the [Angular commit message guidelines](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-guidelines).
   This is because this project uses `semantic-release` for build release automation, and `semantic-release` uses 
   this commit message style for determining release versions and generating changelogs.
   To make this easier, we recommend using the [Commitizen CLI](https://github.com/commitizen/cz-cli)
-  with the `cz-conventional-changelog` adapter.
+  with the `cz-conventional-changelog` adapter.  
+  
   9. Push your commit(s) to your fork and submit a pull request to the **master** branch.
 
 # Developer's Certificate of Origin 1.1
