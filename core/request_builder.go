@@ -92,7 +92,10 @@ func (requestBuilder *RequestBuilder) ConstructHTTPURL(serviceURL string, pathSe
 	}
 
 	for i, pathSegment := range pathSegments {
-		URL.Path += "/" + pathSegment
+		if pathSegment != "" {
+			URL.Path += "/" + pathSegment
+		}
+
 		if pathParameters != nil && i < len(pathParameters) {
 			URL.Path += "/" + pathParameters[i]
 		}

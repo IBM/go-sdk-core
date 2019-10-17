@@ -54,6 +54,17 @@ func TestConstructHTTPURLWithNoPathParam(t *testing.T) {
 	assert.Equal(t, want, request.URL.String(), "Invalid construction of url")
 }
 
+func TestConstructHTTPURLWithEmptyPathSegments(t *testing.T) {
+	endPoint := "https://gateway.watsonplatform.net/assistant/api"
+	pathSegments := []string{"v1/workspaces", "", "segment", ""}
+	pathParameters := []string{"param1", "param2", "param3", "param4"}
+	request := setup()
+	want := "https://gateway.watsonplatform.net/assistant/api/v1/workspaces/param1/param2/segment/param3/param4"
+	_, err := request.ConstructHTTPURL(endPoint, pathSegments, pathParameters)
+	assert.Nil(t, err)
+	assert.Equal(t, want, request.URL.String(), "Invalid construction of url")
+}
+
 func TestConstructHTTPURLMissingURL(t *testing.T) {
 	request := setup()
 	_, err := request.ConstructHTTPURL("", nil, nil)
