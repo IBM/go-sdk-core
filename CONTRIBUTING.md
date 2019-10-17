@@ -7,32 +7,34 @@ Before that, please search for similar issues. It's possible somebody has encoun
 
 If you want to contribute to the repository, here's a quick guide:
   1. Fork the repository
-  2. The GOPATH environment variable is used to specify directories outside of $GOROOT that contain the source for Go projects and their binaries. Example:
+  2. The `go-sdk-core` project uses Go modules for dependency management, so do NOT set the `GOPATH` environment 
+  variable to include your local `go-sdk-core` project directory.
+  3. Clone the respository into a local directory.
+  4. Install the `golangci-lint` tool:
   ```sh
-  export GOPATH="$HOME/workspace/go-workspace"
-  export PATH=$PATH:$GOPATH/bin
-  ````
-  3. Have the following directory layout
-  ```sh
-  mkdir $GOPATH/{src,bin,pkg}
+  curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.21.0
   ```
-  4. Clone the respository into `src/github.com/IBM/go-sdk-core` directory
-  5. Use [dep][dep] dependency manager.
-  On MacOS you can install or upgrade to the latest released version of [dep][dep] with Homebrew
+  Note: As of this writing, the 1.21.0 version of `golangci-lint` is being used by this project.
+  Please check the `curl` command found in the `.travis.yml` file to see the version of this tool that is currently 
+  being used at the time you are planning to commit changes. This will ensure that you are using the same version 
+  of the linter as the Travis build automation, which will ensure that you are using the same set of linter checks
+  that the automated build uses.  
+  5. Make your code changes as needed.  Be sure to add new tests for any new or modified functionality.  
+  6. Test your changes:
   ```sh
-    $ brew install dep
-    $ dep ensure
+  go test ./...
   ```
-  6. Check your code for lint issues
+  7. Check your code for lint issues
   ```sh
-  go get -u gopkg.in/alecthomas/gometalinter.v2
-  go get -u golang.org/x/lint/golint
-  gometalinter.v2 --errors ./...
+  golangci-lint run
   ```
-  7. Develop and test your code changes `go test ./...`
   8. Commit your changes:
-  * Commits should follow the [Angular commit message guidelines](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-guidelines). This is because our release tool uses this format for determining release versions and generating changelogs. To make this easier, we recommend using the [Commitizen CLI](https://github.com/commitizen/cz-cli) with the `cz-conventional-changelog` adapter.
-  9. Push to your fork and submit a pull request to the **master** branch
+  * Commit messages should follow the [Angular commit message guidelines](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-guidelines).
+  This is because this project uses `semantic-release` for build release automation, and `semantic-release` uses 
+  this commit message style for determining release versions and generating changelogs.
+  To make this easier, we recommend using the [Commitizen CLI](https://github.com/commitizen/cz-cli)
+  with the `cz-conventional-changelog` adapter.
+  9. Push your commit(s) to your fork and submit a pull request to the **master** branch.
 
 # Developer's Certificate of Origin 1.1
 
