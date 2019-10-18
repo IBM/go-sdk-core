@@ -37,3 +37,5 @@ deploy:
   skip_cleanup: true
   script: npx semantic-release --repository-url https://${GH_TOKEN}@github.com/IBM/go-sdk-core
     --debug
+  on:
+    branch: master
