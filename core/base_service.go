@@ -88,10 +88,19 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 	// Set a default value for the User-Agent http header.
 	service.SetUserAgent(service.buildUserAgent())
 
+	err := service.ConfigureService(serviceName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &service, nil
+}
+
+func (service *BaseService) ConfigureService(serviceName string) error {
 	// Try to load service properties from external config.
 	serviceProps, err := getServiceProperties(serviceName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// If we were able to load any properties for this service, then check to see if the
@@ -102,7 +111,7 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 		if url, ok := serviceProps[PROPNAME_SVC_URL]; ok && url != "" {
 			err := service.SetURL(url)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		}
 
@@ -120,8 +129,7 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 			}
 		}
 	}
-
-	return &service, nil
+	return nil
 }
 
 // SetURL sets the service URL

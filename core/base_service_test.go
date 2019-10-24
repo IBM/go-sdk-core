@@ -1003,6 +1003,87 @@ func TestExtConfigFromVCAP(t *testing.T) {
 	clearTestVCAP()
 }
 
+func TestConfigureServiceFromCredFile(t *testing.T) {
+	service, err := NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+			URL:           "bad url",
+		}, "service_1", "service_1")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.Equal(t, "bad url", service.Options.URL)
+	assert.Nil(t, service.Client.Transport)
+
+	pwd, _ := os.Getwd()
+	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
+	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
+
+	err = service.ConfigureService("service5")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.Equal(t, "https://service5/api", service.Options.URL)
+	assert.NotNil(t, service.Client.Transport)
+
+	os.Unsetenv("IBM_CREDENTIALS_FILE")
+}
+
+func TestConfigureServiceFromVCAP(t *testing.T) {
+	service, err := NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+			URL:           "bad url",
+		}, "service2", "service2")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.Equal(t, "bad url", service.Options.URL)
+
+	setTestVCAP()
+	err = service.ConfigureService("service3")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.Equal(t, "https://service3/api", service.Options.URL)
+	assert.Nil(t, service.Client.Transport)
+
+	clearTestVCAP()
+}
+
+func TestConfigureServiceFromEnv(t *testing.T) {
+	service, err := NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+			URL:           "bad url",
+		}, "service_1", "service_1")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.Equal(t, "bad url", service.Options.URL)
+	assert.Nil(t, service.Client.Transport)
+
+	setTestEnvironment()
+	err = service.ConfigureService("service_1")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.Equal(t, "https://service1/api", service.Options.URL)
+	assert.NotNil(t, service.Client.Transport)
+
+	clearTestEnvironment()
+}
+
+func TestConfigureServiceError(t *testing.T) {
+	pwd, _ := os.Getwd()
+	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
+	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
+
+	service, err := NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+			URL:           "bad url",
+		}, "service-1", "service-1")
+	assert.Nil(t, err)
+	err = service.ConfigureService("")
+	assert.NotNil(t, err)
+	os.Unsetenv("IBM_CREDENTIALS_FILE")
+}
+
 func TestAuthNotConfigured(t *testing.T) {
 	service, err := NewBaseService(&ServiceOptions{}, "noauth_service", "noauth_service")
 	assert.NotNil(t, err)
