@@ -19,15 +19,19 @@ import (
 	"net/http"
 )
 
-// The BearerTokenAuthenticator will authenticate requests by adding
-// a "Bearer"-type Authorization header that contains the configured bearer token value.
+// BearerTokenAuthenticator will add a user-supplied bearer token
+// to requests.
+//
+// The bearer token will be sent as an Authorization header in the form:
+//
+// 		 Authorization: Bearer <bearer-token>
 type BearerTokenAuthenticator struct {
 
-	// [Required] - the bearer token value to be used to authenticate request.
+	// The bearer token value to be used to authenticate request.
 	BearerToken string
 }
 
-// NewBearerTokenAuthenticator: Constructs a new BearerTokenAuthenticator instance.
+// NewBearerTokenAuthenticator constructs a new BearerTokenAuthenticator instance.
 func NewBearerTokenAuthenticator(bearerToken string) (*BearerTokenAuthenticator, error) {
 	obj := &BearerTokenAuthenticator{
 		BearerToken: bearerToken,
@@ -47,18 +51,25 @@ func newBearerTokenAuthenticatorFromMap(properties map[string]string) (*BearerTo
 	return NewBearerTokenAuthenticator(properties[PROPNAME_BEARER_TOKEN])
 }
 
+// AuthenticationType returns the constant IBM/go-sdk-core uses to identify
+// the authentication scheme implemented by BearerTokenAuthenticator.
 func (BearerTokenAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_BEARER_TOKEN
 }
 
-// Authenticate: authenticates the specified request by adding an Authorization header
-// that contains the bearer token value.
+// Authenticate adds bearer authentication information to the request.
+//
+// The bearer token will be added to the request's headers in the form:
+//
+// 		Authorization: Bearer <bearer-token>
 func (this BearerTokenAuthenticator) Authenticate(request *http.Request) error {
 	request.Header.Set("Authorization", fmt.Sprintf(`Bearer %s`, this.BearerToken))
 	return nil
 }
 
-// Validate: validates the configuration
+// Validate validates the bearer token.
+//
+// Ensures the bearer token is valid for service operations.
 func (this BearerTokenAuthenticator) Validate() error {
 	if this.BearerToken == "" {
 		return fmt.Errorf(ERRORMSG_PROP_MISSING, "BearerToken")

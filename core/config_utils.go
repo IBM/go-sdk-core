@@ -24,7 +24,11 @@ import (
 )
 
 const (
-	IBM_CREDENTIAL_FILE_ENVVAR   = "IBM_CREDENTIALS_FILE"
+	// IBM_CREDENTIAL_FILE_ENVVAR is the environment variable name that points
+	// the ibm credentials filepath.
+	IBM_CREDENTIAL_FILE_ENVVAR = "IBM_CREDENTIALS_FILE"
+	// DEFAULT_CREDENTIAL_FILE_NAME is the default file path for a credentials
+	// file.
 	DEFAULT_CREDENTIAL_FILE_NAME = "ibm-credentials.env"
 )
 
@@ -118,7 +122,7 @@ func getServicePropertiesFromEnvironment(credentialKey string) map[string]string
 	return parsePropertyStrings(credentialKey, os.Environ())
 }
 
-// GetServicePropertiesFromVCAP: returns a map containing properties found within the VCAP_SERVICES
+// getServicePropertiesFromVCAP: returns a map containing properties found within the VCAP_SERVICES
 // environment variable for the specified credentialKey (service name). Returns a nil map if no properties are found.
 func getServicePropertiesFromVCAP(credentialKey string) map[string]string {
 	credentials := loadFromVCAPServices(credentialKey)

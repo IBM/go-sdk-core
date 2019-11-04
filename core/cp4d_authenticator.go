@@ -32,35 +32,36 @@ const (
 	PRE_AUTH_PATH = "/v1/preauth/validateAuth"
 )
 
-// CloudPakForDataAuthenticator : This authenticator will automatically fetch an access token for the
-// user-specified username and password.  Outbound REST requests invoked by the BaseService are then authenticated
-// by adding a Bearer-type Authorization header containing the access token.
+// CloudPakForDataAuthenticator utilizes a username and password pair to
+// obtain a suitable bearer token, and adds it requests.
+//
+// The bearer token will be sent as an Authorization header in the form:
+//
+// 		Authorization: Bearer <bearer-token>
 type CloudPakForDataAuthenticator struct {
-	// [Required] The URL representing the token server's endpoing.
+	// The URL representing the Cloud Pak for Data token service endpoint.
 	URL string
 
-	// [Required] The username and password used to compute the basic auth Authorization header
-	// to be sent with requests to the token server.
-	Username string
-	Password string
+	Username string // The username used to obtain a bearer token.
+	Password string // The password used to obtain a bearer token.
 
-	// [Optional] A flag that indicates whether SSL hostname verification should be disabled or not.
-	// Default: false
+	// A flag that indicates whether SSL hostname verification should be disabled
+	// or not. Defaults to false.
 	DisableSSLVerification bool
 
-	// [Optional] A set of key/value pairs that will be sent as HTTP headers in requests
-	// made to the token server.
+	// Default headers to be sent with every CP4D token request.
 	Headers map[string]string
 
-	// [Optional] The http.Client object used to invoke token server requests.
-	// If not specified by the user, a suitable default Client will be constructed.
+	// The http.Client object used to invoke token server requests. If not
+	// specified by the user, a suitable default Client will be constructed.
 	Client *http.Client
 
 	// The cached token and expiration time.
 	tokenData *cp4dTokenData
 }
 
-// NewCloudPakForDataAuthenticator : Constructs a new CloudPakForDataAuthenticator instance.
+// NewCloudPakForDataAuthenticator constructs a new CloudPakForDataAuthenticator
+// instance.
 func NewCloudPakForDataAuthenticator(url string, username string, password string,
 	disableSSLVerification bool, headers map[string]string) (*CloudPakForDataAuthenticator, error) {
 
@@ -96,11 +97,16 @@ func newCloudPakForDataAuthenticatorFromMap(properties map[string]string) (*Clou
 		disableSSL, nil)
 }
 
+// AuthenticationType returns the constant IBM/go-sdk-core uses to identify
+// the authentication scheme implemented by CloudPakForDataAuthenticator.
 func (CloudPakForDataAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_CP4D
 }
 
-// Validate: validates the configuration.
+// Validate username, password, and url for token requests.
+//
+// Ensures the username, password, and url are not None. Additionally, ensures
+// they do not contain invalid characters.
 func (authenticator CloudPakForDataAuthenticator) Validate() error {
 
 	if authenticator.Username == "" {
@@ -118,8 +124,11 @@ func (authenticator CloudPakForDataAuthenticator) Validate() error {
 	return nil
 }
 
-// Authenticate: performs the authentication on the specified Request by adding a Bearer-type Authorization header
-// containing the access token fetched from the token server.
+// Authenticate adds CP4D authentication information to the request.
+//
+// The CP4D bearer token will be added to the request's headers in the form:
+//
+// 		Authorization: Bearer <bearer-token>
 func (authenticator CloudPakForDataAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.getToken()
 	if err != nil {
