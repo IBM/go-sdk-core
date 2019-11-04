@@ -32,9 +32,12 @@ const (
 	REQUEST_TOKEN_RESPONSE_TYPE = "cloud_iam"
 )
 
-// IamAuthenticator : This authenticator will automatically fetch an access token for the
-// configured apikey.  Outbound REST requests invoked by the BaseService are then authenticated
-// by adding a Bearer-type Authorization header containing the access token.
+// IamAuthenticator utilizes an apikey, or ClientId and ClientSecret
+// pair to obtain a suitable bearer token, and adds it to requests.
+//
+// The bearer token will be sent as an Authorization header in the form:
+//
+// 		Authorization: Bearer <bearer-token>
 type IamAuthenticator struct {
 
 	// [Required] The apikey used to fetch the access token from the IAM token server.
@@ -68,7 +71,7 @@ type IamAuthenticator struct {
 	tokenData *iamTokenData
 }
 
-// NewIamAuthenticator : Constructs a new IamAuthenticator instance.
+// NewIamAuthenticator constructs a new IamAuthenticator instance.
 func NewIamAuthenticator(apikey string, url string, clientId string, clientSecret string,
 	disableSSLVerification bool, headers map[string]string) (*IamAuthenticator, error) {
 
@@ -90,7 +93,8 @@ func NewIamAuthenticator(apikey string, url string, clientId string, clientSecre
 	return authenticator, nil
 }
 
-// NewIamAuthenticatorFromMap : Constructs a new IamAuthenticator instance from a map.
+// NewIamAuthenticatorFromMap constructs a new IamAuthenticator instance from a
+// map.
 func newIamAuthenticatorFromMap(properties map[string]string) (*IamAuthenticator, error) {
 	if properties == nil {
 		return nil, fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
@@ -109,8 +113,11 @@ func (IamAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_IAM
 }
 
-// Authenticate: Performs the authentication on the specified Request by adding a Bearer-type Authorization header
-// containing the access token fetched from the token server.
+// Authenticate adds IAM authentication information to the request.
+//
+// The IAM bearer token will be added to the request's headers in the form:
+//
+// 		Authorization: Bearer <bearer-token>
 func (authenticator IamAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.getToken()
 	if err != nil {

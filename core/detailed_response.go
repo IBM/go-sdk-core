@@ -20,7 +20,8 @@ import (
 	"net/http"
 )
 
-// DetailedResponse : Each generated service method will return an instance of this struct.
+// DetailedResponse is a wrapper for server responses received by generated
+// service methods.
 type DetailedResponse struct {
 
 	// The HTTP status code associated with the response.
@@ -31,11 +32,11 @@ type DetailedResponse struct {
 
 	// Result - this field will contain the result of the operation (obtained from the response body).
 	//
-	// If the operation was successful and the response body contains a JSON response, it is unmarshalled
+	// If the operation was successful and the response body contains a JSON response, it is un-marshalled
 	// into an object of the appropriate type (defined by the particular operation), and the Result field will contain
 	// this response object. To retrieve this response object in its properly-typed form, use the
 	// generated service's "Get<operation-name>Result()" method.
-	// If there was an error while unmarshalling the JSON response body, then the RawResult field
+	// If there was an error while un-marshalling the JSON response body, then the RawResult field
 	// will be set to the byte array containing the response body.
 	//
 	// If the operation was successful and the response body contains a non-JSON response,
@@ -43,14 +44,14 @@ type DetailedResponse struct {
 	// the response data.
 	//
 	// If the operation was unsuccessful and the response body contains a JSON response,
-	// this field will contain an instance of map[string]interface{} which is the result of unmarshalling the
+	// this field will contain an instance of map[string]interface{} which is the result of un-marshalling the
 	// response body as a "generic" JSON object.
-	// If the JSON response for an unsuccessful operation could not be properly unmarshalled, then the
+	// If the JSON response for an unsuccessful operation could not be properly un-marshalled, then the
 	// RawResult field will contain the raw response body.
 	Result interface{}
 
 	// This field will contain the raw response body as a byte array under these conditions:
-	// 1) there was a problem unmarshalling a JSON response body -
+	// 1) there was a problem un-marshalling a JSON response body -
 	// either for a successful or unsuccessful operation.
 	// 2) the operation was unsuccessful, and the response body contains a non-JSON response.
 	RawResult []byte

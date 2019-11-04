@@ -50,14 +50,14 @@ const (
 	ERRORMSG_SERVICE_URL_INVALID = "There was an error parsing the service URL: %s"
 )
 
-// A FormData stores information for form data
+// FormData stores information for form data.
 type FormData struct {
 	fileName    string
 	contentType string
 	contents    interface{}
 }
 
-// A RequestBuilder is an HTTP request to be sent to the service
+// RequestBuilder is an HTTP request to be sent to the service.
 type RequestBuilder struct {
 	Method string
 	URL    *url.URL
@@ -67,7 +67,7 @@ type RequestBuilder struct {
 	Form   map[string][]FormData
 }
 
-// NewRequestBuilder : Initiates a new request
+// NewRequestBuilder initiates a new request.
 func NewRequestBuilder(method string) *RequestBuilder {
 	return &RequestBuilder{
 		Method: method,
@@ -104,19 +104,19 @@ func (requestBuilder *RequestBuilder) ConstructHTTPURL(serviceURL string, pathSe
 	return requestBuilder, nil
 }
 
-// AddQuery adds Query name and value
+// AddQuery adds Query name and value.
 func (requestBuilder *RequestBuilder) AddQuery(name string, value string) *RequestBuilder {
 	requestBuilder.Query[name] = append(requestBuilder.Query[name], value)
 	return requestBuilder
 }
 
-// AddHeader adds header name and value
+// AddHeader adds header name and value.
 func (requestBuilder *RequestBuilder) AddHeader(name string, value string) *RequestBuilder {
 	requestBuilder.Header[name] = []string{value}
 	return requestBuilder
 }
 
-// AddFormData makes an entry for Form data
+// AddFormData makes an entry for Form data.
 func (requestBuilder *RequestBuilder) AddFormData(fieldName string, fileName string, contentType string,
 	contents interface{}) *RequestBuilder {
 	if fileName == "" {
@@ -135,26 +135,26 @@ func (requestBuilder *RequestBuilder) AddFormData(fieldName string, fileName str
 	return requestBuilder
 }
 
-// SetBodyContentJSON - set the body content from a JSON structure
+// SetBodyContentJSON sets the body content from a JSON structure.
 func (requestBuilder *RequestBuilder) SetBodyContentJSON(bodyContent interface{}) (*RequestBuilder, error) {
 	requestBuilder.Body = new(bytes.Buffer)
 	err := json.NewEncoder(requestBuilder.Body.(io.Writer)).Encode(bodyContent)
 	return requestBuilder, err
 }
 
-// SetBodyContentString - set the body content from a string
+// SetBodyContentString sets the body content from a string.
 func (requestBuilder *RequestBuilder) SetBodyContentString(bodyContent string) (*RequestBuilder, error) {
 	requestBuilder.Body = strings.NewReader(bodyContent)
 	return requestBuilder, nil
 }
 
-// SetBodyContentStream - set the body content from an io.Reader instance
+// SetBodyContentStream sets the body content from an io.Reader instance.
 func (requestBuilder *RequestBuilder) SetBodyContentStream(bodyContent io.Reader) (*RequestBuilder, error) {
 	requestBuilder.Body = bodyContent
 	return requestBuilder, nil
 }
 
-// CreateMultipartWriter initializes a new multipart writer
+// CreateMultipartWriter initializes a new multipart writer.
 func (requestBuilder *RequestBuilder) createMultipartWriter() *multipart.Writer {
 	buff := new(bytes.Buffer)
 	requestBuilder.Body = buff
@@ -162,7 +162,7 @@ func (requestBuilder *RequestBuilder) createMultipartWriter() *multipart.Writer 
 }
 
 // CreateFormFile is a convenience wrapper around CreatePart. It creates
-// a new form-data header with the provided field name and file name and contentType
+// a new form-data header with the provided field name and file name and contentType.
 func createFormFile(formWriter *multipart.Writer, fieldname string, filename string, contentType string) (io.Writer, error) {
 	h := make(textproto.MIMEHeader)
 	contentDisposition := fmt.Sprintf(`form-data; name="%s"`, fieldname)
@@ -178,7 +178,7 @@ func createFormFile(formWriter *multipart.Writer, fieldname string, filename str
 	return formWriter.CreatePart(h)
 }
 
-// SetBodyContentForMultipart - sets the body content for a part in a multi-part form
+// SetBodyContentForMultipart sets the body content for a part in a multi-part form.
 func (requestBuilder *RequestBuilder) SetBodyContentForMultipart(contentType string, content interface{}, writer io.Writer) error {
 	var err error
 	if stream, ok := content.(io.Reader); ok {
@@ -197,7 +197,7 @@ func (requestBuilder *RequestBuilder) SetBodyContentForMultipart(contentType str
 	return err
 }
 
-// Build the request
+// Build the request.
 func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
 	// Create multipart form data
 	if len(requestBuilder.Form) > 0 {
@@ -259,7 +259,7 @@ func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
 	return req, nil
 }
 
-// SetBodyContent - sets the body content from one of three different sources
+// SetBodyContent sets the body content from one of three different sources.
 func (requestBuilder *RequestBuilder) SetBodyContent(contentType string, jsonContent interface{}, jsonPatchContent interface{},
 	nonJSONContent interface{}) (builder *RequestBuilder, err error) {
 	if jsonContent != nil {

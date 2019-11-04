@@ -31,38 +31,35 @@ const (
 	sdk_name               = "ibm-go-sdk-core"
 )
 
-// ServiceOptions : This struct contains the options supported by the BaseService methods.
+// ServiceOptions are a struct of configuration values for a service.
 type ServiceOptions struct {
-	// This is the base URL associated with the service instance.
-	// This value will be combined with the path for each operation to form the request URL.
+	// URL to service endpoint. The base url may differ between IBM Cloud regions.
 	URL string
 
-	// This field holds the authenticator for the service instance.
-	// The authenticator will "authenticate" each outbound request by adding additional
-	// information to the request, typically in the form of the "Authorization" http header.
+	// Authenticator adds authentication data to service requests.
 	Authenticator Authenticator
 }
 
-// BaseService : This struct defines a common "service" object that is used by each generated service
-// to manage requests and responses, perform authentication, etc.
+// BaseService defines a common "service" object that is used by each generated
+// service to manage requests and responses, perform authentication, etc.
 type BaseService struct {
 
-	// The options related to the base service.
+	// Configuration values for a service.
 	Options *ServiceOptions
 
 	// A set of "default" http headers to be included with each outbound request.
-	// This can be set by the SDK user.
 	DefaultHeaders http.Header
 
 	// The HTTP Client used to send requests and receive responses.
 	Client *http.Client
 
-	// The value to be used for the "User-Agent" HTTP header that is added to each outbound request.
-	// If this value is not set, then a default value will be used for the header.
+	// The value to be used for the "User-Agent" HTTP header that is added to each
+	// outbound request. If this value is not set, then a default value will be
+	// used for the header.
 	UserAgent string
 }
 
-// NewBaseService : This function will construct a new instance of the BaseService struct, while
+// NewBaseService will construct a new instance of the BaseService struct, while
 // performing validation on input parameters and service options.
 func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*BaseService, error) {
 	if HasBadFirstOrLastChar(options.URL) {
@@ -96,6 +93,8 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 	return &service, nil
 }
 
+// ConfigureService looks for external configuration of a service, then sets
+// service properties.
 func (service *BaseService) ConfigureService(serviceName string) error {
 	// Try to load service properties from external config.
 	serviceProps, err := getServiceProperties(serviceName)
@@ -132,14 +131,14 @@ func (service *BaseService) ConfigureService(serviceName string) error {
 	return nil
 }
 
-// SetURL sets the service URL
+// SetURL sets the service URL.
 //
 // Deprecated: use SetServiceURL instead.
 func (service *BaseService) SetURL(url string) error {
 	return service.SetServiceURL(url)
 }
 
-// SetServiceURL sets the service URL
+// SetServiceURL sets the service URL.
 func (service *BaseService) SetServiceURL(url string) error {
 	if HasBadFirstOrLastChar(url) {
 		return fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
@@ -149,7 +148,7 @@ func (service *BaseService) SetServiceURL(url string) error {
 	return nil
 }
 
-// GetServiceURL returns the service URL
+// GetServiceURL returns the service URL.
 func (service *BaseService) GetServiceURL() string {
 	return service.Options.URL
 }
@@ -159,12 +158,12 @@ func (service *BaseService) SetDefaultHeaders(headers http.Header) {
 	service.DefaultHeaders = headers
 }
 
-// SetHTTPClient updates the client handling the requests
+// SetHTTPClient updates the client handling the requests.
 func (service *BaseService) SetHTTPClient(client *http.Client) {
 	service.Client = client
 }
 
-// DisableSSLVerification skips SSL verification
+// DisableSSLVerification skips SSL verification.
 func (service *BaseService) DisableSSLVerification() {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -172,12 +171,12 @@ func (service *BaseService) DisableSSLVerification() {
 	service.Client.Transport = tr
 }
 
-// BuildUserAgent : Builds the user agent string
+// BuildUserAgent builds the user agent string.
 func (service *BaseService) buildUserAgent() string {
 	return fmt.Sprintf("%s-%s %s", sdk_name, __VERSION__, SystemInfo())
 }
 
-// SetUserAgent : Sets the user agent value
+// SetUserAgent sets the user agent value.
 func (service *BaseService) SetUserAgent(userAgentString string) {
 	if userAgentString == "" {
 		service.UserAgent = service.buildUserAgent()
@@ -185,7 +184,7 @@ func (service *BaseService) SetUserAgent(userAgentString string) {
 	service.UserAgent = userAgentString
 }
 
-// Request performs the HTTP request
+// Request performs the HTTP request.
 func (service *BaseService) Request(req *http.Request, result interface{}) (detailedResponse *DetailedResponse, err error) {
 	// Add default headers.
 	if service.DefaultHeaders != nil {
@@ -272,7 +271,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		return
 	}
 
-	// Operation was successful and we are expecting a response, so deserialize the response.
+	// Operation was successful and we are expecting a response, so de-serialize the response.
 	if result != nil {
 		// For a JSON response, decode it into the response object.
 		if IsJSONMimeType(contentType) {
@@ -307,12 +306,12 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	return
 }
 
-// Errors : a struct for errors array
+// Errors a struct for errors array
 type Errors struct {
 	Errors []Error `json:"errors,omitempty"`
 }
 
-// Error : specifies the error
+// Error specifies the error
 type Error struct {
 	Message string `json:"message,omitempty"`
 }
