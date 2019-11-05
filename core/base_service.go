@@ -40,8 +40,10 @@ type ServiceOptions struct {
 	Authenticator Authenticator
 }
 
-// BaseService defines a common "service" object that is used by each generated
-// service to manage requests and responses, perform authentication, etc.
+// BaseService implements the common functionality between generated services.
+// This includes, but is not limited too, authenticating requests via its
+// authenticator, and wrapping responses from the service endpoint in
+// DetailedResponse instances.
 type BaseService struct {
 
 	// Configuration values for a service.
@@ -59,8 +61,8 @@ type BaseService struct {
 	UserAgent string
 }
 
-// NewBaseService will construct a new instance of the BaseService struct, while
-// performing validation on input parameters and service options.
+// NewBaseService constructs a new instance of BaseService. Validation on input
+// parameters and service options will be performed before instance creation.
 func NewBaseService(options *ServiceOptions) (*BaseService, error) {
 	if HasBadFirstOrLastChar(options.URL) {
 		return nil, fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
