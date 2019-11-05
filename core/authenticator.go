@@ -18,8 +18,8 @@ import (
 	"net/http"
 )
 
-// Authenticator is the interface authentications schemes can implement
-// in order to be used by a service.
+// Authenticator is an interface whose implementations realize authentication
+// schemes.
 type Authenticator interface {
 	AuthenticationType() string
 	Authenticate(*http.Request) error
