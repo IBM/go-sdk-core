@@ -61,9 +61,8 @@ type BaseService struct {
 	UserAgent string
 }
 
-// NewBaseService will construct a new instance of the BaseService struct.
-// Validation on input parameters and service options will be performed before
-// instance creation.
+// NewBaseService constructs a new instance of BaseService. Validation on input
+// parameters and service options will be performed before instance creation.
 func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*BaseService, error) {
 	if HasBadFirstOrLastChar(options.URL) {
 		return nil, fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
@@ -96,8 +95,7 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 	return &service, nil
 }
 
-// ConfigureService looks for external configuration of a service, then sets
-// service properties.
+// ConfigureService updates the service with external configuration values.
 func (service *BaseService) ConfigureService(serviceName string) error {
 	// Try to load service properties from external config.
 	serviceProps, err := getServiceProperties(serviceName)
