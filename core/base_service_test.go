@@ -988,7 +988,7 @@ func TestExtConfigFromEnvironment(t *testing.T) {
 }
 
 func TestExtConfigFromVCAP(t *testing.T) {
-	setTestVCAP()
+	setTestVCAP(t)
 
 	service, err := NewBaseService(
 		&ServiceOptions{
@@ -1037,7 +1037,7 @@ func TestConfigureServiceFromVCAP(t *testing.T) {
 	assert.NotNil(t, service)
 	assert.Equal(t, "bad url", service.Options.URL)
 
-	setTestVCAP()
+	setTestVCAP(t)
 	err = service.ConfigureService("service3")
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
