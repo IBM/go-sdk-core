@@ -942,12 +942,12 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
 	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
 
-	service, err := NewBaseService(
+	service, _ := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
 		})
-	service.ConfigureService("service-1")
+	err := service.ConfigureService("service-1")
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service1/api", service.Options.URL)
@@ -975,12 +975,12 @@ func TestExtConfigError(t *testing.T) {
 func TestExtConfigFromEnvironment(t *testing.T) {
 	setTestEnvironment()
 
-	service, err := NewBaseService(
+	service, _ := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
 		})
-	service.ConfigureService("service3")
+	err := service.ConfigureService("service3")
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service3/api", service.Options.URL)
@@ -992,12 +992,12 @@ func TestExtConfigFromEnvironment(t *testing.T) {
 func TestExtConfigFromVCAP(t *testing.T) {
 	setTestVCAP(t)
 
-	service, err := NewBaseService(
+	service, _ := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
 		})
-	service.ConfigureService("service2")
+	err := service.ConfigureService("service2")
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service2/api", service.Options.URL)
