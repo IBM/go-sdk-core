@@ -88,14 +88,10 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 	// Set a default value for the User-Agent http header.
 	service.SetUserAgent(service.buildUserAgent())
 
-	err := service.ConfigureService(serviceName)
-	if err != nil {
-		return nil, err
-	}
-
 	return &service, nil
 }
 
+// ConfigureService configures the BaseService using external properties.
 func (service *BaseService) ConfigureService(serviceName string) error {
 	// Try to load service properties from external config.
 	serviceProps, err := getServiceProperties(serviceName)
