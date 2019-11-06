@@ -56,7 +56,7 @@ func TestGoodResponseJSON(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -93,7 +93,7 @@ func TestGoodResponseJSONExtraFields(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, _ := NewBaseService(options, "watson", "watson")
+	service, _ := NewBaseService(options)
 	detailedResponse, _ := service.Request(req, new(Foo))
 	result, ok := detailedResponse.Result.(*Foo)
 	assert.Equal(t, true, ok)
@@ -123,7 +123,7 @@ func TestGoodResponseNonJSON(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
@@ -165,7 +165,7 @@ func TestGoodResponseNonJSONNoContentType(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
@@ -204,7 +204,7 @@ func TestGoodResponseJSONDeserFailure(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, _ := NewBaseService(options, "watson", "watson")
+	service, _ := NewBaseService(options)
 	detailedResponse, err := service.Request(req, new(Foo))
 	assert.NotNil(t, detailedResponse)
 	assert.NotNil(t, err)
@@ -238,7 +238,7 @@ func TestGoodResponseNoBody(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -311,7 +311,7 @@ func TestErrorResponseJSON(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, _ := NewBaseService(options, "watson", "watson")
+	service, _ := NewBaseService(options)
 	response, err := service.Request(req, new(Foo))
 	assert.NotNil(t, err)
 	assert.NotNil(t, response)
@@ -345,7 +345,7 @@ func TestErrorResponseJSONDeserError(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, _ := NewBaseService(options, "watson", "watson")
+	service, _ := NewBaseService(options)
 	response, err := service.Request(req, new(Foo))
 	assert.NotNil(t, err)
 	assert.NotNil(t, response)
@@ -375,7 +375,7 @@ func TestErrorResponseNotJSON(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, _ := NewBaseService(options, "watson", "watson")
+	service, _ := NewBaseService(options)
 	response, err := service.Request(req, new(Foo))
 	assert.NotNil(t, err)
 	assert.NotNil(t, response)
@@ -409,7 +409,7 @@ func TestErrorResponseNoBody(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -427,7 +427,7 @@ func TestErrorResponseNoBody(t *testing.T) {
 func TestClient(t *testing.T) {
 	mockClient := http.Client{}
 	authenticator, _ := NewBasicAuthenticator("username", "password")
-	service, _ := NewBaseService(&ServiceOptions{Authenticator: authenticator}, "watson", "watson")
+	service, _ := NewBaseService(&ServiceOptions{Authenticator: authenticator})
 	service.SetHTTPClient(&mockClient)
 	assert.ObjectsAreEqual(mockClient, service.Client)
 }
@@ -452,7 +452,7 @@ func TestRequestForDefaultUserAgent(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, _ := NewBaseService(options, "watson", "watson")
+	service, _ := NewBaseService(options)
 	_, _ = service.Request(req, new(Foo))
 }
 
@@ -476,7 +476,7 @@ func TestRequestForProvidedUserAgent(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, _ := NewBaseService(options, "watson", "watson")
+	service, _ := NewBaseService(options)
 	headers := http.Header{}
 	headers.Add("User-Agent", "provided user agent")
 	service.SetDefaultHeaders(headers)
@@ -489,7 +489,7 @@ func TestIncorrectURL(t *testing.T) {
 		URL:           "{xxx}",
 		Authenticator: authenticator,
 	}
-	_, serviceErr := NewBaseService(options, "watson", "watson")
+	_, serviceErr := NewBaseService(options)
 	expectedError := fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
 	assert.Equal(t, expectedError.Error(), serviceErr.Error())
 }
@@ -499,7 +499,7 @@ func TestDisableSSLVerification(t *testing.T) {
 		URL:           "test.com",
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, _ := NewBaseService(options, "watson", "watson")
+	service, _ := NewBaseService(options)
 	assert.Nil(t, service.Client.Transport)
 	service.DisableSSLVerification()
 	assert.NotNil(t, service.Client.Transport)
@@ -524,7 +524,7 @@ func TestBasicAuth1(t *testing.T) {
 		},
 	}
 
-	service, _ := NewBaseService(options, "watson", "watson")
+	service, _ := NewBaseService(options)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
 
@@ -570,7 +570,7 @@ func TestBasicAuth2(t *testing.T) {
 		},
 	}
 
-	service, err := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -596,7 +596,7 @@ func TestBasicAuthConfigError(t *testing.T) {
 		},
 	}
 
-	service, err := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options)
 	assert.NotNil(t, err)
 	assert.Nil(t, service)
 }
@@ -619,7 +619,7 @@ func TestNoAuth1(t *testing.T) {
 		Authenticator: &NoAuthAuthenticator{},
 	}
 
-	service, err := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -650,7 +650,7 @@ func TestNoAuth2(t *testing.T) {
 		},
 	}
 
-	service, err := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -696,7 +696,7 @@ func TestIAMAuth(t *testing.T) {
 			ApiKey: "xxxxx",
 		},
 	}
-	service, err := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -729,7 +729,7 @@ func TestIAMFailure(t *testing.T) {
 			ApiKey: "xxxxx",
 		},
 	}
-	service, err := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -776,7 +776,7 @@ func TestIAMWithIdSecret(t *testing.T) {
 			ClientSecret: "betts",
 		},
 	}
-	service, err := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -793,7 +793,7 @@ func TestIAMErrorClientIdOnly(t *testing.T) {
 				ApiKey:   "xxxxx",
 				ClientId: "foo",
 			},
-		}, "watson", "watson")
+		})
 	assert.NotNil(t, err)
 }
 
@@ -805,7 +805,7 @@ func TestIAMErrorClientSecretOnly(t *testing.T) {
 				ApiKey:       "xxxxx",
 				ClientSecret: "bar",
 			},
-		}, "watson", "watson")
+		})
 	assert.NotNil(t, err)
 }
 
@@ -818,7 +818,7 @@ func TestIAMNoApiKey(t *testing.T) {
 				ClientId:     "foo",
 				ClientSecret: "bar",
 			},
-		}, "watson", "watson")
+		})
 	assert.NotNil(t, err)
 }
 
@@ -862,7 +862,7 @@ func TestCP4DAuth(t *testing.T) {
 		},
 	}
 
-	service, err := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 
@@ -891,7 +891,7 @@ func TestCP4DFail(t *testing.T) {
 			Password: "bogus",
 		},
 	}
-	service, err := NewBaseService(options, "watson", "watson")
+	service, err := NewBaseService(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -907,7 +907,7 @@ func TestSetURL(t *testing.T) {
 			Authenticator: &IamAuthenticator{
 				ApiKey: "xxxxx",
 			},
-		}, "watson", "watson")
+		})
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 
@@ -919,7 +919,7 @@ func TestSetServiceURL(t *testing.T) {
 	service, err := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
-		}, "watson", "watson")
+		})
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 
@@ -946,7 +946,8 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
-		}, "service-1", "service-1")
+		})
+	service.ConfigureService("service-1")
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service1/api", service.Options.URL)
@@ -960,13 +961,13 @@ func TestExtConfigError(t *testing.T) {
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
 	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
 
-	service, err := NewBaseService(
+	service, _ := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
-		}, "error4", "error4")
+		})
+	err := service.ConfigureService("error4")
 	assert.NotNil(t, err)
-	assert.Nil(t, service)
 
 	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
@@ -978,7 +979,8 @@ func TestExtConfigFromEnvironment(t *testing.T) {
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
-		}, "service3", "service3")
+		})
+	service.ConfigureService("service3")
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service3/api", service.Options.URL)
@@ -994,7 +996,8 @@ func TestExtConfigFromVCAP(t *testing.T) {
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
-		}, "service2", "service2")
+		})
+	service.ConfigureService("service2")
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service2/api", service.Options.URL)
@@ -1008,7 +1011,7 @@ func TestConfigureServiceFromCredFile(t *testing.T) {
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
-		}, "service_1", "service_1")
+		})
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "bad url", service.Options.URL)
@@ -1032,7 +1035,7 @@ func TestConfigureServiceFromVCAP(t *testing.T) {
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
-		}, "service2", "service2")
+		})
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "bad url", service.Options.URL)
@@ -1052,7 +1055,7 @@ func TestConfigureServiceFromEnv(t *testing.T) {
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
-		}, "service_1", "service_1")
+		})
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "bad url", service.Options.URL)
@@ -1077,7 +1080,7 @@ func TestConfigureServiceError(t *testing.T) {
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
-		}, "service-1", "service-1")
+		})
 	assert.Nil(t, err)
 	err = service.ConfigureService("")
 	assert.NotNil(t, err)
@@ -1085,7 +1088,7 @@ func TestConfigureServiceError(t *testing.T) {
 }
 
 func TestAuthNotConfigured(t *testing.T) {
-	service, err := NewBaseService(&ServiceOptions{}, "noauth_service", "noauth_service")
+	service, err := NewBaseService(&ServiceOptions{})
 	assert.NotNil(t, err)
 	assert.Nil(t, service)
 }

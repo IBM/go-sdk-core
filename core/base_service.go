@@ -64,7 +64,7 @@ type BaseService struct {
 
 // NewBaseService : This function will construct a new instance of the BaseService struct, while
 // performing validation on input parameters and service options.
-func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*BaseService, error) {
+func NewBaseService(options *ServiceOptions) (*BaseService, error) {
 	if HasBadFirstOrLastChar(options.URL) {
 		return nil, fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
 	}
