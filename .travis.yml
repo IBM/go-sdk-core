@@ -27,7 +27,7 @@ script:
 - golangci-lint run
 
 before_deploy:
-- pip install bumpversion
+- pip install --user bumpversion
 - nvm install 12
 - npm install @semantic-release/changelog
 - npm install @semantic-release/exec
