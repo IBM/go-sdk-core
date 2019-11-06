@@ -77,7 +77,7 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 }
 
 func TestGetAuthenticatorFromEnvironment3(t *testing.T) {
-	setTestVCAP()
+	setTestVCAP(t)
 
 	authenticator, err := GetAuthenticatorFromEnvironment("service-1")
 	assert.Nil(t, err)

@@ -203,7 +203,8 @@ func parsePropertyStrings(credentialKey string, propertyStrings []string) map[st
 
 // Service : The service
 type service struct {
-	Credentials credential `json:"credentials,omitempty"`
+	Name        string      `json:"name,omitempty"`
+	Credentials *credential `json:"credentials,omitempty"`
 }
 
 // Credential : The service credential
@@ -222,11 +223,15 @@ func loadFromVCAPServices(serviceName string) *credential {
 		if err := json.Unmarshal([]byte(vcapServices), &rawServices); err != nil {
 			return nil
 		}
-		for name, instances := range rawServices {
-			if name == serviceName {
-				creds := &instances[0].Credentials
-				return creds
+		for _, serviceEntries := range rawServices {
+			for _, service := range serviceEntries {
+				if service.Name == serviceName {
+					return service.Credentials
+				}
 			}
+		}
+		if serviceList, exists := rawServices[serviceName]; exists && len(serviceList) > 0 {
+			return serviceList[0].Credentials
 		}
 	}
 	return nil
