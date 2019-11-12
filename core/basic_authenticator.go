@@ -26,7 +26,8 @@ import (
 //        Authorization: Basic <encoded username and password>
 //
 type BasicAuthenticator struct {
-	Username string // User-supplied username for basic auth.
+        // Username is the user-supplied basic auth username [required].
+        Username string
 	Password string // User-supplied password for basic auth.
 }
 
