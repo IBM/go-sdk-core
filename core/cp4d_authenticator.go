@@ -51,7 +51,7 @@ type CloudPakForDataAuthenticator struct {
 	// or not. Defaults to false.
 	DisableSSLVerification bool
 
-	// Default headers to be sent with every CP4D token request.
+	// Default headers to be sent with every CP4D token request [optional].
 	Headers map[string]string
 
 	// The http.Client object used to invoke token server requests. If not
