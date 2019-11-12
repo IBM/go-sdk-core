@@ -307,12 +307,12 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	return
 }
 
-// Errors a struct for errors array
+// Errors a struct for errors array.
 type Errors struct {
 	Errors []Error `json:"errors,omitempty"`
 }
 
-// Error specifies the error
+// Error specifies the error.
 type Error struct {
 	Message string `json:"message,omitempty"`
 }
