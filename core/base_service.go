@@ -310,7 +310,7 @@ type Errors struct {
 	Errors []Error `json:"errors,omitempty"`
 }
 
-// Error specifies the error.
+// Error is a struct used to represent a single error received in an operation response.
 type Error struct {
 	Message string `json:"message,omitempty"`
 }
