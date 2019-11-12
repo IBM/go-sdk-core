@@ -36,7 +36,8 @@ type ServiceOptions struct {
 	// URL to service endpoint. The base url may differ between IBM Cloud regions.
 	URL string
 
-	// Authenticator adds authentication data to service requests.
+	// Authenticator holds the authenticator implementation to be used by the service instance
+	// to authenticate outbound requests, typically by adding the HTTP "Authorization" header.
 	Authenticator Authenticator
 }
 
