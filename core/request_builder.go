@@ -110,7 +110,7 @@ func (requestBuilder *RequestBuilder) AddQuery(name string, value string) *Reque
 	return requestBuilder
 }
 
-// AddHeader adds header name and value.
+// AddHeader adds a header name and value to the request.
 func (requestBuilder *RequestBuilder) AddHeader(name string, value string) *RequestBuilder {
 	requestBuilder.Header[name] = []string{value}
 	return requestBuilder
