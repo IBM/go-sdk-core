@@ -304,7 +304,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	return
 }
 
-// Errors a struct for errors array.
+// Errors is a struct used to hold an array of errors received in an operation response.
 type Errors struct {
 	Errors []Error `json:"errors,omitempty"`
 }
