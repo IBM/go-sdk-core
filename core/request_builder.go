@@ -104,7 +104,7 @@ func (requestBuilder *RequestBuilder) ConstructHTTPURL(serviceURL string, pathSe
 	return requestBuilder, nil
 }
 
-// AddQuery adds Query name and value.
+// AddQuery adds a query parameter name and value to the request.
 func (requestBuilder *RequestBuilder) AddQuery(name string, value string) *RequestBuilder {
 	requestBuilder.Query[name] = append(requestBuilder.Query[name], value)
 	return requestBuilder
