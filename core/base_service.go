@@ -182,7 +182,7 @@ func (service *BaseService) SetUserAgent(userAgentString string) {
 	service.UserAgent = userAgentString
 }
 
-// Request performs the HTTP request.
+// Request invokes the specified HTTP request and returns the response.
 func (service *BaseService) Request(req *http.Request, result interface{}) (detailedResponse *DetailedResponse, err error) {
 	// Add default headers.
 	if service.DefaultHeaders != nil {
