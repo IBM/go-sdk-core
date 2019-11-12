@@ -33,7 +33,8 @@ const (
 
 // ServiceOptions is a struct of configuration values for a service.
 type ServiceOptions struct {
-	// URL to service endpoint. The base url may differ between IBM Cloud regions.
+	// This is the base URL associated with the service instance.
+	// This value will be combined with the path for each operation to form the request URL.
 	URL string
 
 	// Authenticator holds the authenticator implementation to be used by the service instance
