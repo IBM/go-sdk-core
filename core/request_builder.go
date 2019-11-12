@@ -104,19 +104,20 @@ func (requestBuilder *RequestBuilder) ConstructHTTPURL(serviceURL string, pathSe
 	return requestBuilder, nil
 }
 
-// AddQuery adds Query name and value.
+// AddQuery adds a query parameter name and value to the request.
 func (requestBuilder *RequestBuilder) AddQuery(name string, value string) *RequestBuilder {
 	requestBuilder.Query[name] = append(requestBuilder.Query[name], value)
 	return requestBuilder
 }
 
-// AddHeader adds header name and value.
+// AddHeader adds a header name and value to the request.
 func (requestBuilder *RequestBuilder) AddHeader(name string, value string) *RequestBuilder {
 	requestBuilder.Header[name] = []string{value}
 	return requestBuilder
 }
 
-// AddFormData makes an entry for Form data.
+// AddFormData adds a new mime part (constructed from the input parameters)
+// to the request's multi-part form.
 func (requestBuilder *RequestBuilder) AddFormData(fieldName string, fileName string, contentType string,
 	contents interface{}) *RequestBuilder {
 	if fileName == "" {
