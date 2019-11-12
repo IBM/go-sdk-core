@@ -27,7 +27,7 @@ import (
 // 		 Authorization: Bearer <bearer-token>
 type BearerTokenAuthenticator struct {
 
-	// The bearer token value to be used to authenticate request.
+	// The bearer token to use for authenticating requests [required].
 	BearerToken string
 }
 
