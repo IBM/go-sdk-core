@@ -47,7 +47,8 @@ type CloudPakForDataAuthenticator struct {
         // The password used to obtain a bearer token [required].
         Password string
 
-	// A flag that indicates whether SSL hostname verification should be disabled
+	// A flag that indicates whether verification of the server's SSL certificate should be disabled [optional].
+	// Default: false
 	// or not. Defaults to false.
 	DisableSSLVerification bool
 
