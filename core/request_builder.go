@@ -116,7 +116,8 @@ func (requestBuilder *RequestBuilder) AddHeader(name string, value string) *Requ
 	return requestBuilder
 }
 
-// AddFormData makes an entry for Form data.
+// AddFormData adds a new mime part (constructed from the input parameters)
+// to the request's multi-part form.
 func (requestBuilder *RequestBuilder) AddFormData(fieldName string, fileName string, contentType string,
 	contents interface{}) *RequestBuilder {
 	if fileName == "" {
