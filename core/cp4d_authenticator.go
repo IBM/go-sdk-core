@@ -42,7 +42,8 @@ type CloudPakForDataAuthenticator struct {
 	// The URL representing the Cloud Pak for Data token service endpoint [required].
 	URL string
 
-	Username string // The username used to obtain a bearer token.
+        // The username used to obtain a bearer token [required].
+        Username string
         // The password used to obtain a bearer token [required].
         Password string
 
