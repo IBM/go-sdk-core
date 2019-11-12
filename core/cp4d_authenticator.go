@@ -33,7 +33,7 @@ const (
 )
 
 // CloudPakForDataAuthenticator utilizes a username and password pair to
-// obtain a suitable bearer token, and adds it requests.
+// obtain a suitable bearer token, and adds it to requests.
 //
 // The bearer token will be sent as an Authorization header in the form:
 //
