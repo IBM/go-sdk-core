@@ -40,7 +40,7 @@ const (
 // 		Authorization: Bearer <bearer-token>
 type IamAuthenticator struct {
 
-	// [Required] The apikey used to fetch the access token from the IAM token server.
+	// The apikey used to fetch the bearer token from the IAM token server [required].
 	ApiKey string
 
 	// [Optional] The URL representing the IAM token server's endpoint.
