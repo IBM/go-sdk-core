@@ -28,7 +28,8 @@ import (
 type BasicAuthenticator struct {
         // Username is the user-supplied basic auth username [required].
         Username string
-	Password string // User-supplied password for basic auth.
+        // Password is the user-supplied basic auth password [required].
+        Password string
 }
 
 // NewBasicAuthenticator constructs a new BasicAuthenticator instance.
