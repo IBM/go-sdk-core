@@ -43,7 +43,8 @@ type CloudPakForDataAuthenticator struct {
 	URL string
 
 	Username string // The username used to obtain a bearer token.
-	Password string // The password used to obtain a bearer token.
+        // The password used to obtain a bearer token [required].
+        Password string
 
 	// A flag that indicates whether SSL hostname verification should be disabled
 	// or not. Defaults to false.
