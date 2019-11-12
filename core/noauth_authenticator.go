@@ -19,7 +19,7 @@ import (
 )
 
 // The NoAuthAuthenticator is simply a placeholder implementation of the Authenticator interface
-// that perform no authentication.   This might be useful in testing/debugging situations.
+// that performs no authentication. This might be useful in testing/debugging situations.
 type NoAuthAuthenticator struct {
 }
 
