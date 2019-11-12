@@ -41,7 +41,8 @@ type ServiceOptions struct {
 	Authenticator Authenticator
 }
 
-// BaseService implements the common functionality between generated services.
+// BaseService implements the common functionality shared by generated services to manage
+// requests and responses, authenticate outbound requests, etc.
 // This includes, but is not limited too, authenticating requests via its
 // authenticator, and wrapping responses from the service endpoint in
 // DetailedResponse instances.
