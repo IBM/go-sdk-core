@@ -18,7 +18,7 @@ import (
 	"net/http"
 )
 
-// Authenticator is an interface whose implementations realize authentication
+// Authenticator describes the set of methods implemented by each authenticator
 // schemes.
 type Authenticator interface {
 	AuthenticationType() string
