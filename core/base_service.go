@@ -63,7 +63,7 @@ type BaseService struct {
 
 // NewBaseService constructs a new instance of BaseService. Validation on input
 // parameters and service options will be performed before instance creation.
-func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*BaseService, error) {
+func NewBaseService(options *ServiceOptions) (*BaseService, error) {
 	if HasBadFirstOrLastChar(options.URL) {
 		return nil, fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
 	}
@@ -86,11 +86,6 @@ func NewBaseService(options *ServiceOptions, serviceName, displayName string) (*
 
 	// Set a default value for the User-Agent http header.
 	service.SetUserAgent(service.buildUserAgent())
-
-	err := service.ConfigureService(serviceName)
-	if err != nil {
-		return nil, err
-	}
 
 	return &service, nil
 }

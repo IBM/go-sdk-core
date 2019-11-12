@@ -1,0 +1,79 @@
+{
+  "service-1": [
+    {
+      "credentials": {
+        "url": "https://service1/api",
+        "username": "my-vcap-user",
+        "password": "my-vcap-password",
+        "apikey": "my-vcap-apikey1"
+      }
+    }
+  ],
+  "service2": [
+    {
+      "credentials": {
+        "url": "https://service2/api",
+        "username": "my-vcap-user",
+        "password": "my-vcap-password"
+      }
+    }
+  ],
+  "service3": [
+    {
+      "credentials": {
+        "url": "https://service3/api",
+        "apikey": "my-vcap-apikey3"
+      }
+    }
+  ],
+  "key_to_service_entry_1": [
+    {
+      "name": "service4",
+      "credentials": {
+        "url": "https://service3/api",
+        "apikey": "my-vcap-apikey3"
+      }
+    },
+    {
+      "name": "service_entry_key_and_key_to_service_entries",
+      "label": "devops-insights",
+      "plan": "standard",
+      "credentials": {
+        "url": "https://on.the.toolchainplatform.net/devops-insights/api",
+        "username": "not-a-username",
+        "password": "not-a-password"
+      }
+    }
+  ],
+  "key_to_service_entry_2": [
+    {
+      "label": "devops-insights",
+      "plan": "standard",
+      "credentials": {
+        "url": "https://on.the.toolchainplatform.net/devops-insights-3/api",
+        "username": "not-a-username-3",
+        "password": "not-a-password-3"
+      }
+    }
+  ],
+  "service_entry_key_and_key_to_service_entries": [
+    {
+      "name": "service_entry_key-2",
+      "label": "devops-insights",
+      "plan": "elite",
+      "credentials": {
+        "url": "https://on.the.toolchainplatform.net/devops-insights-2/api",
+        "username": "not-a-username-2",
+        "password": "not-a-password-2"
+      }
+    }
+  ],
+  "empty_service": [],
+  "no-creds-service": [
+    {
+      "name": "no-creds-service",
+      "label": "devops-insights",
+      "plan": "elite"
+    }
+  ]
+}
