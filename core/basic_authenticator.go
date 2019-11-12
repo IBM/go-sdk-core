@@ -52,7 +52,7 @@ func newBasicAuthenticatorFromMap(properties map[string]string) (*BasicAuthentic
 	return NewBasicAuthenticator(properties[PROPNAME_USERNAME], properties[PROPNAME_PASSWORD])
 }
 
-// AuthenticationType returns the constant IBM/go-sdk-core uses to identify
+// AuthenticationType returns the authentication type for this authenticator.
 // the authentication scheme implemented by BasicAuthenticator.
 func (BasicAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_BASIC
