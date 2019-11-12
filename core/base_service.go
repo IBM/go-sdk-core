@@ -31,7 +31,7 @@ const (
 	sdk_name               = "ibm-go-sdk-core"
 )
 
-// ServiceOptions are a struct of configuration values for a service.
+// ServiceOptions is a struct of configuration values for a service.
 type ServiceOptions struct {
 	// URL to service endpoint. The base url may differ between IBM Cloud regions.
 	URL string
