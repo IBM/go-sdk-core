@@ -32,7 +32,9 @@ const (
 	REQUEST_TOKEN_RESPONSE_TYPE = "cloud_iam"
 )
 
-// IamAuthenticator utilizes an apikey, or ClientId and ClientSecret
+// IamAuthenticator uses an apikey to obtain a suitable bearer token value,
+// and adds the bearer token to requests via an Authorization header
+// of the form:
 // pair to obtain a suitable bearer token, and adds it to requests.
 //
 // The bearer token will be sent as an Authorization header in the form:
