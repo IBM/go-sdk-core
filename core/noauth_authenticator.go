@@ -18,7 +18,7 @@ import (
 	"net/http"
 )
 
-// The NoAuthAuthenticator is simply a placeholder implementation of the Authenticator interface
+// NoAuthAuthenticator is simply a placeholder implementation of the Authenticator interface
 // that performs no authentication. This might be useful in testing/debugging situations.
 type NoAuthAuthenticator struct {
 }

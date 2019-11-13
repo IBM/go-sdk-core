@@ -24,11 +24,13 @@ import (
 )
 
 const (
-	// IBM_CREDENTIAL_FILE_ENVVAR is the environment variable name that points
-	// the ibm credentials filepath.
+	// IBM_CREDENTIAL_FILE_ENVVAR is the environment key used to find the path to
+	// a credentials file.
 	IBM_CREDENTIAL_FILE_ENVVAR = "IBM_CREDENTIALS_FILE"
-	// DEFAULT_CREDENTIAL_FILE_NAME is the default file path for a credentials
-	// file.
+	// DEFAULT_CREDENTIAL_FILE_NAME is the default filename for a credentials file.
+	// It is used when "IBM_CREDENTIALS_FILE" is not specified. The filename will
+	// be searched for within the program's working directory, and then the OS's
+	// current user directory.
 	DEFAULT_CREDENTIAL_FILE_NAME = "ibm-credentials.env"
 )
 

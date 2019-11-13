@@ -40,6 +40,7 @@ const (
 // The bearer token will be sent as an Authorization header in the form:
 //
 // 		Authorization: Bearer <bearer-token>
+//
 type IamAuthenticator struct {
 
 	// The apikey used to fetch the bearer token from the IAM token server [required].

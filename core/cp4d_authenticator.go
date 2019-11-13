@@ -38,14 +38,15 @@ const (
 // The bearer token will be sent as an Authorization header in the form:
 //
 // 		Authorization: Bearer <bearer-token>
+//
 type CloudPakForDataAuthenticator struct {
 	// The URL representing the Cloud Pak for Data token service endpoint [required].
 	URL string
 
-        // The username used to obtain a bearer token [required].
-        Username string
-        // The password used to obtain a bearer token [required].
-        Password string
+	// The username used to obtain a bearer token [required].
+	Username string
+	// The password used to obtain a bearer token [required].
+	Password string
 
 	// A flag that indicates whether verification of the server's SSL certificate should be disabled [optional].
 	// Default: false

@@ -23,13 +23,13 @@ import (
 //
 // Basic Authorization will be sent as an Authorization header in the form:
 //
-//        Authorization: Basic <encoded username and password>
+// 		Authorization: Basic <encoded username and password>
 //
 type BasicAuthenticator struct {
-        // Username is the user-supplied basic auth username [required].
-        Username string
-        // Password is the user-supplied basic auth password [required].
-        Password string
+	// Username is the user-supplied basic auth username [required].
+	Username string
+	// Password is the user-supplied basic auth password [required].
+	Password string
 }
 
 // NewBasicAuthenticator constructs a new BasicAuthenticator instance.
@@ -55,7 +55,6 @@ func newBasicAuthenticatorFromMap(properties map[string]string) (*BasicAuthentic
 }
 
 // AuthenticationType returns the authentication type for this authenticator.
-// the authentication scheme implemented by BasicAuthenticator.
 func (BasicAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_BASIC
 }
@@ -65,6 +64,7 @@ func (BasicAuthenticator) AuthenticationType() string {
 // Basic Authorization will be added to the request's headers in the form:
 //
 // 		Authorization: Basic <encoded username and password>
+//
 func (this BasicAuthenticator) Authenticate(request *http.Request) error {
 	request.SetBasicAuth(this.Username, this.Password)
 	return nil
