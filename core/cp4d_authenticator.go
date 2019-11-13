@@ -100,7 +100,7 @@ func newCloudPakForDataAuthenticatorFromMap(properties map[string]string) (*Clou
 		disableSSL, nil)
 }
 
-// AuthenticationType returns the constant IBM/go-sdk-core uses to identify
+// AuthenticationType returns the authentication type for this authenticator.
 // the authentication scheme implemented by CloudPakForDataAuthenticator.
 func (CloudPakForDataAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_CP4D
