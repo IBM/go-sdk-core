@@ -55,7 +55,7 @@ type CloudPakForDataAuthenticator struct {
 	// Default headers to be sent with every CP4D token request [optional].
 	Headers map[string]string
 
-	// The http.Client object used to invoke token server requests. If not
+	// The http.Client object used to invoke token server requests [optional].
 	// specified by the user, a suitable default Client will be constructed.
 	Client *http.Client
 
