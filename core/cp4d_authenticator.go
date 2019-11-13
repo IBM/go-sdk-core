@@ -38,14 +38,15 @@ const (
 // The bearer token will be sent as an Authorization header in the form:
 //
 // 		Authorization: Bearer <bearer-token>
+//
 type CloudPakForDataAuthenticator struct {
 	// The URL representing the Cloud Pak for Data token service endpoint [required].
 	URL string
 
-        // The username used to obtain a bearer token [required].
-        Username string
-        // The password used to obtain a bearer token [required].
-        Password string
+	// The username used to obtain a bearer token [required].
+	Username string
+	// The password used to obtain a bearer token [required].
+	Password string
 
 	// A flag that indicates whether verification of the server's SSL certificate should be disabled [optional].
 	// Default: false
@@ -56,7 +57,7 @@ type CloudPakForDataAuthenticator struct {
 	Headers map[string]string
 
 	// The http.Client object used to invoke token server requests [optional].
-	// specified by the user, a suitable default Client will be constructed.
+	// If not specified, a suitable default Client will be constructed.
 	Client *http.Client
 
 	// The cached token and expiration time.
@@ -100,13 +101,13 @@ func newCloudPakForDataAuthenticatorFromMap(properties map[string]string) (*Clou
 		disableSSL, nil)
 }
 
-// AuthenticationType returns the constant IBM/go-sdk-core uses to identify
+// AuthenticationType returns the authentication type for this authenticator.
 // the authentication scheme implemented by CloudPakForDataAuthenticator.
 func (CloudPakForDataAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_CP4D
 }
 
-// Validate username, password, and url for token requests.
+// Validate the authenticator's configuration.
 //
 // Ensures the username, password, and url are not None. Additionally, ensures
 // they do not contain invalid characters.

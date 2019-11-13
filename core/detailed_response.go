@@ -20,7 +20,7 @@ import (
 	"net/http"
 )
 
-// DetailedResponse is a wrapper for server responses received by generated
+// DetailedResponse holds the response information received from the server.
 // service methods.
 type DetailedResponse struct {
 

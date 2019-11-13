@@ -24,7 +24,8 @@ import (
 //
 // The bearer token will be sent as an Authorization header in the form:
 //
-// 		 Authorization: Bearer <bearer-token>
+// 		Authorization: Bearer <bearer-token>
+//
 type BearerTokenAuthenticator struct {
 
 	// The bearer token to use for authenticating requests [required].
@@ -51,8 +52,7 @@ func newBearerTokenAuthenticatorFromMap(properties map[string]string) (*BearerTo
 	return NewBearerTokenAuthenticator(properties[PROPNAME_BEARER_TOKEN])
 }
 
-// AuthenticationType returns the constant IBM/go-sdk-core uses to identify
-// the authentication scheme implemented by BearerTokenAuthenticator.
+// AuthenticationType returns the authentication type for this authenticator.
 func (BearerTokenAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_BEARER_TOKEN
 }
@@ -62,6 +62,7 @@ func (BearerTokenAuthenticator) AuthenticationType() string {
 // The bearer token will be added to the request's headers in the form:
 //
 // 		Authorization: Bearer <bearer-token>
+//
 func (this BearerTokenAuthenticator) Authenticate(request *http.Request) error {
 	request.Header.Set("Authorization", fmt.Sprintf(`Bearer %s`, this.BearerToken))
 	return nil
