@@ -56,7 +56,7 @@ type CloudPakForDataAuthenticator struct {
 	Headers map[string]string
 
 	// The http.Client object used to invoke token server requests [optional].
-	// specified by the user, a suitable default Client will be constructed.
+	// If not specified, a suitable default Client will be constructed.
 	Client *http.Client
 
 	// The cached token and expiration time.
