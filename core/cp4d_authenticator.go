@@ -128,12 +128,13 @@ func (authenticator CloudPakForDataAuthenticator) Validate() error {
 	return nil
 }
 
-// Authenticate adds the bearer token (obtained from the token server) to the specified request
-// via the Authorization header in the form:    Authorization Bearer <bearer-token>
+// Authenticate adds the bearer token (obtained from the token server) to
+// the specified request.
 //
 // The CP4D bearer token will be added to the request's headers in the form:
 //
 // 		Authorization: Bearer <bearer-token>
+//
 func (authenticator CloudPakForDataAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.getToken()
 	if err != nil {
