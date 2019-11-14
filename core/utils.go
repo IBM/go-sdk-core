@@ -78,27 +78,27 @@ func ValidateStruct(param interface{}, paramName string) error {
 	return nil
 }
 
-// StringPtr return pointer to string literal.
+// StringPtr returns a pointer to string literal.
 func StringPtr(literal string) *string {
 	return &literal
 }
 
-// BoolPtr return pointer to boolean literal.
+// BoolPtr returns a pointer to boolean literal.
 func BoolPtr(literal bool) *bool {
 	return &literal
 }
 
-// Int64Ptr return pointer to int64 literal.
+// Int64Ptr returns a pointer to int64 literal.
 func Int64Ptr(literal int64) *int64 {
 	return &literal
 }
 
-// Float32Ptr return pointer to float32 literal.
+// Float32Ptr returns a pointer to float32 literal.
 func Float32Ptr(literal float32) *float32 {
 	return &literal
 }
 
-// Float64Ptr return pointer to float64 literal.
+// Float64Ptr returns a pointer to float64 literal.
 func Float64Ptr(literal float64) *float64 {
 	return &literal
 }
