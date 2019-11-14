@@ -127,7 +127,7 @@ func (authenticator CloudPakForDataAuthenticator) Validate() error {
 }
 
 // Authenticate adds the bearer token (obtained from the token server) to the
-// specified request
+// specified request.
 //
 // The CP4D bearer token will be added to the request's headers in the form:
 //

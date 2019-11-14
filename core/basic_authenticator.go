@@ -43,7 +43,7 @@ func NewBasicAuthenticator(username string, password string) (*BasicAuthenticato
 	return obj, nil
 }
 
-// newBasicAuthenticatorFromMap: Constructs a new BasicAuthenticator instance
+// newBasicAuthenticatorFromMap constructs a new BasicAuthenticator instance
 // from a map.
 func newBasicAuthenticatorFromMap(properties map[string]string) (*BasicAuthenticator, error) {
 	if properties == nil {

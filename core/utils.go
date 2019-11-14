@@ -28,7 +28,7 @@ import (
 	validator "gopkg.in/go-playground/validator.v9"
 )
 
-// Validate single instance of Validate, it caches struct info.
+// Validate is a shared validator instance used to perform validation of structs.
 var Validate *validator.Validate
 
 func init() {

@@ -57,7 +57,7 @@ type FormData struct {
 	contents    interface{}
 }
 
-// RequestBuilder is an HTTP request to be sent to the service.
+// RequestBuilder is used to build an HTTP Request instance.
 type RequestBuilder struct {
 	Method string
 	URL    *url.URL
@@ -198,7 +198,7 @@ func (requestBuilder *RequestBuilder) SetBodyContentForMultipart(contentType str
 	return err
 }
 
-// Build the request.
+// Build builds an HTTP Request object from this RequestBuilder instance.
 func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
 	// Create multipart form data
 	if len(requestBuilder.Form) > 0 {

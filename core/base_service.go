@@ -169,7 +169,7 @@ func (service *BaseService) DisableSSLVerification() {
 	service.Client.Transport = tr
 }
 
-// BuildUserAgent builds the user agent string.
+// buildUserAgent builds the user agent string.
 func (service *BaseService) buildUserAgent() string {
 	return fmt.Sprintf("%s-%s %s", sdk_name, __VERSION__, SystemInfo())
 }

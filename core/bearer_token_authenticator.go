@@ -19,7 +19,7 @@ import (
 	"net/http"
 )
 
-// BearerTokenAuthenticator will take a user-supplied bearer token, and adds
+// BearerTokenAuthenticator will take a user-supplied bearer token and adds
 // it to requests via an Authorization header of the form:
 //
 // 		Authorization: Bearer <bearer-token>
