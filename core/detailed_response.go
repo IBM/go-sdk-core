@@ -21,7 +21,6 @@ import (
 )
 
 // DetailedResponse holds the response information received from the server.
-// service methods.
 type DetailedResponse struct {
 
 	// The HTTP status code associated with the response.

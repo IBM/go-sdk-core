@@ -19,16 +19,15 @@ import (
 	"net/http"
 )
 
-// BearerTokenAuthenticator will add a user-supplied bearer token
-// to requests.
-//
-// The bearer token will be sent as an Authorization header in the form:
+// BearerTokenAuthenticator will add a user-supplied bearer token, and adds
+// the bearer token to requests via an Authorization header of the
+// form:
 //
 // 		Authorization: Bearer <bearer-token>
 //
 type BearerTokenAuthenticator struct {
 
-	// The bearer token to use for authenticating requests [required].
+	// The bearer token value to be used to authenticate request [required].
 	BearerToken string
 }
 

@@ -33,20 +33,19 @@ const (
 
 // ServiceOptions is a struct of configuration values for a service.
 type ServiceOptions struct {
-	// This is the base URL associated with the service instance.
-	// This value will be combined with the path for each operation to form the request URL.
+	// This is the base URL associated with the service instance. This value will
+	// be combined with the paths for each operation to form the request URL
+	// [required].
 	URL string
 
-	// Authenticator holds the authenticator implementation to be used by the service instance
-	// to authenticate outbound requests, typically by adding the HTTP "Authorization" header.
+	// Authenticator holds the authenticator implementation to be used by the
+	// service instance to authenticate outbound requests, typically by adding the
+	// HTTP "Authorization" header.
 	Authenticator Authenticator
 }
 
-// BaseService implements the common functionality shared by generated services to manage
-// requests and responses, authenticate outbound requests, etc.
-// This includes, but is not limited too, authenticating requests via its
-// authenticator, and wrapping responses from the service endpoint in
-// DetailedResponse instances.
+// BaseService implements the common functionality shared by generated services
+// to manage requests and responses, authenticate outbound requests, etc.
 type BaseService struct {
 
 	// Configuration values for a service.
@@ -305,12 +304,14 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	return
 }
 
-// Errors is a struct used to hold an array of errors received in an operation response.
+// Errors is a struct used to hold an array of errors received in an operation
+// response.
 type Errors struct {
 	Errors []Error `json:"errors,omitempty"`
 }
 
-// Error is a struct used to represent a single error received in an operation response.
+// Error is a struct used to represent a single error received in an operation
+// response.
 type Error struct {
 	Message string `json:"message,omitempty"`
 }

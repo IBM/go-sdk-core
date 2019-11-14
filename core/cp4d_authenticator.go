@@ -32,10 +32,9 @@ const (
 	PRE_AUTH_PATH = "/v1/preauth/validateAuth"
 )
 
-// CloudPakForDataAuthenticator utilizes a username and password pair to
-// obtain a suitable bearer token, and adds it to requests.
-//
-// The bearer token will be sent as an Authorization header in the form:
+// CloudPakForDataAuthenticator uses a username and password pair to obtain a
+// suitable bearer token, and adds the bearer token to requests via an
+// Authorization header of the form:
 //
 // 		Authorization: Bearer <bearer-token>
 //
@@ -45,19 +44,19 @@ type CloudPakForDataAuthenticator struct {
 
 	// The username used to obtain a bearer token [required].
 	Username string
+
 	// The password used to obtain a bearer token [required].
 	Password string
 
-	// A flag that indicates whether verification of the server's SSL certificate should be disabled [optional].
-	// Default: false
-	// or not. Defaults to false.
+	// A flag that indicates whether verification of the server's SSL certificate
+	// should be disabled; defaults to false [optional].
 	DisableSSLVerification bool
 
 	// Default headers to be sent with every CP4D token request [optional].
 	Headers map[string]string
 
-	// The http.Client object used to invoke token server requests [optional].
-	// If not specified, a suitable default Client will be constructed.
+	// The http.Client object used to invoke token server requests [optional]. If
+	// not specified, a suitable default Client will be constructed.
 	Client *http.Client
 
 	// The cached token and expiration time.
@@ -102,12 +101,11 @@ func newCloudPakForDataAuthenticatorFromMap(properties map[string]string) (*Clou
 }
 
 // AuthenticationType returns the authentication type for this authenticator.
-// the authentication scheme implemented by CloudPakForDataAuthenticator.
 func (CloudPakForDataAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_CP4D
 }
 
-// Validate the authenticator's configuration.
+// Validate validates the authenticator's configuration.
 //
 // Ensures the username, password, and url are not None. Additionally, ensures
 // they do not contain invalid characters.
@@ -128,8 +126,8 @@ func (authenticator CloudPakForDataAuthenticator) Validate() error {
 	return nil
 }
 
-// Authenticate adds the bearer token (obtained from the token server) to
-// the specified request.
+// Authenticate adds the bearer token (obtained from the token server) to the
+// specified request
 //
 // The CP4D bearer token will be added to the request's headers in the form:
 //

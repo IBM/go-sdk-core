@@ -35,31 +35,34 @@ const (
 // IamAuthenticator uses an apikey to obtain a suitable bearer token value,
 // and adds the bearer token to requests via an Authorization header
 // of the form:
-// pair to obtain a suitable bearer token, and adds it to requests.
-//
-// The bearer token will be sent as an Authorization header in the form:
 //
 // 		Authorization: Bearer <bearer-token>
 //
 type IamAuthenticator struct {
 
-	// The apikey used to fetch the bearer token from the IAM token server [required].
+	// The apikey used to fetch the bearer token from the IAM token server
+	// [required].
 	ApiKey string
 
-	// [Optional] The URL representing the IAM token server's endpoint.
-	// If not specified, a suitable default value is used.
+	// The URL representing the IAM token server's endpoint; If not specified,
+	// a suitable default value will be used [optional].
 	URL string
 
-	// [Optional] The ClientId and ClientSecret fields are used to form a "basic auth" Authorization header
-	// for interactions with the IAM token server.
-	// If neither field is specified, then no Authorization header will be sent with token server requests.
-	// These fields are optional, but must be specified together.
-	// Default: "", ""
-	ClientId     string
+	// The ClientId and ClientSecret fields are used to form a "basic auth"
+	// Authorization header for interactions with the IAM token server
+
+	// If neither field is specified, then no Authorization header will be sent
+	// with token server requests [optional]. These fields are optional, but must
+	// be specified together.
+	ClientId string
+
+	// If neither field is specified, then no Authorization header will be sent
+	// with token server requests [optional]. These fields are optional, but must
+	// be specified together.
 	ClientSecret string
 
-	// [Optional] A flag that indicates whether verificaton of the server's SSL certificate should be disabled or not.
-	// Default: false
+	// A flag that indicates whether verification of the server's SSL certificate
+	// should be disabled; defaults to false [optional].
 	DisableSSLVerification bool
 
 	// [Optional] A set of key/value pairs that will be sent as HTTP headers in requests
@@ -112,6 +115,7 @@ func newIamAuthenticatorFromMap(properties map[string]string) (*IamAuthenticator
 		disableSSL, nil)
 }
 
+// AuthenticationType returns the authentication type for this authenticator.
 func (IamAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_IAM
 }
@@ -121,6 +125,7 @@ func (IamAuthenticator) AuthenticationType() string {
 // The IAM bearer token will be added to the request's headers in the form:
 //
 // 		Authorization: Bearer <bearer-token>
+//
 func (authenticator IamAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.getToken()
 	if err != nil {
@@ -131,7 +136,10 @@ func (authenticator IamAuthenticator) Authenticate(request *http.Request) error 
 	return nil
 }
 
-// Validate: validates the configuration of the IamAuthenticator instance.
+// Validate validates the authenticator's configuration.
+//
+// Ensures the ApiKey is valid, and the ClientId and ClientSecret pair are
+// mutually inclusive.
 func (this IamAuthenticator) Validate() error {
 	if this.ApiKey == "" {
 		return fmt.Errorf(ERRORMSG_PROP_MISSING, "ApiKey")

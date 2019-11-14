@@ -19,9 +19,9 @@ import (
 	"net/http"
 )
 
-// BasicAuthenticator is used to add basic authentication information to requests.
-//
-// Basic Authorization will be sent as an Authorization header in the form:
+// BasicAuthenticator takes a user-supplied username and password, and adds
+// the username and password to requests via an Authorization header of the
+// form:
 //
 // 		Authorization: Basic <encoded username and password>
 //
