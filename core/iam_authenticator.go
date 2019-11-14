@@ -32,28 +32,37 @@ const (
 	REQUEST_TOKEN_RESPONSE_TYPE = "cloud_iam"
 )
 
-// IamAuthenticator : This authenticator will automatically fetch an access token for the
-// configured apikey.  Outbound REST requests invoked by the BaseService are then authenticated
-// by adding a Bearer-type Authorization header containing the access token.
+// IamAuthenticator uses an apikey to obtain a suitable bearer token value,
+// and adds the bearer token to requests via an Authorization header
+// of the form:
+//
+// 		Authorization: Bearer <bearer-token>
+//
 type IamAuthenticator struct {
 
-	// [Required] The apikey used to fetch the access token from the IAM token server.
+	// The apikey used to fetch the bearer token from the IAM token server
+	// [required].
 	ApiKey string
 
-	// [Optional] The URL representing the IAM token server's endpoint.
-	// If not specified, a suitable default value is used.
+	// The URL representing the IAM token server's endpoint; If not specified,
+	// a suitable default value will be used [optional].
 	URL string
 
-	// [Optional] The ClientId and ClientSecret fields are used to form a "basic auth" Authorization header
-	// for interactions with the IAM token server.
-	// If neither field is specified, then no Authorization header will be sent with token server requests.
-	// These fields are optional, but must be specified together.
-	// Default: "", ""
-	ClientId     string
+	// The ClientId and ClientSecret fields are used to form a "basic auth"
+	// Authorization header for interactions with the IAM token server
+
+	// If neither field is specified, then no Authorization header will be sent
+	// with token server requests [optional]. These fields are optional, but must
+	// be specified together.
+	ClientId string
+
+	// If neither field is specified, then no Authorization header will be sent
+	// with token server requests [optional]. These fields are optional, but must
+	// be specified together.
 	ClientSecret string
 
-	// [Optional] A flag that indicates whether verificaton of the server's SSL certificate should be disabled or not.
-	// Default: false
+	// A flag that indicates whether verification of the server's SSL certificate
+	// should be disabled; defaults to false [optional].
 	DisableSSLVerification bool
 
 	// [Optional] A set of key/value pairs that will be sent as HTTP headers in requests
@@ -68,7 +77,7 @@ type IamAuthenticator struct {
 	tokenData *iamTokenData
 }
 
-// NewIamAuthenticator : Constructs a new IamAuthenticator instance.
+// NewIamAuthenticator constructs a new IamAuthenticator instance.
 func NewIamAuthenticator(apikey string, url string, clientId string, clientSecret string,
 	disableSSLVerification bool, headers map[string]string) (*IamAuthenticator, error) {
 
@@ -90,7 +99,8 @@ func NewIamAuthenticator(apikey string, url string, clientId string, clientSecre
 	return authenticator, nil
 }
 
-// NewIamAuthenticatorFromMap : Constructs a new IamAuthenticator instance from a map.
+// NewIamAuthenticatorFromMap constructs a new IamAuthenticator instance from a
+// map.
 func newIamAuthenticatorFromMap(properties map[string]string) (*IamAuthenticator, error) {
 	if properties == nil {
 		return nil, fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
@@ -105,12 +115,17 @@ func newIamAuthenticatorFromMap(properties map[string]string) (*IamAuthenticator
 		disableSSL, nil)
 }
 
+// AuthenticationType returns the authentication type for this authenticator.
 func (IamAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_IAM
 }
 
-// Authenticate: Performs the authentication on the specified Request by adding a Bearer-type Authorization header
-// containing the access token fetched from the token server.
+// Authenticate adds IAM authentication information to the request.
+//
+// The IAM bearer token will be added to the request's headers in the form:
+//
+// 		Authorization: Bearer <bearer-token>
+//
 func (authenticator IamAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.getToken()
 	if err != nil {
@@ -121,7 +136,10 @@ func (authenticator IamAuthenticator) Authenticate(request *http.Request) error 
 	return nil
 }
 
-// Validate: validates the configuration of the IamAuthenticator instance.
+// Validate the authenticator's configuration.
+//
+// Ensures the ApiKey is valid, and the ClientId and ClientSecret pair are
+// mutually inclusive.
 func (this IamAuthenticator) Validate() error {
 	if this.ApiKey == "" {
 		return fmt.Errorf(ERRORMSG_PROP_MISSING, "ApiKey")

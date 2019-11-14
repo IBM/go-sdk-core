@@ -19,15 +19,19 @@ import (
 	"net/http"
 )
 
-// The BasicAuthenticator will perform authentication on outbound requests by adding
-// a "Basic" type Authorization header that contains the base64-encoded username and password.
+// BasicAuthenticator takes a user-supplied username and password, and adds
+// them to requests via an Authorization header of the form:
+//
+// 		Authorization: Basic <encoded username and password>
+//
 type BasicAuthenticator struct {
-	// [Required] - the basic auth username and password.
+	// Username is the user-supplied basic auth username [required].
 	Username string
+	// Password is the user-supplied basic auth password [required].
 	Password string
 }
 
-// NewBasicAuthenticator: Constructs a new BasicAuthenticator instance.
+// NewBasicAuthenticator constructs a new BasicAuthenticator instance.
 func NewBasicAuthenticator(username string, password string) (*BasicAuthenticator, error) {
 	obj := &BasicAuthenticator{
 		Username: username,
@@ -39,7 +43,8 @@ func NewBasicAuthenticator(username string, password string) (*BasicAuthenticato
 	return obj, nil
 }
 
-// newBasicAuthenticatorFromMap: Constructs a new BasicAuthenticator instance from a map.
+// newBasicAuthenticatorFromMap constructs a new BasicAuthenticator instance
+// from a map.
 func newBasicAuthenticatorFromMap(properties map[string]string) (*BasicAuthenticator, error) {
 	if properties == nil {
 		return nil, fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
@@ -48,17 +53,26 @@ func newBasicAuthenticatorFromMap(properties map[string]string) (*BasicAuthentic
 	return NewBasicAuthenticator(properties[PROPNAME_USERNAME], properties[PROPNAME_PASSWORD])
 }
 
+// AuthenticationType returns the authentication type for this authenticator.
 func (BasicAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_BASIC
 }
 
-// Authenticate: authenticates the specified request by adding an Authorizatin header.
+// Authenticate adds basic authentication information to a request.
+//
+// Basic Authorization will be added to the request's headers in the form:
+//
+// 		Authorization: Basic <encoded username and password>
+//
 func (this BasicAuthenticator) Authenticate(request *http.Request) error {
 	request.SetBasicAuth(this.Username, this.Password)
 	return nil
 }
 
-// Validate: validates the configuration
+// Validate the authenticator's configuration.
+//
+// Ensures the username and password are not Nil. Additionally, ensures
+// they do not contain invalid characters.
 func (this BasicAuthenticator) Validate() error {
 	if this.Username == "" {
 		return fmt.Errorf(ERRORMSG_PROP_MISSING, "Username")
