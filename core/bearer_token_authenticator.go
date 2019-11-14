@@ -66,7 +66,7 @@ func (this BearerTokenAuthenticator) Authenticate(request *http.Request) error {
 	return nil
 }
 
-// Validate validates the bearer token.
+// Validate the authenticator's configuration.
 //
 // Ensures the bearer token is not Nil.
 func (this BearerTokenAuthenticator) Validate() error {

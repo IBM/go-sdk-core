@@ -105,7 +105,7 @@ func (CloudPakForDataAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_CP4D
 }
 
-// Validate validates the authenticator's configuration.
+// Validate the authenticator's configuration.
 //
 // Ensures the username, password, and url are not Nil. Additionally, ensures
 // they do not contain invalid characters.

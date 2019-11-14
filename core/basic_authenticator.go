@@ -20,8 +20,7 @@ import (
 )
 
 // BasicAuthenticator takes a user-supplied username and password, and adds
-// the username and password to requests via an Authorization header of the
-// form:
+// them to requests via an Authorization header of the form:
 //
 // 		Authorization: Basic <encoded username and password>
 //
@@ -70,7 +69,7 @@ func (this BasicAuthenticator) Authenticate(request *http.Request) error {
 	return nil
 }
 
-// Validate validates the configuration.
+// Validate the authenticator's configuration.
 //
 // Ensures the username and password are not Nil. Additionally, ensures
 // they do not contain invalid characters.

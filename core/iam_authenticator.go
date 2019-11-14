@@ -136,7 +136,7 @@ func (authenticator IamAuthenticator) Authenticate(request *http.Request) error 
 	return nil
 }
 
-// Validate validates the authenticator's configuration.
+// Validate the authenticator's configuration.
 //
 // Ensures the ApiKey is valid, and the ClientId and ClientSecret pair are
 // mutually inclusive.
