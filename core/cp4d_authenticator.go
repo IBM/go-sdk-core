@@ -107,7 +107,7 @@ func (CloudPakForDataAuthenticator) AuthenticationType() string {
 
 // Validate validates the authenticator's configuration.
 //
-// Ensures the username, password, and url are not None. Additionally, ensures
+// Ensures the username, password, and url are not Nil. Additionally, ensures
 // they do not contain invalid characters.
 func (authenticator CloudPakForDataAuthenticator) Validate() error {
 

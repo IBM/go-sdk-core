@@ -71,6 +71,9 @@ func (this BasicAuthenticator) Authenticate(request *http.Request) error {
 }
 
 // Validate validates the configuration.
+//
+// Ensures the username and password are not Nil. Additionally, ensures
+// they do not contain invalid characters.
 func (this BasicAuthenticator) Validate() error {
 	if this.Username == "" {
 		return fmt.Errorf(ERRORMSG_PROP_MISSING, "Username")

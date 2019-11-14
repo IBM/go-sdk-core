@@ -19,9 +19,8 @@ import (
 	"net/http"
 )
 
-// BearerTokenAuthenticator will add a user-supplied bearer token, and adds
-// the bearer token to requests via an Authorization header of the
-// form:
+// BearerTokenAuthenticator will take a user-supplied bearer token, and adds
+// it to requests via an Authorization header of the form:
 //
 // 		Authorization: Bearer <bearer-token>
 //
@@ -69,7 +68,7 @@ func (this BearerTokenAuthenticator) Authenticate(request *http.Request) error {
 
 // Validate validates the bearer token.
 //
-// Ensures the bearer token is valid for service operations.
+// Ensures the bearer token is not Nil.
 func (this BearerTokenAuthenticator) Validate() error {
 	if this.BearerToken == "" {
 		return fmt.Errorf(ERRORMSG_PROP_MISSING, "BearerToken")
