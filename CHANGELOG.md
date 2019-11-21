@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/IBM/go-sdk-core/compare/v2.0.0...v2.0.1) (2019-11-21)
+
+
+### Bug Fixes
+
+* add HEAD operation constant ([#41](https://github.com/IBM/go-sdk-core/issues/41)) ([47b5dc9](https://github.com/IBM/go-sdk-core/commit/47b5dc9e46c4fa25b3e93e2b1ff15136c16e1877))
+
 # [2.0.0](https://github.com/IBM/go-sdk-core/compare/v1.1.0...v2.0.0) (2019-11-06)
 
 
