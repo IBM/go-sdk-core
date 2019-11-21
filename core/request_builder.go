@@ -36,6 +36,7 @@ const (
 	DELETE = http.MethodDelete
 	PUT    = http.MethodPut
 	PATCH  = http.MethodPatch
+	HEAD   = http.MethodHead
 )
 
 // common headers
