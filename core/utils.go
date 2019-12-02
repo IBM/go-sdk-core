@@ -38,6 +38,7 @@ func init() {
 const (
 	jsonMimePattern      = "(?i)^application\\/((json)|(merge\\-patch\\+json))(;.*)?$"
 	jsonPatchMimePattern = "(?i)^application\\/json\\-patch\\+json(;.*)?$"
+	textMimePattern      = "(?i)^text\\/(.+?)(;.*)?$"	
 )
 
 // isNil checks if the specified object is nil or not.
@@ -123,6 +124,19 @@ func IsJSONPatchMimeType(mimeType string) bool {
 		return false
 	}
 	matched, err := regexp.MatchString(jsonPatchMimePattern, mimeType)
+	if err != nil {
+		return false
+	}
+	return matched
+}
+
+// IsTextMimeType Returns true iff the specified mimeType value represents a
+// text mimetype.
+func IsTextMimeType(mimeType string) bool {
+	if mimeType == "" {
+		return false
+	}
+	matched, err := regexp.MatchString(textMimePattern, mimeType)
 	if err != nil {
 		return false
 	}

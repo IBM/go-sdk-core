@@ -295,9 +295,24 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			// Decode step was successful. Return the decoded response object in the Result field.
 			detailedResponse.Result = result
 			return
+		} else if IsTextMimeType(contentType) {
+			// For a "text" response, let's just read the response body into a string.
+			
+			// First, read the response body into a byte array.
+			defer httpResponse.Body.Close()
+			responseBody, readErr := ioutil.ReadAll(httpResponse.Body)
+			if readErr != nil {
+				err = fmt.Errorf("An error occurred while reading the response body: '%s'", readErr.Error())
+				return
+			}
+			
+			// Next, create a string containing the response bytes and save it in the Result field.
+			s := string(responseBody[:])
+			detailedResponse.Result = &s
+			return
 		}
 
-		// For a non-JSON response body, just return it as an io.Reader in the Result field.
+		// For a non-JSON/non-Text response body, just return it as an io.Reader in the Result field.
 		detailedResponse.Result = httpResponse.Body
 	}
 

@@ -102,7 +102,7 @@ func TestGoodResponseJSONExtraFields(t *testing.T) {
 }
 
 // Test a non-JSON response.
-func TestGoodResponseNonJSON(t *testing.T) {
+func TestGoodResponseOctetStream(t *testing.T) {
 	expectedResponse := []byte("This is a non-json response.")
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/octet-stream")
@@ -144,7 +144,7 @@ func TestGoodResponseNonJSON(t *testing.T) {
 }
 
 // Test a non-JSON response with no Content-Type set.
-func TestGoodResponseNonJSONNoContentType(t *testing.T) {
+func TestGoodResponseOctetStreamNoContentType(t *testing.T) {
 	expectedResponse := []byte("This is a non-json response.")
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "")
@@ -183,6 +183,44 @@ func TestGoodResponseNonJSONNoContentType(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, actualResponse)
 	assert.Equal(t, expectedResponse, actualResponse)
+}
+
+// Test a Text response.
+func TestGoodResponseText(t *testing.T) {
+	expectedResponse := []byte("This is a text response.")
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "text/plain")
+		_, _ = w.Write(expectedResponse)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	authenticator := &NoAuthAuthenticator{}
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
+	detailedResponse, _ := service.Request(req, new(string))
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, "text/plain", detailedResponse.GetHeaders().Get("Content-Type"))
+	assert.Equal(t, http.StatusOK, detailedResponse.GetStatusCode())
+	assert.NotNil(t, detailedResponse.Result)
+	actualResponse, ok := detailedResponse.Result.(*string)
+	assert.Equal(t, true, ok)
+	assert.NotNil(t, actualResponse)
+	expectedString := string(expectedResponse)
+	assert.Equal(t, expectedString, *actualResponse)
 }
 
 // Test a JSON response that causes a deserialization error.

@@ -38,6 +38,17 @@ func TestIsJSONPatchMimeType(t *testing.T) {
 	assert.False(t, IsJSONPatchMimeType("YOapplication/json-patch+jsonYO"))
 }
 
+func TestIsTextMimeType(t *testing.T) {
+	assert.True(t, IsTextMimeType("text/html"))
+	assert.True(t, IsTextMimeType("TEXT/PlAiN"))
+	assert.True(t, IsTextMimeType("text/anything;blah"))
+
+	assert.False(t, IsTextMimeType("application/json-patch+patch"))
+	assert.False(t, IsTextMimeType("YOtext/htmlYO"))
+	assert.False(t, IsTextMimeType("application/octet-stream"))
+	assert.False(t, IsTextMimeType("audio/mp3"))
+}
+
 func TestStringNilMapper(t *testing.T) {
 	var s = "test string"
 	assert.Equal(t, "", StringNilMapper(nil))
