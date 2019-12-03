@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -269,10 +270,11 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		return
 	}
 
-	// Operation was successful and we are expecting a response, so de-serialize the response.
+	// Operation was successful and we are expecting a response, so process the response.
 	if result != nil {
 		// For a JSON response, decode it into the response object.
-		if IsJSONMimeType(contentType) {
+		resultType := reflect.TypeOf(result).String()
+		if IsJSONMimeType(contentType) && resultType != "*io.ReadCloser" {
 
 			// First, read the response body into a byte array.
 			defer httpResponse.Body.Close()

@@ -15,6 +15,8 @@ package core
 // limitations under the License.
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -44,8 +46,6 @@ func TestGoodResponseJSON(t *testing.T) {
 	builder := NewRequestBuilder("POST")
 	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
 	assert.Nil(t, err)
-	builder.AddHeader("Content-Type", "Application/json").
-		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
 	authenticator, err := NewBasicAuthenticator("xxx", "yyy")
@@ -73,6 +73,56 @@ func TestGoodResponseJSON(t *testing.T) {
 	assert.Equal(t, "wonder woman", *(result.Name))
 }
 
+// Test a JSON-based response that should be returned as a stream (io.ReadCloser).
+func TestGoodResponseJSONStream(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{"name": "wonder woman"}`)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("POST")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	req, _ := builder.Build()
+
+	authenticator, err := NewBasicAuthenticator("xxx", "yyy")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
+
+	detailedResponse, err := service.Request(req, new(io.ReadCloser))
+	assert.Nil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, http.StatusCreated, detailedResponse.StatusCode)
+	assert.Equal(t, "application/json", detailedResponse.Headers.Get("Content-Type"))
+
+	result, ok := detailedResponse.Result.(io.ReadCloser)
+	assert.Equal(t, true, ok)
+	assert.NotNil(t, result)
+
+	// Read the bytes from the response body and decode as JSON to verify.
+	responseBytes, err := ioutil.ReadAll(result)
+	assert.Nil(t, err)
+	assert.NotNil(t, responseBytes)
+
+	// Decode the byte array as JSON.
+	responseObj := new(Foo)
+	err = json.NewDecoder(bytes.NewReader(responseBytes)).Decode(&responseObj)
+	assert.Nil(t, err)
+	assert.NotNil(t, responseObj)
+	assert.Equal(t, "wonder woman", *(responseObj.Name))
+}
+
 // Verify that extra fields in result are silently ignored.
 func TestGoodResponseJSONExtraFields(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -85,8 +135,6 @@ func TestGoodResponseJSONExtraFields(t *testing.T) {
 	builder := NewRequestBuilder("GET")
 	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
 	assert.Nil(t, err)
-	builder.AddHeader("Content-Type", "Application/json").
-		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
@@ -101,9 +149,9 @@ func TestGoodResponseJSONExtraFields(t *testing.T) {
 	assert.Equal(t, "wonder woman", *result.Name)
 }
 
-// Test a non-JSON response.
-func TestGoodResponseNonJSON(t *testing.T) {
-	expectedResponse := []byte("This is a non-json response.")
+// Test a binary response.
+func TestGoodResponseStream(t *testing.T) {
+	expectedResponse := []byte("This is an octet stream response.")
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/octet-stream")
 		_, _ = w.Write(expectedResponse)
@@ -113,8 +161,6 @@ func TestGoodResponseNonJSON(t *testing.T) {
 	builder := NewRequestBuilder("GET")
 	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
 	assert.Nil(t, err)
-	builder.AddHeader("Content-Type", "Application/json").
-		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
 	authenticator := &NoAuthAuthenticator{}
@@ -143,6 +189,51 @@ func TestGoodResponseNonJSON(t *testing.T) {
 	assert.Equal(t, expectedResponse, actualResponse)
 }
 
+// Test a text response.
+func TestGoodResponseText(t *testing.T) {
+	expectedResponse := "This is a text response."
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "text/plain")
+		fmt.Fprint(w, expectedResponse)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	req, _ := builder.Build()
+
+	authenticator := &NoAuthAuthenticator{}
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
+	detailedResponse, err := service.Request(req, new(string))
+	assert.Nil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, "text/plain", detailedResponse.GetHeaders().Get("Content-Type"))
+	assert.Equal(t, http.StatusOK, detailedResponse.GetStatusCode())
+	assert.NotNil(t, detailedResponse.Result)
+	stream, ok := detailedResponse.Result.(io.ReadCloser)
+	assert.Equal(t, true, ok)
+	assert.NotNil(t, stream)
+
+	// Read the bytes from the returned stream and verify.
+	// This is a simulation of what the generated code will need to do once the stream is returned
+	// by the Request method.
+	defer stream.Close()
+	responseBytes, err := ioutil.ReadAll(stream)
+	assert.Nil(t, err)
+	assert.NotNil(t, responseBytes)
+	actualResponse := string(responseBytes)
+	assert.Equal(t, expectedResponse, actualResponse)
+}
+
 // Test a non-JSON response with no Content-Type set.
 func TestGoodResponseNonJSONNoContentType(t *testing.T) {
 	expectedResponse := []byte("This is a non-json response.")
@@ -155,8 +246,6 @@ func TestGoodResponseNonJSONNoContentType(t *testing.T) {
 	builder := NewRequestBuilder("GET")
 	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
 	assert.Nil(t, err)
-	builder.AddHeader("Content-Type", "Application/json").
-		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
 	authenticator := &NoAuthAuthenticator{}
@@ -196,8 +285,6 @@ func TestGoodResponseJSONDeserFailure(t *testing.T) {
 	builder := NewRequestBuilder("GET")
 	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
 	assert.Nil(t, err)
-	builder.AddHeader("Content-Type", "Application/json").
-		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
 	options := &ServiceOptions{
@@ -226,8 +313,6 @@ func TestGoodResponseNoBody(t *testing.T) {
 	builder := NewRequestBuilder("GET")
 	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
 	assert.Nil(t, err)
-	builder.AddHeader("Content-Type", "Application/json").
-		AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
 	authenticator, err := NewBasicAuthenticator("xxx", "yyy")
