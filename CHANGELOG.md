@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/IBM/go-sdk-core/compare/v2.0.1...v2.1.0) (2019-12-04)
+
+
+### Features
+
+* allow JSON response body to be streamed ([d1345d7](https://github.com/IBM/go-sdk-core/commit/d1345d7d5d7dc91959eafc0d8c1ddd79a6f31450))
+
 ## [2.0.1](https://github.com/IBM/go-sdk-core/compare/v2.0.0...v2.0.1) (2019-11-21)
 
 
