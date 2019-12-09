@@ -1,3 +1,13 @@
+# [3.0.0](https://github.com/IBM/go-sdk-core/compare/v2.1.0...v3.0.0) (2019-12-09)
+
+### Features
+
+* created new major version 3.0.0 in v3 directory ([1595df4](https://github.com/IBM/go-sdk-core/commit/1595df486aba57dd5b965354376f5590d435ecfb))
+
+### BREAKING CHANGES
+
+* created new major version 3.0.0 in v3 directory
+
 # [2.1.0](https://github.com/IBM/go-sdk-core/compare/v2.0.1...v2.1.0) (2019-12-04)
 
 
