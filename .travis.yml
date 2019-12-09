@@ -23,20 +23,23 @@ install:
 
 script:
 - env | grep GO
+- cd v3
+- pwd
 - go test ./...
+- pwd
 - golangci-lint run
 
 before_deploy:
-- pip install --user bumpversion
-- nvm install 12
-- npm install @semantic-release/changelog
-- npm install @semantic-release/exec
-- npm install @semantic-release/git
-- npm install @semantic-release/github
+#- pip install --user bumpversion
+#- nvm install 12
+#- npm install @semantic-release/changelog
+#- npm install @semantic-release/exec
+#- npm install @semantic-release/git
+#- npm install @semantic-release/github
 
-deploy:
-  - provider: script
-    script: npx semantic-release
-    skip_cleanup: true
-    on:
-      branch: master
+#deploy:
+#  - provider: script
+#    script: npx semantic-release
+#    skip_cleanup: true
+#    on:
+#      branch: master
