@@ -3,8 +3,8 @@ module github.com/IBM/go-sdk-core/v3
 go 1.12
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/go-openapi/strfmt v0.19.4
 	github.com/go-playground/locales v0.12.1 // indirect
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
