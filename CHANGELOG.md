@@ -1,3 +1,10 @@
+# [3.1.0](https://github.com/IBM/go-sdk-core/compare/v3.0.0...v3.1.0) (2020-01-06)
+
+
+### Features
+
+* add unmarshal utility functions for primitive types ([3f7299b](https://github.com/IBM/go-sdk-core/commit/3f7299b0203f0fec5f6a6ede6bd23f63568388c3))
+
 # [3.0.0](https://github.com/IBM/go-sdk-core/compare/v2.1.0...v3.0.0) (2019-12-09)
 
 ### Features
