@@ -1,3 +1,11 @@
+## [3.1.1](https://github.com/IBM/go-sdk-core/compare/v3.1.0...v3.1.1) (2020-01-09)
+
+
+### Bug Fixes
+
+* ensure version # is updated in go.mod ([8fdc596](https://github.com/IBM/go-sdk-core/commit/8fdc5961b6951cc8f2769fbad241f749cc983d9c))
+* fixup version #'s to 3.1.0 ([ecdafe1](https://github.com/IBM/go-sdk-core/commit/ecdafe11762d060ff08fb56ab5bd3b37ca870bbc))
+
 # [3.1.0](https://github.com/IBM/go-sdk-core/compare/v3.0.0...v3.1.0) (2020-01-06)
 
 
