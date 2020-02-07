@@ -616,6 +616,76 @@ func TestUnmarshalObject(t *testing.T) {
 	assert.Nil(t, slice)
 }
 
+func TestUnmarshalAny(t *testing.T) {
+	jsonString := `{
+		"prop1": {"foo": "bar"},
+		"prop2": true,
+		"prop3": 33,
+		"prop4": "a string",
+		"slice1": [
+			{"name": "object1"},
+			{"name": "object2"},
+			{"name": "object3"}
+		],
+		"slice2": [
+		    true,
+		    false
+		],
+		"slice3": [
+		    74,
+		    44
+		],
+		"slice4": [
+		    "football",
+		    "baseball"
+		]
+	}`
+
+	testMap, err := unmarshalJsonToMap(t, jsonString)
+	assert.Nil(t, err)
+	assert.NotNil(t, testMap)
+
+	value, err := UnmarshalAny(testMap, "prop1")
+	assert.Nil(t, err)
+	assert.NotNil(t, value)
+	
+	value, err = UnmarshalAny(testMap, "prop2")
+	assert.Nil(t, err)
+	assert.NotNil(t, value)
+	
+	value, err = UnmarshalAny(testMap, "prop3")
+	assert.Nil(t, err)
+	assert.NotNil(t, value)
+	
+	value, err = UnmarshalAny(testMap, "prop4")
+	assert.Nil(t, err)
+	assert.NotNil(t, value)
+	
+	value, err = UnmarshalAny(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	slice, err := UnmarshalAnySlice(testMap, "slice1")
+	assert.Nil(t, err)
+	assert.NotNil(t, slice)
+
+	slice, err = UnmarshalAnySlice(testMap, "slice2")
+	assert.Nil(t, err)
+	assert.NotNil(t, slice)
+
+	slice, err = UnmarshalAnySlice(testMap, "slice3")
+	assert.Nil(t, err)
+	assert.NotNil(t, slice)
+
+	slice, err = UnmarshalAnySlice(testMap, "slice4")
+	assert.Nil(t, err)
+	assert.NotNil(t, slice)
+
+	slice, err = UnmarshalAnySlice(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+}
+
 // unmarshalJson is a utility function that unmarshals a JSON string into the specified target object in
 // much the same way as the BaseService.Request() method does so that we can simulate that behavior here for testing.
 func unmarshalJson(t *testing.T, jsonString string, target interface{}) (result interface{}, err error) {
