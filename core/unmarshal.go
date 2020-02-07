@@ -538,6 +538,33 @@ func UnmarshalObjectSlice(m map[string]interface{}, propertyName string) (slice 
 	return
 }
 
+// UnmarshalAny retrieves the specified property from the map and returns it as a generic
+// value (i.e. interface{}), or nil if the property wasn't found in the map.
+func UnmarshalAny(m map[string]interface{}, propertyName string) (result interface{}, err error) {
+	var v interface{}
+	v, foundIt := m[propertyName]
+	if foundIt {
+		result = v
+	}
+	return
+}
+
+// UnmarshalAnySlice retrieves the specified property from the map and returns it as a slice of
+// generic values (i.e. []interface{}), or nil if the property wasn't found in the map.
+func UnmarshalAnySlice(m map[string]interface{}, propertyName string) (slice []interface{}, err error) {
+	v, foundIt := m[propertyName]
+	if foundIt {
+		// Interpret the map value as a slice of anything.
+		vSlice, ok := v.([]interface{})
+		if !ok {
+			err = fmt.Errorf(errorNotAnArray, propertyName, reflect.TypeOf(v).String())
+			return
+		}
+		slice = vSlice
+	}
+	return
+}
+
 // truncateString returns a string suitable for inclusion in an error message.
 // If the input string is longer than the specified length, we'll just return the first <length> 
 // bytes followed by "...".
