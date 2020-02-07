@@ -1,3 +1,10 @@
+# [3.2.0](https://github.com/IBM/go-sdk-core/compare/v3.1.1...v3.2.0) (2020-02-07)
+
+
+### Features
+
+* add unmarshal functions for 'any' ([55c1eee](https://github.com/IBM/go-sdk-core/commit/55c1eee879932086061c9d5849b972caf5d31094))
+
 ## [3.1.1](https://github.com/IBM/go-sdk-core/compare/v3.1.0...v3.1.1) (2020-01-09)
 
 
