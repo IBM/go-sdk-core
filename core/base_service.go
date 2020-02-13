@@ -347,20 +347,31 @@ func getErrorMessage(responseMap map[string]interface{}, statusCode int) string 
 		}
 	}
 
-	// Return the "error" field if present.
+	// Return the "error" field if present and is a string.
 	if val, ok := responseMap["error"]; ok {
-		return val.(string)
+		errorMsg, ok := val.(string)
+		if ok {
+			return errorMsg
+		}
 	}
 
-	// Return the "message" field if present.
+	// Return the "message" field if present and is a string.
 	if val, ok := responseMap["message"]; ok {
-		return val.(string)
+		errorMsg, ok := val.(string)
+		if ok {
+			return errorMsg
+		}
 	}
 
-	// Finally, return the "errorMessage" field if present.
+	// Finally, return the "errorMessage" field if present and is a string.
 	if val, ok := responseMap["errorMessage"]; ok {
-		return val.(string)
+		errorMsg, ok := val.(string)
+		if ok {
+			return errorMsg
+		}
 	}
 
+	// If we couldn't find an error message above, just return the generic text
+	// for the status code.
 	return http.StatusText(statusCode)
 }

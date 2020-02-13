@@ -1197,4 +1197,16 @@ func TestErrorMessage(t *testing.T) {
 	testGetErrorMessage(t, http.StatusForbidden, `{"msg":"error4"}`, http.StatusText(http.StatusForbidden))
 
 	testGetErrorMessage(t, http.StatusBadRequest, `{"errorMessage":"error5"}`, "error5")
+	
+	testGetErrorMessage(t, http.StatusInternalServerError, 
+		`{"error":{"statusCode":500,"message":"Internal Server Error"}}`,
+		"Internal Server Error")	
+	
+	testGetErrorMessage(t, http.StatusInternalServerError, 
+		`{"message":{"statusCode":500,"message":"Internal Server Error"}}`,
+		"Internal Server Error")	
+	
+	testGetErrorMessage(t, http.StatusInternalServerError, 
+		`{"errorMessage":{"statusCode":500,"message":"Internal Server Error"}}`,
+		"Internal Server Error")	
 }
