@@ -1,3 +1,10 @@
+## [3.2.2](https://github.com/IBM/go-sdk-core/compare/v3.2.1...v3.2.2) (2020-02-13)
+
+
+### Bug Fixes
+
+* correct go.mod ([64ff92d](https://github.com/IBM/go-sdk-core/commit/64ff92decff6e1595f3f1f7764b5839864bcca20))
+
 ## [3.2.1](https://github.com/IBM/go-sdk-core/compare/v3.2.0...v3.2.1) (2020-02-13)
 
 
