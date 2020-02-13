@@ -1,3 +1,10 @@
+## [3.2.1](https://github.com/IBM/go-sdk-core/compare/v3.2.0...v3.2.1) (2020-02-13)
+
+
+### Bug Fixes
+
+* tolerate non-compliant error response bodies ([f0e3a13](https://github.com/IBM/go-sdk-core/commit/f0e3a1301c028df05ddd315cda687fd6295e39ab))
+
 # [3.2.0](https://github.com/IBM/go-sdk-core/compare/v3.1.1...v3.2.0) (2020-02-07)
 
 
