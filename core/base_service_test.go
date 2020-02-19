@@ -750,17 +750,21 @@ func TestNoAuth2(t *testing.T) {
 }
 
 func TestIAMAuth(t *testing.T) {
+	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		body, _ := ioutil.ReadAll(r.Body)
 		if strings.Contains(string(body), "grant_type") {
+			assert.Equal(t, true, firstCall)
+			firstCall = false
+			expiration := GetCurrentTime() + 3600
 			fmt.Fprint(w, `{
 				"access_token": "captain marvel",
 				"token_type": "Bearer",
 				"expires_in": 3600,
 				"expiration": 1524167011,
 				"refresh_token": "jy4gl91BQ"
-			}`)
+			}`, expiration)
 			assert.Equal(t, "", r.Header.Get("Authorization"))
 		} else {
 			assert.Equal(t, "Bearer captain marvel", r.Header.Get("Authorization"))
@@ -787,6 +791,13 @@ func TestIAMAuth(t *testing.T) {
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_IAM, service.Options.Authenticator.AuthenticationType())
 
+	_, err = service.Request(req, new(Foo))
+	if err != nil {
+		fmt.Println("Error: ", err)
+	}
+	assert.Nil(t, err)
+
+	// Subsequent request should not request new access token
 	_, err = service.Request(req, new(Foo))
 	if err != nil {
 		fmt.Println("Error: ", err)
@@ -1197,16 +1208,16 @@ func TestErrorMessage(t *testing.T) {
 	testGetErrorMessage(t, http.StatusForbidden, `{"msg":"error4"}`, http.StatusText(http.StatusForbidden))
 
 	testGetErrorMessage(t, http.StatusBadRequest, `{"errorMessage":"error5"}`, "error5")
-	
-	testGetErrorMessage(t, http.StatusInternalServerError, 
+
+	testGetErrorMessage(t, http.StatusInternalServerError,
 		`{"error":{"statusCode":500,"message":"Internal Server Error"}}`,
-		"Internal Server Error")	
-	
-	testGetErrorMessage(t, http.StatusInternalServerError, 
+		"Internal Server Error")
+
+	testGetErrorMessage(t, http.StatusInternalServerError,
 		`{"message":{"statusCode":500,"message":"Internal Server Error"}}`,
-		"Internal Server Error")	
-	
-	testGetErrorMessage(t, http.StatusInternalServerError, 
+		"Internal Server Error")
+
+	testGetErrorMessage(t, http.StatusInternalServerError,
 		`{"errorMessage":{"statusCode":500,"message":"Internal Server Error"}}`,
-		"Internal Server Error")	
+		"Internal Server Error")
 }
