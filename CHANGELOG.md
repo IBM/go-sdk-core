@@ -1,3 +1,10 @@
+## [3.2.3](https://github.com/IBM/go-sdk-core/compare/v3.2.2...v3.2.3) (2020-02-19)
+
+
+### Bug Fixes
+
+* Fix token caching ([880b0be](https://github.com/IBM/go-sdk-core/commit/880b0bed51187332f26ba140d01b47e079f8df0c))
+
 ## [3.2.2](https://github.com/IBM/go-sdk-core/compare/v3.2.1...v3.2.2) (2020-02-13)
 
 
