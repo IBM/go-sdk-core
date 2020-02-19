@@ -126,7 +126,7 @@ func (IamAuthenticator) AuthenticationType() string {
 //
 // 		Authorization: Bearer <bearer-token>
 //
-func (authenticator IamAuthenticator) Authenticate(request *http.Request) error {
+func (authenticator *IamAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.getToken()
 	if err != nil {
 		return err

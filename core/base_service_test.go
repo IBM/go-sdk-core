@@ -758,11 +758,11 @@ func TestIAMAuth(t *testing.T) {
 			assert.Equal(t, true, firstCall)
 			firstCall = false
 			expiration := GetCurrentTime() + 3600
-			fmt.Fprint(w, `{
+			fmt.Fprintf(w, `{
 				"access_token": "captain marvel",
 				"token_type": "Bearer",
 				"expires_in": 3600,
-				"expiration": 1524167011,
+				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
 			}`, expiration)
 			assert.Equal(t, "", r.Header.Get("Authorization"))
