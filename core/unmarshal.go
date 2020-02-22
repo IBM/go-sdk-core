@@ -77,7 +77,7 @@ func CopyMap(m map[string]interface{}) map[string]interface{} {
 func UnmarshalString(m map[string]interface{}, propertyName string) (result *string, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a string.
 		s, ok := v.(string)
 		if ok {
@@ -94,7 +94,7 @@ func UnmarshalString(m map[string]interface{}, propertyName string) (result *str
 func UnmarshalStringSlice(m map[string]interface{}, propertyName string) (slice []string, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a slice of anything.
 		vSlice, ok := v.([]interface{})
 		if !ok {
@@ -119,7 +119,7 @@ func UnmarshalStringSlice(m map[string]interface{}, propertyName string) (slice 
 func UnmarshalByteArray(m map[string]interface{}, propertyName string) (result *[]byte, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a string.
 		s, ok := v.(string)
 		if ok {
@@ -143,7 +143,7 @@ func UnmarshalByteArray(m map[string]interface{}, propertyName string) (result *
 func UnmarshalByteArraySlice(m map[string]interface{}, propertyName string) (slice [][]byte, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a slice of anything.
 		vSlice, ok := v.([]interface{})
 		if ok {
@@ -176,7 +176,7 @@ func UnmarshalByteArraySlice(m map[string]interface{}, propertyName string) (sli
 func UnmarshalBool(m map[string]interface{}, propertyName string) (result *bool, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a bool.
 		b, ok := v.(bool)
 		if ok {
@@ -193,7 +193,7 @@ func UnmarshalBool(m map[string]interface{}, propertyName string) (result *bool,
 func UnmarshalBoolSlice(m map[string]interface{}, propertyName string) (slice []bool, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a slice of anything.
 		vSlice, ok := v.([]interface{})
 		if !ok {
@@ -218,7 +218,7 @@ func UnmarshalBoolSlice(m map[string]interface{}, propertyName string) (slice []
 func UnmarshalInt64(m map[string]interface{}, propertyName string) (result *int64, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a float64 to match the behavior of the JSON unmarshaller.
 		f, ok := v.(float64)
 		if ok {
@@ -236,7 +236,7 @@ func UnmarshalInt64(m map[string]interface{}, propertyName string) (result *int6
 func UnmarshalInt64Slice(m map[string]interface{}, propertyName string) (slice []int64, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a slice of anything.
 		vSlice, ok := v.([]interface{})
 		if !ok {
@@ -261,7 +261,7 @@ func UnmarshalInt64Slice(m map[string]interface{}, propertyName string) (slice [
 func UnmarshalFloat32(m map[string]interface{}, propertyName string) (result *float32, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a float64 to match the behavior of the JSON unmarshaller.
 		f, ok := v.(float64)
 		if ok {
@@ -279,7 +279,7 @@ func UnmarshalFloat32(m map[string]interface{}, propertyName string) (result *fl
 func UnmarshalFloat32Slice(m map[string]interface{}, propertyName string) (slice []float32, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a slice of anything.
 		vSlice, ok := v.([]interface{})
 		if !ok {
@@ -304,7 +304,7 @@ func UnmarshalFloat32Slice(m map[string]interface{}, propertyName string) (slice
 func UnmarshalFloat64(m map[string]interface{}, propertyName string) (result *float64, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a float64.
 		f, ok := v.(float64)
 		if ok {
@@ -321,7 +321,7 @@ func UnmarshalFloat64(m map[string]interface{}, propertyName string) (result *fl
 func UnmarshalFloat64Slice(m map[string]interface{}, propertyName string) (slice []float64, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a slice of anything.
 		vSlice, ok := v.([]interface{})
 		if !ok {
@@ -346,7 +346,7 @@ func UnmarshalFloat64Slice(m map[string]interface{}, propertyName string) (slice
 func UnmarshalUUID(m map[string]interface{}, propertyName string) (result *strfmt.UUID, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a string.
 		s, ok := v.(string)
 		if ok {
@@ -365,7 +365,7 @@ func UnmarshalUUID(m map[string]interface{}, propertyName string) (result *strfm
 func UnmarshalUUIDSlice(m map[string]interface{}, propertyName string) (slice []strfmt.UUID, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a slice of anything.
 		vSlice, ok := v.([]interface{})
 		if !ok {
@@ -390,7 +390,7 @@ func UnmarshalUUIDSlice(m map[string]interface{}, propertyName string) (slice []
 func UnmarshalDate(m map[string]interface{}, propertyName string) (result *strfmt.Date, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a string.
 		s, ok := v.(string)
 		if ok {
@@ -414,7 +414,7 @@ func UnmarshalDate(m map[string]interface{}, propertyName string) (result *strfm
 func UnmarshalDateSlice(m map[string]interface{}, propertyName string) (slice []strfmt.Date, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a slice of anything.
 		vSlice, ok := v.([]interface{})
 		if !ok {
@@ -446,7 +446,7 @@ func UnmarshalDateSlice(m map[string]interface{}, propertyName string) (slice []
 func UnmarshalDateTime(m map[string]interface{}, propertyName string) (result *strfmt.DateTime, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a string.
 		s, ok := v.(string)
 		if ok {
@@ -470,7 +470,7 @@ func UnmarshalDateTime(m map[string]interface{}, propertyName string) (result *s
 func UnmarshalDateTimeSlice(m map[string]interface{}, propertyName string) (slice []strfmt.DateTime, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a slice of anything.
 		vSlice, ok := v.([]interface{})
 		if !ok {
@@ -502,7 +502,7 @@ func UnmarshalDateTimeSlice(m map[string]interface{}, propertyName string) (slic
 func UnmarshalObject(m map[string]interface{}, propertyName string) (result map[string]interface{}, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a generic map containing a JSON object.
 		jsonMap, ok := v.(map[string]interface{})
 		if ok {
@@ -518,7 +518,7 @@ func UnmarshalObject(m map[string]interface{}, propertyName string) (result map[
 // generic objects (i.e. []map[string]interface{}), or nil if the property wasn't found in the map.
 func UnmarshalObjectSlice(m map[string]interface{}, propertyName string) (slice []map[string]interface{}, err error) {
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a slice of anything.
 		vSlice, ok := v.([]interface{})
 		if !ok {
@@ -543,7 +543,7 @@ func UnmarshalObjectSlice(m map[string]interface{}, propertyName string) (slice 
 func UnmarshalAny(m map[string]interface{}, propertyName string) (result interface{}, err error) {
 	var v interface{}
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		result = v
 	}
 	return
@@ -553,7 +553,7 @@ func UnmarshalAny(m map[string]interface{}, propertyName string) (result interfa
 // generic values (i.e. []interface{}), or nil if the property wasn't found in the map.
 func UnmarshalAnySlice(m map[string]interface{}, propertyName string) (slice []interface{}, err error) {
 	v, foundIt := m[propertyName]
-	if foundIt {
+	if foundIt && v != nil {
 		// Interpret the map value as a slice of anything.
 		vSlice, ok := v.([]interface{})
 		if !ok {
