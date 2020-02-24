@@ -1,3 +1,10 @@
+## [3.2.4](https://github.com/IBM/go-sdk-core/compare/v3.2.3...v3.2.4) (2020-02-24)
+
+
+### Bug Fixes
+
+* tolerate explicit JSON null values in UnmarshalXXX() methods ([3967601](https://github.com/IBM/go-sdk-core/commit/39676013711af6cb685c8c5ec7c631e226b266df))
+
 ## [3.2.3](https://github.com/IBM/go-sdk-core/compare/v3.2.2...v3.2.3) (2020-02-19)
 
 
