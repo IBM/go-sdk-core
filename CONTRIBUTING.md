@@ -3,6 +3,21 @@
 If you encounter an issue with the SDK, you are welcome to submit a [bug report](https://github.com/IBM/go-sdk-core/issues).
 Before that, please search for similar issues. It's possible somebody has encountered this issue already.
 
+# Code
+## Commit Messages
+Commit messages should follow the [Angular Commit Message Guidelines](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-guidelines).
+This is because our release tool - [semantic-release](https://github.com/semantic-release/semantic-release) -
+uses this format for determining release versions and generating changelogs.
+Tools such as [commitizen](https://github.com/commitizen/cz-cli) or [commitlint](https://github.com/conventional-changelog/commitlint)
+can be used to help contributors and enforce commit messages.
+Here are some examples of acceptable commit messages, along with the release type that would be done based on the commit message:
+
+| Commit message                                                                                                                                                              | Release type               |
+|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------|
+| `fix(IAM Authentication) propagate token request errors back to request invocation thread`                                                                                  | Patch Release              |
+| `feat(JSON Serialization): add custom deserializer for dynamic models`                                                                                                      | ~~Minor~~ Feature Release  |
+| `feat(BaseService): added baseURL as param to BaseService ctor`<br><br>`BREAKING CHANGE: The global-search service has been updated to reflect version 3 of the API.`       | ~~Major~~ Breaking Release |
+
 # Pull Requests
 
 If you want to contribute to the repository, here's a quick guide:
@@ -36,11 +51,7 @@ If you want to contribute to the repository, here's a quick guide:
      ```  
   
   8. Commit your changes:
-  * Commit messages should follow the [Angular commit message guidelines](https://github.com/angular/angular/blob/master/CONTRIBUTING.md#-commit-message-guidelines).
-  This is because this project uses `semantic-release` for build release automation, and `semantic-release` uses 
-  this commit message style for determining release versions and generating changelogs.
-  To make this easier, we recommend using the [Commitizen CLI](https://github.com/commitizen/cz-cli)
-  with the `cz-conventional-changelog` adapter.  
+  * Commit messages should follow the Angular commit message guidelines as mentioned above.
   
   9. Push your commit(s) to your fork and submit a pull request to the **master** branch.
 

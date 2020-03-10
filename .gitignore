@@ -18,3 +18,4 @@ core/coverage.out
 .secrets.baseline
 /.settings/
 /.vscode/
+package-lock.json
