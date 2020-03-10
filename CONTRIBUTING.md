@@ -81,7 +81,7 @@ By making a contribution to this project, I certify that:
    maintained indefinitely and may be redistributed consistent with
    this project or the open source license(s) involved.
 
-## Additional Resources
+# Additional Resources
 + [General GitHub documentation](https://help.github.com/)
 + [GitHub pull request documentation](https://help.github.com/send-pull-requests/)
 
