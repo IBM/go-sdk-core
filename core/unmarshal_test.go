@@ -48,25 +48,24 @@ func TestCopyMap(t *testing.T) {
 
 func TestUnmarshalString(t *testing.T) {
 	jsonString := `{
-		"prop1": "string value",
-		"slice1": ["string1", "string2"],
-		"incorrect_type":  true,
+		"good_prop": "string value",
+		"good_slice": ["string1", "string2"],
+		"bad_type":  true,
 		"not_a_slice": false,
-		"incorrect_slice_type": [38, 26],
-		"null_prop": null,
-		"null_slice": null
+		"bad_slice_type": [38, 26],
+		"null_prop": null
 	}`
 
 	testMap, err := unmarshalJsonToMap(t, jsonString)
 	assert.Nil(t, err)
 	assert.NotNil(t, testMap)
 
-	value, err := UnmarshalString(testMap, "prop1")
+	value, err := UnmarshalString(testMap, "good_prop")
 	assert.Nil(t, err)
 	assert.NotNil(t, value)
 	assert.Equal(t, "string value", *value)
 
-	value, err = UnmarshalString(testMap, "incorrect_type")
+	value, err = UnmarshalString(testMap, "bad_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, value)
 	assert.True(t, strings.Contains(err.Error(), "should be a string but was"))
@@ -80,7 +79,7 @@ func TestUnmarshalString(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, value)
 
-	slice, err := UnmarshalStringSlice(testMap, "slice1")
+	slice, err := UnmarshalStringSlice(testMap, "good_slice")
 	assert.Nil(t, err)
 	assert.NotNil(t, slice)
 	assert.Equal(t, []string{"string1", "string2"}, slice)
@@ -91,7 +90,7 @@ func TestUnmarshalString(t *testing.T) {
 	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
-	slice, err = UnmarshalStringSlice(testMap, "incorrect_slice_type")
+	slice, err = UnmarshalStringSlice(testMap, "bad_slice_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, slice)
 	assert.True(t, strings.Contains(err.Error(), "array element should be a string but was"))
@@ -101,7 +100,80 @@ func TestUnmarshalString(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 
-	slice, err = UnmarshalStringSlice(testMap, "null_slice")
+	slice, err = UnmarshalStringSlice(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+}
+
+func TestUnmarshalStringMap(t *testing.T) {
+	jsonString := `{
+		"good_map": {"key1": "value1"},
+		"not_a_map":  true,
+		"bad_value_type" : {"key1": false},
+		"good_slice": [{"key1": "value1"}, {"key2": "value2"}],
+		"not_a_slice": false,
+		"bad_slice_type": [38, 26],
+		"bad_slice_value_type": [{"key1": "value1"}, {"key2": false}],
+		"null_prop": null
+	}`
+
+	testMap, err := unmarshalJsonToMap(t, jsonString)
+	assert.Nil(t, err)
+	assert.NotNil(t, testMap)
+
+	value, err := UnmarshalStringMap(testMap, "good_map")
+	assert.Nil(t, err)
+	assert.NotNil(t, value)
+	assert.Equal(t, map[string]string{"key1": "value1"}, value)
+
+	value, err = UnmarshalStringMap(testMap, "not_a_map")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "should be a map[string]string but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalStringMap(testMap, "bad_value_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "value should be a string but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalStringMap(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	value, err = UnmarshalStringMap(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	slice, err := UnmarshalStringMapSlice(testMap, "good_slice")
+	assert.Nil(t, err)
+	assert.NotNil(t, slice)
+	assert.Equal(t, []map[string]string{{"key1": "value1"}, {"key2": "value2"}}, slice)
+
+	slice, err = UnmarshalStringMapSlice(testMap, "not_a_slice")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalStringMapSlice(testMap, "bad_slice_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a map[string]string but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalStringMapSlice(testMap, "bad_slice_value_type")
+	assert.NotNil(t, err)
+	assert.NotNil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a string but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalStringMapSlice(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+
+	slice, err = UnmarshalStringMapSlice(testMap, "null_prop")
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 }
@@ -111,15 +183,14 @@ func TestUnmarshalByteArray(t *testing.T) {
 	assert.NotNil(t, encodedString)
 
 	jsonTemplate := `{
-		"prop1": "%s",
-		"slice1": ["%s","%s"],
-		"incorrect_type": true,
+		"good_prop": "%s",
+		"good_slice": ["%s","%s"],
+		"bad_type": true,
 		"not_a_slice": false,
-		"incorrect_slice_type": [38, 26],
+		"bad_slice_type": [38, 26],
 		"invalid_byte_array": "this is not an encoded string!",
 		"invalid_byte_array_slice": ["this is not an encoded string!"],
-		"null_prop": null,
-		"null_slice": null
+		"null_prop": null
 	}`
 	jsonString := fmt.Sprintf(jsonTemplate, encodedString, encodedString, encodedString)
 
@@ -127,12 +198,12 @@ func TestUnmarshalByteArray(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, testMap)
 
-	value, err := UnmarshalByteArray(testMap, "prop1")
+	value, err := UnmarshalByteArray(testMap, "good_prop")
 	assert.Nil(t, err)
 	assert.NotNil(t, value)
 	assert.Equal(t, []byte("deadbeef"), *value)
 
-	value, err = UnmarshalByteArray(testMap, "incorrect_type")
+	value, err = UnmarshalByteArray(testMap, "bad_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, value)
 	assert.True(t, strings.Contains(err.Error(), "should be a base64-encoded string but was"))
@@ -152,7 +223,7 @@ func TestUnmarshalByteArray(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, value)
 
-	slice, err := UnmarshalByteArraySlice(testMap, "slice1")
+	slice, err := UnmarshalByteArraySlice(testMap, "good_slice")
 	assert.Nil(t, err)
 	assert.NotNil(t, slice)
 	assert.Equal(t, [][]byte{[]byte("deadbeef"), []byte("deadbeef")}, slice)
@@ -163,10 +234,10 @@ func TestUnmarshalByteArray(t *testing.T) {
 	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
-	slice, err = UnmarshalByteArraySlice(testMap, "incorrect_slice_type")
+	slice, err = UnmarshalByteArraySlice(testMap, "bad_slice_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, slice)
-	assert.True(t, strings.Contains(err.Error(), "array element should be a base64-encoded string but was"))
+	assert.True(t, strings.Contains(err.Error(), "should be a base64-encoded string but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
 	slice, err = UnmarshalByteArraySlice(testMap, "invalid_byte_array_slice")
@@ -179,32 +250,130 @@ func TestUnmarshalByteArray(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 
-	slice, err = UnmarshalByteArraySlice(testMap, "null_slice")
+	slice, err = UnmarshalByteArraySlice(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+}
+
+func TestUnmarshalByteArrayMap(t *testing.T) {
+	deadbeef := []byte("deadbeef")
+	encodedString := base64.StdEncoding.EncodeToString(deadbeef)
+	assert.NotNil(t, encodedString)
+
+	jsonTemplate := `{
+		"good_map": {"key1": "%s"},
+		"not_a_map":  true,
+		"bad_value_type" : {"key1": false},
+		"good_slice": [{"key1": "%s"}, {"key2": "%s"}],
+		"not_a_slice": false,
+		"bad_slice_type": [38, 26],
+		"bad_slice_value_type": [{"key1": "%s"}, {"key2": false}],
+		"invalid_byte_array": {"key1": "this is not an encoded string!"},
+		"invalid_byte_array_slice": [{"key1": "this is not an encoded string!"}],
+		"null_prop": null
+	}`
+
+	jsonString := fmt.Sprintf(jsonTemplate, encodedString, encodedString, encodedString, encodedString)
+
+	testMap, err := unmarshalJsonToMap(t, jsonString)
+	assert.Nil(t, err)
+	assert.NotNil(t, testMap)
+
+	value, err := UnmarshalByteArrayMap(testMap, "good_map")
+	assert.Nil(t, err)
+	assert.NotNil(t, value)
+	expectedMap := map[string][]byte{"key1": deadbeef}
+	assert.Equal(t, expectedMap, value)
+
+	value, err = UnmarshalByteArrayMap(testMap, "not_a_map")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "value should be a map[string]string but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalByteArrayMap(testMap, "bad_value_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "should be a base64-encoded string but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalByteArrayMap(testMap, "invalid_byte_array")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "error decoding"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalByteArrayMap(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	value, err = UnmarshalByteArrayMap(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	slice, err := UnmarshalByteArrayMapSlice(testMap, "good_slice")
+	assert.Nil(t, err)
+	assert.NotNil(t, slice)
+
+	expectedMap2 := map[string][]byte{"key2": deadbeef}
+	var expectedSlice []map[string][]byte
+	expectedSlice = append(expectedSlice, expectedMap)
+	expectedSlice = append(expectedSlice, expectedMap2)
+	assert.Equal(t, expectedSlice, slice)
+
+	slice, err = UnmarshalByteArrayMapSlice(testMap, "not_a_slice")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalByteArrayMapSlice(testMap, "bad_slice_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "should be a map[string]string but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalByteArrayMapSlice(testMap, "bad_slice_value_type")
+	assert.NotNil(t, err)
+	assert.NotNil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "should be a base64-encoded string but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalByteArrayMapSlice(testMap, "invalid_byte_array_slice")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "error decoding"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalByteArrayMapSlice(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+
+	slice, err = UnmarshalByteArrayMapSlice(testMap, "null_prop")
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 }
 
 func TestUnmarshalBool(t *testing.T) {
 	jsonString := `{
-		"prop1": true,
-		"slice1": [false, true],
-		"incorrect_type": "true",
+		"good_prop": true,
+		"good_slice": [false, true],
+		"bad_type": "true",
 		"not_a_slice": false,
-		"incorrect_slice_type": [38, 26],
-		"null_prop": null,
-		"null_slice": null
+		"bad_slice_type": [38, 26],
+		"null_prop": null
 	}`
 
 	testMap, err := unmarshalJsonToMap(t, jsonString)
 	assert.Nil(t, err)
 	assert.NotNil(t, testMap)
 
-	value, err := UnmarshalBool(testMap, "prop1")
+	value, err := UnmarshalBool(testMap, "good_prop")
 	assert.Nil(t, err)
 	assert.NotNil(t, value)
 	assert.Equal(t, true, *value)
 
-	value, err = UnmarshalBool(testMap, "incorrect_type")
+	value, err = UnmarshalBool(testMap, "bad_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, value)
 	assert.True(t, strings.Contains(err.Error(), "should be a boolean but was"))
@@ -218,7 +387,7 @@ func TestUnmarshalBool(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, value)
 
-	slice, err := UnmarshalBoolSlice(testMap, "slice1")
+	slice, err := UnmarshalBoolSlice(testMap, "good_slice")
 	assert.Nil(t, err)
 	assert.NotNil(t, slice)
 	assert.Equal(t, []bool{false, true}, slice)
@@ -229,7 +398,7 @@ func TestUnmarshalBool(t *testing.T) {
 	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
-	slice, err = UnmarshalBoolSlice(testMap, "incorrect_slice_type")
+	slice, err = UnmarshalBoolSlice(testMap, "bad_slice_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, slice)
 	assert.True(t, strings.Contains(err.Error(), "array element should be a boolean but was"))
@@ -239,32 +408,104 @@ func TestUnmarshalBool(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 
-	slice, err = UnmarshalBoolSlice(testMap, "null_slice")
+	slice, err = UnmarshalBoolSlice(testMap, "null_prop")
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 }
 
-func TestUnmarshalInt64(t *testing.T) {
+func TestUnmarshalBoolMap(t *testing.T) {
 	jsonString := `{
-		"prop1": 32,
-		"slice1": [74, 44],
-		"incorrect_type":  true,
+		"good_map": {"key1": true},
+		"not_a_map":  "not a map",
+		"bad_value_type" : {"key1": "false"},
+		"good_slice": [{"key1": false}, {"key2": true}],
 		"not_a_slice": false,
-		"incorrect_slice_type": ["blah"],
-		"null_prop": null,
-		"null_slice": null
+		"bad_slice_type": [38, 26],
+		"bad_slice_value_type": [{"key1": false}, {"key2": 38}],
+		"null_prop": null
 	}`
 
 	testMap, err := unmarshalJsonToMap(t, jsonString)
 	assert.Nil(t, err)
 	assert.NotNil(t, testMap)
 
-	value, err := UnmarshalInt64(testMap, "prop1")
+	value, err := UnmarshalBoolMap(testMap, "good_map")
+	assert.Nil(t, err)
+	assert.NotNil(t, value)
+	assert.Equal(t, map[string]bool{"key1": true}, value)
+
+	value, err = UnmarshalBoolMap(testMap, "not_a_map")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "should be a map[string]bool but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalBoolMap(testMap, "bad_value_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "value should be a bool but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalBoolMap(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	value, err = UnmarshalBoolMap(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	slice, err := UnmarshalBoolMapSlice(testMap, "good_slice")
+	assert.Nil(t, err)
+	assert.NotNil(t, slice)
+	assert.Equal(t, []map[string]bool{{"key1": false}, {"key2": true}}, slice)
+
+	slice, err = UnmarshalBoolMapSlice(testMap, "not_a_slice")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalBoolMapSlice(testMap, "bad_slice_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a map[string]bool but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalBoolMapSlice(testMap, "bad_slice_value_type")
+	assert.NotNil(t, err)
+	assert.NotNil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a bool but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalBoolMapSlice(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+
+	slice, err = UnmarshalBoolMapSlice(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+}
+
+func TestUnmarshalInt64(t *testing.T) {
+	jsonString := `{
+		"good_prop": 32,
+		"good_slice": [74, 44],
+		"bad_type":  true,
+		"not_a_slice": false,
+		"bad_slice_type": ["blah"],
+		"null_prop": null
+	}`
+
+	testMap, err := unmarshalJsonToMap(t, jsonString)
+	assert.Nil(t, err)
+	assert.NotNil(t, testMap)
+
+	value, err := UnmarshalInt64(testMap, "good_prop")
 	assert.Nil(t, err)
 	assert.NotNil(t, value)
 	assert.Equal(t, int64(32), *value)
 
-	value, err = UnmarshalInt64(testMap, "incorrect_type")
+	value, err = UnmarshalInt64(testMap, "bad_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, value)
 	assert.True(t, strings.Contains(err.Error(), "should be a integer but was"))
@@ -278,7 +519,7 @@ func TestUnmarshalInt64(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, value)
 
-	slice, err := UnmarshalInt64Slice(testMap, "slice1")
+	slice, err := UnmarshalInt64Slice(testMap, "good_slice")
 	assert.Nil(t, err)
 	assert.NotNil(t, slice)
 	assert.Equal(t, []int64{74, 44}, slice)
@@ -289,7 +530,7 @@ func TestUnmarshalInt64(t *testing.T) {
 	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
-	slice, err = UnmarshalInt64Slice(testMap, "incorrect_slice_type")
+	slice, err = UnmarshalInt64Slice(testMap, "bad_slice_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, slice)
 	assert.True(t, strings.Contains(err.Error(), "array element should be a integer but was"))
@@ -299,92 +540,104 @@ func TestUnmarshalInt64(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 
-	slice, err = UnmarshalInt64Slice(testMap, "null_slice")
+	slice, err = UnmarshalInt64Slice(testMap, "null_prop")
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 }
 
-func TestUnmarshalFloat64(t *testing.T) {
+func TestUnmarshalInt64Map(t *testing.T) {
 	jsonString := `{
-		"prop1": 32.3,
-		"slice1": [74.5, 44.8],
-		"incorrect_type":  true,
-		"not_a_slice": false,
-		"incorrect_slice_type": ["blah"],
-		"null_prop": null,
-		"null_slice": null
+		"good_map": {"key1": 38},
+		"not_a_map":  "not a map",
+		"bad_value_type" : {"key1": "bad_value"},
+		"good_slice": [{"key1": 38}, {"key2": 26}],
+		"not_a_slice": "false",
+		"bad_slice_type": [38, 26],
+		"bad_slice_value_type": [{"key1": 38}, {"key2": true}],
+		"null_prop": null
 	}`
 
 	testMap, err := unmarshalJsonToMap(t, jsonString)
 	assert.Nil(t, err)
 	assert.NotNil(t, testMap)
 
-	value, err := UnmarshalFloat64(testMap, "prop1")
+	value, err := UnmarshalInt64Map(testMap, "good_map")
 	assert.Nil(t, err)
 	assert.NotNil(t, value)
-	assert.Equal(t, float64(32.3), *value)
+	assert.Equal(t, map[string]int64{"key1": 38}, value)
 
-	value, err = UnmarshalFloat64(testMap, "incorrect_type")
+	value, err = UnmarshalInt64Map(testMap, "not_a_map")
 	assert.NotNil(t, err)
 	assert.Nil(t, value)
-	assert.True(t, strings.Contains(err.Error(), "should be a float64 but was"))
+	assert.True(t, strings.Contains(err.Error(), "should be a map[string]int64 but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
-	value, err = UnmarshalFloat64(testMap, "XXX")
+	value, err = UnmarshalInt64Map(testMap, "bad_value_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "value should be a int64 but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalInt64Map(testMap, "XXX")
 	assert.Nil(t, err)
 	assert.Nil(t, value)
 
-	value, err = UnmarshalFloat64(testMap, "null_prop")
+	value, err = UnmarshalInt64Map(testMap, "null_prop")
 	assert.Nil(t, err)
 	assert.Nil(t, value)
 
-	slice, err := UnmarshalFloat64Slice(testMap, "slice1")
+	slice, err := UnmarshalInt64MapSlice(testMap, "good_slice")
 	assert.Nil(t, err)
 	assert.NotNil(t, slice)
-	assert.Equal(t, []float64{74.5, 44.8}, slice)
+	assert.Equal(t, []map[string]int64{{"key1": 38}, {"key2": 26}}, slice)
 
-	slice, err = UnmarshalFloat64Slice(testMap, "not_a_slice")
+	slice, err = UnmarshalInt64MapSlice(testMap, "not_a_slice")
 	assert.NotNil(t, err)
 	assert.Nil(t, slice)
 	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
-	slice, err = UnmarshalFloat64Slice(testMap, "incorrect_slice_type")
+	slice, err = UnmarshalInt64MapSlice(testMap, "bad_slice_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, slice)
-	assert.True(t, strings.Contains(err.Error(), "array element should be a float64 but was"))
+	assert.True(t, strings.Contains(err.Error(), "value should be a map[string]int64 but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
-	slice, err = UnmarshalFloat64Slice(testMap, "XXX")
+	slice, err = UnmarshalInt64MapSlice(testMap, "bad_slice_value_type")
+	assert.NotNil(t, err)
+	assert.NotNil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a int64 but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalInt64MapSlice(testMap, "XXX")
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 
-	slice, err = UnmarshalFloat64Slice(testMap, "null_slice")
+	slice, err = UnmarshalInt64MapSlice(testMap, "null_prop")
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 }
 
 func TestUnmarshalFloat32(t *testing.T) {
 	jsonString := `{
-		"prop1": 32.3,
-		"slice1": [74.5, 44.8],
-		"incorrect_type":  true,
+		"good_prop": 32.3,
+		"good_slice": [74.5, 44.8],
+		"bad_type":  true,
 		"not_a_slice": false,
-		"incorrect_slice_type": ["blah"],
-		"null_prop": null,
-		"null_slice": null
+		"bad_slice_type": ["blah"],
+		"null_prop": null
 	}`
 
 	testMap, err := unmarshalJsonToMap(t, jsonString)
 	assert.Nil(t, err)
 	assert.NotNil(t, testMap)
 
-	value, err := UnmarshalFloat32(testMap, "prop1")
+	value, err := UnmarshalFloat32(testMap, "good_prop")
 	assert.Nil(t, err)
 	assert.NotNil(t, value)
 	assert.Equal(t, float32(32.3), *value)
 
-	value, err = UnmarshalFloat32(testMap, "incorrect_type")
+	value, err = UnmarshalFloat32(testMap, "bad_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, value)
 	assert.True(t, strings.Contains(err.Error(), "should be a float32 but was"))
@@ -398,7 +651,7 @@ func TestUnmarshalFloat32(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, value)
 
-	slice, err := UnmarshalFloat32Slice(testMap, "slice1")
+	slice, err := UnmarshalFloat32Slice(testMap, "good_slice")
 	assert.Nil(t, err)
 	assert.NotNil(t, slice)
 	assert.Equal(t, []float32{74.5, 44.8}, slice)
@@ -409,7 +662,7 @@ func TestUnmarshalFloat32(t *testing.T) {
 	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
-	slice, err = UnmarshalFloat32Slice(testMap, "incorrect_slice_type")
+	slice, err = UnmarshalFloat32Slice(testMap, "bad_slice_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, slice)
 	assert.True(t, strings.Contains(err.Error(), "array element should be a float32 but was"))
@@ -419,7 +672,212 @@ func TestUnmarshalFloat32(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 
-	slice, err = UnmarshalFloat32Slice(testMap, "null_slice")
+	slice, err = UnmarshalFloat32Slice(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+}
+
+func TestUnmarshalFloat32Map(t *testing.T) {
+	jsonString := `{
+		"good_map": {"key1": 38.5},
+		"not_a_map":  "not a map",
+		"bad_value_type" : {"key1": "bad_value"},
+		"good_slice": [{"key1": 38.5}, {"key2": 26.2}],
+		"not_a_slice": "false",
+		"bad_slice_type": [38.5, 26.2],
+		"bad_slice_value_type": [{"key1": 38.5}, {"key2": true}],
+		"null_prop": null
+	}`
+
+	testMap, err := unmarshalJsonToMap(t, jsonString)
+	assert.Nil(t, err)
+	assert.NotNil(t, testMap)
+
+	value, err := UnmarshalFloat32Map(testMap, "good_map")
+	assert.Nil(t, err)
+	assert.NotNil(t, value)
+	assert.Equal(t, map[string]float32{"key1": 38.5}, value)
+
+	value, err = UnmarshalFloat32Map(testMap, "not_a_map")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "value should be a map[string]float32 but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalFloat32Map(testMap, "bad_value_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "value should be a float32 but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalFloat32Map(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	value, err = UnmarshalFloat32Map(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	slice, err := UnmarshalFloat32MapSlice(testMap, "good_slice")
+	assert.Nil(t, err)
+	assert.NotNil(t, slice)
+	assert.Equal(t, []map[string]float32{{"key1": 38.5}, {"key2": 26.2}}, slice)
+
+	slice, err = UnmarshalFloat32MapSlice(testMap, "not_a_slice")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalFloat32MapSlice(testMap, "bad_slice_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a map[string]float32 but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalFloat32MapSlice(testMap, "bad_slice_value_type")
+	assert.NotNil(t, err)
+	assert.NotNil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a float32 but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalFloat32MapSlice(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+
+	slice, err = UnmarshalFloat32MapSlice(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+}
+
+func TestUnmarshalFloat64(t *testing.T) {
+	jsonString := `{
+		"good_prop": 32.3,
+		"good_slice": [74.5, 44.8],
+		"bad_type":  true,
+		"not_a_slice": false,
+		"bad_slice_type": ["blah"],
+		"null_prop": null
+	}`
+
+	testMap, err := unmarshalJsonToMap(t, jsonString)
+	assert.Nil(t, err)
+	assert.NotNil(t, testMap)
+
+	value, err := UnmarshalFloat64(testMap, "good_prop")
+	assert.Nil(t, err)
+	assert.NotNil(t, value)
+	assert.Equal(t, float64(32.3), *value)
+
+	value, err = UnmarshalFloat64(testMap, "bad_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "should be a float64 but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalFloat64(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	value, err = UnmarshalFloat64(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	slice, err := UnmarshalFloat64Slice(testMap, "good_slice")
+	assert.Nil(t, err)
+	assert.NotNil(t, slice)
+	assert.Equal(t, []float64{74.5, 44.8}, slice)
+
+	slice, err = UnmarshalFloat64Slice(testMap, "not_a_slice")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalFloat64Slice(testMap, "bad_slice_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "array element should be a float64 but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalFloat64Slice(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+
+	slice, err = UnmarshalFloat64Slice(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+}
+
+func TestUnmarshalFloat64Map(t *testing.T) {
+	jsonString := `{
+		"good_map": {"key1": 38.5},
+		"not_a_map":  "not a map",
+		"bad_value_type" : {"key1": "bad_value"},
+		"good_slice": [{"key1": 38.5}, {"key2": 26.2}],
+		"not_a_slice": "false",
+		"bad_slice_type": [38.5, 26.2],
+		"bad_slice_value_type": [{"key1": 38.5}, {"key2": true}],
+		"null_prop": null
+	}`
+
+	testMap, err := unmarshalJsonToMap(t, jsonString)
+	assert.Nil(t, err)
+	assert.NotNil(t, testMap)
+
+	value, err := UnmarshalFloat64Map(testMap, "good_map")
+	assert.Nil(t, err)
+	assert.NotNil(t, value)
+	assert.Equal(t, map[string]float64{"key1": 38.5}, value)
+
+	value, err = UnmarshalFloat64Map(testMap, "not_a_map")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "value should be a map[string]float64 but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalFloat64Map(testMap, "bad_value_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "value should be a float64 but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalFloat64Map(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	value, err = UnmarshalFloat64Map(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	slice, err := UnmarshalFloat64MapSlice(testMap, "good_slice")
+	assert.Nil(t, err)
+	assert.NotNil(t, slice)
+	assert.Equal(t, []map[string]float64{{"key1": 38.5}, {"key2": 26.2}}, slice)
+
+	slice, err = UnmarshalFloat64MapSlice(testMap, "not_a_slice")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalFloat64MapSlice(testMap, "bad_slice_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a map[string]float64 but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalFloat64MapSlice(testMap, "bad_slice_value_type")
+	assert.NotNil(t, err)
+	assert.NotNil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a float64 but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalFloat64MapSlice(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+
+	slice, err = UnmarshalFloat64MapSlice(testMap, "null_prop")
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 }
@@ -429,13 +887,12 @@ func TestUnmarshalUUID(t *testing.T) {
 	uuid2 := "12ab83da-98cb-4f18-a7ba-b6f0435c0000"
 
 	jsonTemplate := `{
-		"prop1": "%s",
-		"slice1": ["%s","%s"],
-		"incorrect_type": true,
+		"good_prop": "%s",
+		"good_slice": ["%s","%s"],
+		"bad_type": true,
 		"not_a_slice": false,
-		"incorrect_slice_type": [true, false],
-		"null_prop": null,
-		"null_slice": null
+		"bad_slice_type": [true, false],
+		"null_prop": null
 	}`
 	jsonString := fmt.Sprintf(jsonTemplate, uuid1, uuid1, uuid2)
 
@@ -443,12 +900,12 @@ func TestUnmarshalUUID(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, testMap)
 
-	value, err := UnmarshalUUID(testMap, "prop1")
+	value, err := UnmarshalUUID(testMap, "good_prop")
 	assert.Nil(t, err)
 	assert.NotNil(t, value)
 	assert.Equal(t, uuid1, value.String())
 
-	value, err = UnmarshalUUID(testMap, "incorrect_type")
+	value, err = UnmarshalUUID(testMap, "bad_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, value)
 	assert.True(t, strings.Contains(err.Error(), "should be a UUID but was"))
@@ -462,7 +919,7 @@ func TestUnmarshalUUID(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, value)
 
-	slice, err := UnmarshalUUIDSlice(testMap, "slice1")
+	slice, err := UnmarshalUUIDSlice(testMap, "good_slice")
 	assert.Nil(t, err)
 	assert.NotNil(t, slice)
 	actual := []string{slice[0].String(), slice[1].String()}
@@ -474,7 +931,7 @@ func TestUnmarshalUUID(t *testing.T) {
 	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
-	slice, err = UnmarshalUUIDSlice(testMap, "incorrect_slice_type")
+	slice, err = UnmarshalUUIDSlice(testMap, "bad_slice_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, slice)
 	assert.True(t, strings.Contains(err.Error(), "array element should be a UUID but was"))
@@ -484,7 +941,85 @@ func TestUnmarshalUUID(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 
-	slice, err = UnmarshalUUIDSlice(testMap, "null_slice")
+	slice, err = UnmarshalUUIDSlice(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+}
+
+func TestUnmarshalUUIDMap(t *testing.T) {
+	uuid1 := "9fab83da-98cb-4f18-a7ba-b6f0435c9673"
+	uuid2 := "12ab83da-98cb-4f18-a7ba-b6f0435c0000"
+
+	jsonTemplate := `{
+		"good_map": {"key1": "%s"},
+		"not_a_map":  "not a map",
+		"bad_value_type" : {"key1": 38},
+		"good_slice": [{"key1": "%s"}, {"key2": "%s"}],
+		"not_a_slice": "false",
+		"bad_slice_type": ["%s", "%s"],
+		"bad_slice_value_type": [{"key1": "%s"}, {"key2": true}],
+		"null_prop": null
+	}`
+	jsonString := fmt.Sprintf(jsonTemplate, uuid1, uuid1, uuid2, uuid1, uuid2, uuid1)
+
+	testMap, err := unmarshalJsonToMap(t, jsonString)
+	assert.Nil(t, err)
+	assert.NotNil(t, testMap)
+
+	value, err := UnmarshalUUIDMap(testMap, "good_map")
+	assert.Nil(t, err)
+	assert.NotNil(t, value)
+	assert.Equal(t, uuid1, value["key1"].String())
+
+	value, err = UnmarshalUUIDMap(testMap, "not_a_map")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "value should be a map[string]UUID but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalUUIDMap(testMap, "bad_value_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "value should be a UUID but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalUUIDMap(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	value, err = UnmarshalUUIDMap(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	slice, err := UnmarshalUUIDMapSlice(testMap, "good_slice")
+	assert.Nil(t, err)
+	assert.NotNil(t, slice)
+	assert.Equal(t, uuid1, slice[0]["key1"].String())
+	assert.Equal(t, uuid2, slice[1]["key2"].String())
+
+	slice, err = UnmarshalUUIDMapSlice(testMap, "not_a_slice")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalUUIDMapSlice(testMap, "bad_slice_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a map[string]UUID but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalUUIDMapSlice(testMap, "bad_slice_value_type")
+	assert.NotNil(t, err)
+	assert.NotNil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a UUID but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalUUIDMapSlice(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+
+	slice, err = UnmarshalUUIDMapSlice(testMap, "null_prop")
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 }
@@ -494,15 +1029,14 @@ func TestUnmarshalDate(t *testing.T) {
 	date2 := "2019-12-23"
 
 	jsonTemplate := `{
-		"prop1": "%s",
-		"slice1": ["%s","%s"],
-		"incorrect_type": true,
+		"good_prop": "%s",
+		"good_slice": ["%s","%s"],
+		"bad_type": true,
 		"not_a_slice": false,
-		"incorrect_slice_type": [true, false],
+		"bad_slice_type": [true, false],
 		"invalid_date": "this is not a valid date",
 		"invalid_date_slice": ["another invalid date value"],
-		"null_prop": null,
-		"null_slice": null
+		"null_prop": null
 	}`
 	jsonString := fmt.Sprintf(jsonTemplate, date1, date1, date2)
 
@@ -510,12 +1044,12 @@ func TestUnmarshalDate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, testMap)
 
-	value, err := UnmarshalDate(testMap, "prop1")
+	value, err := UnmarshalDate(testMap, "good_prop")
 	assert.Nil(t, err)
 	assert.NotNil(t, value)
 	assert.Equal(t, date1, value.String())
 
-	value, err = UnmarshalDate(testMap, "incorrect_type")
+	value, err = UnmarshalDate(testMap, "bad_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, value)
 	assert.True(t, strings.Contains(err.Error(), "should be a Date but was"))
@@ -535,7 +1069,7 @@ func TestUnmarshalDate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, value)
 
-	slice, err := UnmarshalDateSlice(testMap, "slice1")
+	slice, err := UnmarshalDateSlice(testMap, "good_slice")
 	assert.Nil(t, err)
 	assert.NotNil(t, slice)
 	actual := []string{slice[0].String(), slice[1].String()}
@@ -547,10 +1081,10 @@ func TestUnmarshalDate(t *testing.T) {
 	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
-	slice, err = UnmarshalDateSlice(testMap, "incorrect_slice_type")
+	slice, err = UnmarshalDateSlice(testMap, "bad_slice_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, slice)
-	assert.True(t, strings.Contains(err.Error(), "array element should be a Date but was"))
+	assert.True(t, strings.Contains(err.Error(), "value should be a Date but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
 	slice, err = UnmarshalDateSlice(testMap, "invalid_date_slice")
@@ -563,7 +1097,85 @@ func TestUnmarshalDate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 
-	slice, err = UnmarshalDateSlice(testMap, "null_slice")
+	slice, err = UnmarshalDateSlice(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+}
+
+func TestUnmarshalDateMap(t *testing.T) {
+	date1 := "1970-01-01"
+	date2 := "2019-12-23"
+
+	jsonTemplate := `{
+		"good_map": {"key1": "%s"},
+		"not_a_map":  "not a map",
+		"bad_value_type" : {"key1": 38},
+		"good_slice": [{"key1": "%s"}, {"key2": "%s"}],
+		"not_a_slice": "false",
+		"bad_slice_type": ["%s", "%s"],
+		"bad_slice_value_type": [{"key1": "%s"}, {"key2": true}],
+		"null_prop": null
+	}`
+	jsonString := fmt.Sprintf(jsonTemplate, date1, date1, date2, date1, date2, date1)
+
+	testMap, err := unmarshalJsonToMap(t, jsonString)
+	assert.Nil(t, err)
+	assert.NotNil(t, testMap)
+
+	value, err := UnmarshalDateMap(testMap, "good_map")
+	assert.Nil(t, err)
+	assert.NotNil(t, value)
+	assert.Equal(t, date1, value["key1"].String())
+
+	value, err = UnmarshalDateMap(testMap, "not_a_map")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "value should be a map[string]Date but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalDateMap(testMap, "bad_value_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "value should be a Date but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalDateMap(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	value, err = UnmarshalDateMap(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	slice, err := UnmarshalDateMapSlice(testMap, "good_slice")
+	assert.Nil(t, err)
+	assert.NotNil(t, slice)
+	assert.Equal(t, date1, slice[0]["key1"].String())
+	assert.Equal(t, date2, slice[1]["key2"].String())
+
+	slice, err = UnmarshalDateMapSlice(testMap, "not_a_slice")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalDateMapSlice(testMap, "bad_slice_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a map[string]Date but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalDateMapSlice(testMap, "bad_slice_value_type")
+	assert.NotNil(t, err)
+	assert.NotNil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a Date but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalDateMapSlice(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+
+	slice, err = UnmarshalDateMapSlice(testMap, "null_prop")
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 }
@@ -574,15 +1186,14 @@ func TestUnmarshalDateTime(t *testing.T) {
 	datetime3 := "2019-12-31T23:59:59.333Z"
 
 	jsonTemplate := `{
-		"prop1": "%s",
-		"slice1": ["%s","%s"],
-		"incorrect_type": true,
+		"good_prop": "%s",
+		"good_slice": ["%s","%s"],
+		"bad_type": true,
 		"not_a_slice": false,
-		"incorrect_slice_type": [true, false],
+		"bad_slice_type": [true, false],
 		"invalid_datetime": "this is an invalid datetime value",
 		"invalid_datetime_slice": ["another invalid datetime value"],
-		"null_prop": null,
-		"null_slice": null
+		"null_prop": null
 	}`
 	jsonString := fmt.Sprintf(jsonTemplate, datetime1, datetime2, datetime3)
 
@@ -590,12 +1201,12 @@ func TestUnmarshalDateTime(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, testMap)
 
-	value, err := UnmarshalDateTime(testMap, "prop1")
+	value, err := UnmarshalDateTime(testMap, "good_prop")
 	assert.Nil(t, err)
 	assert.NotNil(t, value)
-	assert.Equal(t, datetime1 + ".000Z", value.String())
+	assert.Equal(t, datetime1+".000Z", value.String())
 
-	value, err = UnmarshalDateTime(testMap, "incorrect_type")
+	value, err = UnmarshalDateTime(testMap, "bad_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, value)
 	assert.True(t, strings.Contains(err.Error(), "should be a DateTime but was"))
@@ -615,10 +1226,10 @@ func TestUnmarshalDateTime(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, value)
 
-	slice, err := UnmarshalDateTimeSlice(testMap, "slice1")
+	slice, err := UnmarshalDateTimeSlice(testMap, "good_slice")
 	assert.Nil(t, err)
 	assert.NotNil(t, slice)
-	expectedSlice := []string{"2019-12-23T23:59:59.000Z","2019-12-31T23:59:59.333Z"} 
+	expectedSlice := []string{"2019-12-23T23:59:59.000Z", "2019-12-31T23:59:59.333Z"}
 	actualSlice := []string{slice[0].String(), slice[1].String()}
 	assert.Equal(t, expectedSlice, actualSlice)
 
@@ -628,10 +1239,10 @@ func TestUnmarshalDateTime(t *testing.T) {
 	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
-	slice, err = UnmarshalDateTimeSlice(testMap, "incorrect_slice_type")
+	slice, err = UnmarshalDateTimeSlice(testMap, "bad_slice_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, slice)
-	assert.True(t, strings.Contains(err.Error(), "array element should be a DateTime but was"))
+	assert.True(t, strings.Contains(err.Error(), "value should be a DateTime but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
 	slice, err = UnmarshalDateTimeSlice(testMap, "invalid_datetime_slice")
@@ -644,36 +1255,118 @@ func TestUnmarshalDateTime(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 
-	slice, err = UnmarshalDateTimeSlice(testMap, "null_slice")
+	slice, err = UnmarshalDateTimeSlice(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+}
+
+func TestUnmarshalDateTimeMap(t *testing.T) {
+	datetime1 := "1970-01-01T01:02:03"
+	datetime2 := "2019-12-23T23:59:59Z"
+
+	jsonTemplate := `{
+		"good_map": {"key1": "%s"},
+		"not_a_map":  "not a map",
+		"bad_value_type" : {"key1": 38},
+		"good_slice": [{"key1": "%s"}, {"key2": "%s"}],
+		"not_a_slice": "false",
+		"bad_slice_type": ["%s", "%s"],
+		"bad_slice_value_type": [{"key1": "%s"}, {"key2": true}],
+		"null_prop": null
+	}`
+	jsonString := fmt.Sprintf(jsonTemplate, datetime1, datetime1, datetime2, datetime1, datetime2, datetime1)
+
+	testMap, err := unmarshalJsonToMap(t, jsonString)
+	assert.Nil(t, err)
+	assert.NotNil(t, testMap)
+
+	value, err := UnmarshalDateTimeMap(testMap, "good_map")
+	assert.Nil(t, err)
+	assert.NotNil(t, value)
+	assert.Equal(t, datetime1+".000Z", value["key1"].String())
+
+	value, err = UnmarshalDateTimeMap(testMap, "not_a_map")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "value should be a map[string]DateTime but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalDateTimeMap(testMap, "bad_value_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, value)
+	assert.True(t, strings.Contains(err.Error(), "value should be a DateTime but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	value, err = UnmarshalDateTimeMap(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	value, err = UnmarshalDateTimeMap(testMap, "null_prop")
+	assert.Nil(t, err)
+	assert.Nil(t, value)
+
+	slice, err := UnmarshalDateTimeMapSlice(testMap, "good_slice")
+	assert.Nil(t, err)
+	assert.NotNil(t, slice)
+	assert.Equal(t, datetime1+".000Z", slice[0]["key1"].String())
+	assert.Equal(t, "2019-12-23T23:59:59.000Z", slice[1]["key2"].String())
+
+	slice, err = UnmarshalDateTimeMapSlice(testMap, "not_a_slice")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalDateTimeMapSlice(testMap, "bad_slice_type")
+	assert.NotNil(t, err)
+	assert.Nil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a map[string]DateTime but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalDateTimeMapSlice(testMap, "bad_slice_value_type")
+	assert.NotNil(t, err)
+	assert.NotNil(t, slice)
+	assert.True(t, strings.Contains(err.Error(), "value should be a DateTime but was"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	slice, err = UnmarshalDateTimeMapSlice(testMap, "XXX")
+	assert.Nil(t, err)
+	assert.Nil(t, slice)
+
+	slice, err = UnmarshalDateTimeMapSlice(testMap, "null_prop")
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 }
 
 func TestUnmarshalObject(t *testing.T) {
 	jsonString := `{
-		"prop1": {"foo": "bar"},
-		"slice1": [
+		"good_prop": {"foo": "bar"},
+		"good_slice": [
 			{"name": "object1"},
 			{"name": "object2"},
 			{"name": "object3"}
 		],
-		"incorrect_type":  true,
+		"bad_type":  true,
 		"not_a_slice": false,
-		"incorrect_slice_type": [false],
-		"null_prop": null,
-		"null_slice": null
+		"bad_slice_type": [false],
+		"null_prop": null
 	}`
 
 	testMap, err := unmarshalJsonToMap(t, jsonString)
 	assert.Nil(t, err)
 	assert.NotNil(t, testMap)
 
-	value, err := UnmarshalObject(testMap, "prop1")
+	value, err := UnmarshalObject(testMap, "good_prop")
 	assert.Nil(t, err)
 	assert.NotNil(t, value)
 	assert.Equal(t, "bar", value["foo"])
 
-	value, err = UnmarshalObject(testMap, "incorrect_type")
+	value, err = UnmarshalAnyMap(testMap, "good_prop")
+	assert.Nil(t, err)
+	assert.NotNil(t, value)
+	assert.Equal(t, "bar", value["foo"])
+
+	value, err = UnmarshalObject(testMap, "bad_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, value)
 	assert.True(t, strings.Contains(err.Error(), "should be a JSON object but was"))
@@ -687,7 +1380,14 @@ func TestUnmarshalObject(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, value)
 
-	slice, err := UnmarshalObjectSlice(testMap, "slice1")
+	slice, err := UnmarshalObjectSlice(testMap, "good_slice")
+	assert.Nil(t, err)
+	assert.NotNil(t, slice)
+	assert.Equal(t, "object1", slice[0]["name"])
+	assert.Equal(t, "object2", slice[1]["name"])
+	assert.Equal(t, "object3", slice[2]["name"])
+
+	slice, err = UnmarshalAnyMapSlice(testMap, "good_slice")
 	assert.Nil(t, err)
 	assert.NotNil(t, slice)
 	assert.Equal(t, "object1", slice[0]["name"])
@@ -700,7 +1400,7 @@ func TestUnmarshalObject(t *testing.T) {
 	assert.True(t, strings.Contains(err.Error(), "should be an array but was"))
 	t.Logf("Expected error: %s\n", err.Error())
 
-	slice, err = UnmarshalObjectSlice(testMap, "incorrect_slice_type")
+	slice, err = UnmarshalObjectSlice(testMap, "bad_slice_type")
 	assert.NotNil(t, err)
 	assert.Nil(t, slice)
 	assert.True(t, strings.Contains(err.Error(), "array element should be a JSON object but was"))
@@ -710,7 +1410,7 @@ func TestUnmarshalObject(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 
-	slice, err = UnmarshalObjectSlice(testMap, "null_slice")
+	slice, err = UnmarshalObjectSlice(testMap, "null_prop")
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 }
@@ -738,8 +1438,7 @@ func TestUnmarshalAny(t *testing.T) {
 		    "football",
 		    "baseball"
 		],
-		"null_prop": null,
-		"null_slice": null
+		"null_prop": null
 	}`
 
 	testMap, err := unmarshalJsonToMap(t, jsonString)
@@ -749,23 +1448,23 @@ func TestUnmarshalAny(t *testing.T) {
 	value, err := UnmarshalAny(testMap, "prop1")
 	assert.Nil(t, err)
 	assert.NotNil(t, value)
-	
+
 	value, err = UnmarshalAny(testMap, "prop2")
 	assert.Nil(t, err)
 	assert.NotNil(t, value)
-	
+
 	value, err = UnmarshalAny(testMap, "prop3")
 	assert.Nil(t, err)
 	assert.NotNil(t, value)
-	
+
 	value, err = UnmarshalAny(testMap, "prop4")
 	assert.Nil(t, err)
 	assert.NotNil(t, value)
-	
+
 	value, err = UnmarshalAny(testMap, "XXX")
 	assert.Nil(t, err)
 	assert.Nil(t, value)
-	
+
 	value, err = UnmarshalAny(testMap, "null_prop")
 	assert.Nil(t, err)
 	assert.Nil(t, value)
@@ -790,7 +1489,7 @@ func TestUnmarshalAny(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 
-	slice, err = UnmarshalAnySlice(testMap, "null_slice")
+	slice, err = UnmarshalAnySlice(testMap, "null_prop")
 	assert.Nil(t, err)
 	assert.Nil(t, slice)
 }
