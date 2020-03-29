@@ -1,3 +1,10 @@
+# [3.3.0](https://github.com/IBM/go-sdk-core/compare/v3.2.4...v3.3.0) (2020-03-29)
+
+
+### Features
+
+* add unmarshal methods for maps of primitive types ([0afd3f7](https://github.com/IBM/go-sdk-core/commit/0afd3f7cc650ca9fdf868d6a2276c940cdb52651))
+
 ## [3.2.4](https://github.com/IBM/go-sdk-core/compare/v3.2.3...v3.2.4) (2020-02-24)
 
 
