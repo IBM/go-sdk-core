@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	assert "github.com/stretchr/testify/assert"
 )
@@ -47,14 +48,15 @@ func TestIamGetTokenSuccess(t *testing.T) {
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
+		expiration := GetCurrentTime() + 3600
 		if firstCall {
 			fmt.Fprintf(w, `{
 				"access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
 				"token_type": "Bearer",
 				"expires_in": 3600,
-				"expiration": 1524167011,
+				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
-			}`)
+			}`, expiration)
 			firstCall = false
 			_, _, ok := r.BasicAuth()
 			assert.Equal(t, ok, false)
@@ -63,9 +65,9 @@ func TestIamGetTokenSuccess(t *testing.T) {
 				"access_token": "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
 				"token_type": "Bearer",
 				"expires_in": 3600,
-				"expiration": 1524167011,
+				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
-			}`)
+			}`, expiration)
 			username, password, ok := r.BasicAuth()
 			assert.Equal(t, ok, true)
 			assert.Equal(t, "mookie", username)
@@ -86,7 +88,7 @@ func TestIamGetTokenSuccess(t *testing.T) {
 	assert.NotNil(t, authenticator.tokenData)
 
 	// Force expiration and verify that we got the second access token.
-	authenticator.tokenData.RefreshTime = GetCurrentTime() - 3600
+	authenticator.tokenData.Expiration = GetCurrentTime() - 3600
 	authenticator.ClientId = "mookie"
 	authenticator.ClientSecret = "betts"
 	_, err = authenticator.getToken()
@@ -145,15 +147,128 @@ func TestIamGetCachedToken(t *testing.T) {
 	assert.NotNil(t, authenticator.tokenData)
 }
 
+func TestIamBackgroundTokenRefresh(t *testing.T) {
+	firstCall := true
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		expiration := GetCurrentTime() + 3600
+		w.WriteHeader(http.StatusOK)
+		if firstCall {
+			fmt.Fprintf(w, `{
+				"access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
+				"token_type": "Bearer",
+				"expires_in": 3600,
+				"expiration": %d,
+				"refresh_token": "jy4gl91BQ"
+			}`, expiration)
+			firstCall = false
+			_, _, ok := r.BasicAuth()
+			assert.Equal(t, ok, false)
+		} else {
+			fmt.Fprintf(w, `{
+				"access_token": "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
+				"token_type": "Bearer",
+				"expires_in": 3600,
+				"expiration": %d,
+				"refresh_token": "jy4gl91BQ"
+			}`, expiration)
+			_, _, ok := r.BasicAuth()
+			assert.Equal(t, ok, false)
+		}
+	}))
+	defer server.Close()
+
+	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	assert.Nil(t, err)
+	assert.Nil(t, authenticator.tokenData)
+
+	// Force the first fetch and verify we got the first access token.
+	token, err := authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+
+	// Now put the test in the "refresh window" where the token is not expired but still needs to be refreshed.
+	authenticator.tokenData.RefreshTime = GetCurrentTime() - 720
+	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
+	// getToken() again. The immediate response should be the token which was already stored, since it's not yet
+	// expired.
+	token, err = authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+	// Wait for the background thread to finish
+	time.Sleep(5 * time.Second)
+	token, err = authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+
+}
+
+func TestIamBackgroundTokenRefreshFailure(t *testing.T) {
+	firstCall := true
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		expiration := GetCurrentTime() + 3600
+		w.WriteHeader(http.StatusOK)
+		if firstCall {
+			fmt.Fprintf(w, `{
+				"access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
+				"token_type": "Bearer",
+				"expires_in": 3600,
+				"expiration": %d,
+				"refresh_token": "jy4gl91BQ"
+			}`, expiration)
+			firstCall = false
+			_, _, ok := r.BasicAuth()
+			assert.Equal(t, ok, false)
+		} else {
+			_, _ = w.Write([]byte("Sorry you are forbidden"))
+		}
+	}))
+	defer server.Close()
+
+	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	assert.Nil(t, err)
+	assert.Nil(t, authenticator.tokenData)
+
+	// Successfully fetch the first token.
+	token, err := authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+
+	// Now put the test in the "refresh window" where the token is not expired but still needs to be refreshed.
+	authenticator.tokenData.RefreshTime = GetCurrentTime() - 720
+	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
+	// getToken() again. The immediate response should be the token which was already stored, since it's not yet
+	// expired.
+	token, err = authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+	// Wait for the background thread to finish
+	time.Sleep(5 * time.Second)
+	_, err = authenticator.getToken()
+	assert.NotNil(t, err)
+	assert.Equal(t, "Error while trying to get access token", err.Error())
+
+}
+
 func TestIamClientIdAndSecret(t *testing.T) {
+	expiration := GetCurrentTime() + 3600
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{
 			"access_token": "oAeisG8yqPY7sFR_x66Z15",
 			"token_type": "Bearer",
 			"expires_in": 3600,
-			"expiration": 1524167011,
+			"expiration": %d,
 			"refresh_token": "jy4gl91BQ"
-		}`)
+		}`, expiration)
 		username, password, ok := r.BasicAuth()
 		assert.Equal(t, ok, true)
 		assert.Equal(t, "mookie", username)
@@ -191,14 +306,15 @@ func TestIamRefreshTimeCalculation(t *testing.T) {
 }
 
 func TestIamDisableSSL(t *testing.T) {
+	expiration := GetCurrentTime() + 3600
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{
 			"access_token": "oAeisG8yqPY7sFR_x66Z15",
 			"token_type": "Bearer",
 			"expires_in": 3600,
-			"expiration": 1524167011,
+			"expiration": %d,
 			"refresh_token": "jy4gl91BQ"
-		}`)
+		}`, expiration)
 		_, _, ok := r.BasicAuth()
 		assert.Equal(t, false, ok)
 	}))
@@ -219,14 +335,15 @@ func TestIamDisableSSL(t *testing.T) {
 }
 
 func TestIamUserHeaders(t *testing.T) {
+	expiration := GetCurrentTime() + 3600
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{
 			"access_token": "oAeisG8yqPY7sFR_x66Z15",
 			"token_type": "Bearer",
 			"expires_in": 3600,
-			"expiration": 1524167011,
+			"expiration": %d,
 			"refresh_token": "jy4gl91BQ"
-		}`)
+		}`, expiration)
 		_, _, ok := r.BasicAuth()
 		assert.Equal(t, ok, false)
 		assert.Equal(t, "Value1", r.Header.Get("Header1"))
@@ -260,6 +377,96 @@ func TestIamGetTokenFailure(t *testing.T) {
 
 	_, err := authenticator.getToken()
 	assert.Equal(t, "Sorry you are forbidden", err.Error())
+}
+
+func TestIamGetTokenTimeoutError(t *testing.T) {
+	firstCall := true
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		expiration := GetCurrentTime() + 3600
+		if firstCall {
+			fmt.Fprintf(w, `{
+				"access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
+				"token_type": "Bearer",
+				"expires_in": 3600,
+				"expiration": %d,
+				"refresh_token": "jy4gl91BQ"
+			}`, expiration)
+			firstCall = false
+			_, _, ok := r.BasicAuth()
+			assert.Equal(t, ok, false)
+		} else {
+			time.Sleep(3 * time.Second)
+			fmt.Fprintf(w, `{
+				"access_token": "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
+				"token_type": "Bearer",
+				"expires_in": 3600,
+				"expiration": %d,
+				"refresh_token": "jy4gl91BQ"
+			}`, expiration)
+		}
+	}))
+	defer server.Close()
+
+	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	assert.Nil(t, err)
+	assert.Nil(t, authenticator.tokenData)
+
+	// Force the first fetch and verify we got the first access token.
+	token, err := authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+
+	// Force expiration and verify that we got a timeout error
+	authenticator.tokenData.Expiration = GetCurrentTime() - 3600
+	// Set the client timeout to something very low
+	authenticator.Client.Timeout = time.Second * 2
+	token, err = authenticator.getToken()
+	assert.NotNil(t, err)
+	assert.Equal(t, "", token)
+}
+
+func TestIamGetTokenServerError(t *testing.T) {
+	firstCall := true
+	expiration := GetCurrentTime() + 3600
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if firstCall {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintf(w, `{
+				"access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
+				"token_type": "Bearer",
+				"expires_in": 3600,
+				"expiration": %d,
+				"refresh_token": "jy4gl91BQ"
+			}`, expiration)
+			firstCall = false
+			_, _, ok := r.BasicAuth()
+			assert.Equal(t, ok, false)
+		} else {
+			w.WriteHeader(http.StatusGatewayTimeout)
+			_, _ = w.Write([]byte("Gateway Timeout"))
+		}
+	}))
+	defer server.Close()
+
+	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	assert.Nil(t, err)
+	assert.Nil(t, authenticator.tokenData)
+
+	// Force the first fetch and verify we got the first access token.
+	token, err := authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+
+	// Force expiration and verify that we got a server error
+	authenticator.tokenData.Expiration = GetCurrentTime() - 3600
+	token, err = authenticator.getToken()
+	assert.NotNil(t, err)
+	assert.Equal(t, "", token)
 }
 
 func TestNewIamAuthenticatorFromMap(t *testing.T) {
