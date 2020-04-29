@@ -73,6 +73,11 @@ func TestUnmarshalPrimitiveString(t *testing.T) {
 	assert.NotNil(t, model.Prop)
 	assert.Equal(t, s1, *(model.Prop))
 
+	var aString string
+	err = UnmarshalPrimitive(rawMap, "prop", &aString)
+	assert.Nil(t, err)
+	assert.Equal(t, s1, aString)
+
 	err = UnmarshalPrimitive(rawMap, "prop_slice", &model.PropSlice)
 	assert.Nil(t, err)
 	assert.NotNil(t, model.PropSlice)
@@ -196,6 +201,11 @@ func TestUnmarshalPrimitiveBool(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, model.Prop)
 	assert.Equal(t, b1, *(model.Prop))
+
+	var aBool bool
+	err = UnmarshalPrimitive(rawMap, "prop", &aBool)
+	assert.Nil(t, err)
+	assert.Equal(t, b1, aBool)
 
 	err = UnmarshalPrimitive(rawMap, "prop_slice", &model.PropSlice)
 	assert.Nil(t, err)
@@ -322,6 +332,11 @@ func TestUnmarshalPrimitiveByteArray(t *testing.T) {
 	assert.NotNil(t, model.Prop)
 	assert.Equal(t, s1, string(*(model.Prop)))
 
+	var aBA []byte
+	err = UnmarshalPrimitive(rawMap, "prop", &aBA)
+	assert.Nil(t, err)
+	assert.Equal(t, s1, string(aBA))
+
 	err = UnmarshalPrimitive(rawMap, "prop_slice", &model.PropSlice)
 	assert.Nil(t, err)
 	assert.NotNil(t, model.PropSlice)
@@ -444,6 +459,11 @@ func TestUnmarshalPrimitiveInt64(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, model.Prop)
 	assert.Equal(t, n1, *(model.Prop))
+
+	var anInt int64
+	err = UnmarshalPrimitive(rawMap, "prop", &anInt)
+	assert.Nil(t, err)
+	assert.Equal(t, n1, anInt)
 
 	err = UnmarshalPrimitive(rawMap, "prop_slice", &model.PropSlice)
 	assert.Nil(t, err)
@@ -568,6 +588,11 @@ func TestUnmarshalPrimitiveFloat32(t *testing.T) {
 	assert.NotNil(t, model.Prop)
 	assert.Equal(t, n1, *(model.Prop))
 
+	var aFloat float32
+	err = UnmarshalPrimitive(rawMap, "prop", &aFloat)
+	assert.Nil(t, err)
+	assert.Equal(t, n1, aFloat)
+
 	err = UnmarshalPrimitive(rawMap, "prop_slice", &model.PropSlice)
 	assert.Nil(t, err)
 	assert.NotNil(t, model.PropSlice)
@@ -691,6 +716,11 @@ func TestUnmarshalPrimitiveFloat64(t *testing.T) {
 	assert.NotNil(t, model.Prop)
 	assert.Equal(t, n1, *(model.Prop))
 
+	var aFloat float64
+	err = UnmarshalPrimitive(rawMap, "prop", &aFloat)
+	assert.Nil(t, err)
+	assert.Equal(t, n1, aFloat)
+
 	err = UnmarshalPrimitive(rawMap, "prop_slice", &model.PropSlice)
 	assert.Nil(t, err)
 	assert.NotNil(t, model.PropSlice)
@@ -786,6 +816,9 @@ func TestUnmarshalPrimitiveDate(t *testing.T) {
 		"prop_slice_map_slice": [{"key1": ["%d1"]}, {"key2": ["%d2", "%d3", "%d4"]} ],
 		
 		"bad_type":  true,
+		"bad_date1": "",
+		"bad_date2": "10-27-2004",
+		"bad_date3": "she/he was a psycho",
 		"not_a_slice": false,
 		"bad_slice_type": [38, 26],
 		"null_prop": null
@@ -813,6 +846,11 @@ func TestUnmarshalPrimitiveDate(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, model.Prop)
 	assert.Equal(t, d1, model.Prop.String())
+
+	var aDate strfmt.Date
+	err = UnmarshalPrimitive(rawMap, "prop", &aDate)
+	assert.Nil(t, err)
+	assert.Equal(t, d1, aDate.String())
 
 	err = UnmarshalPrimitive(rawMap, "prop_slice", &model.PropSlice)
 	assert.Nil(t, err)
@@ -888,6 +926,21 @@ func TestUnmarshalPrimitiveDate(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "error unmarshalling property 'bad_slice_type'"))
 	t.Logf("Expected error: %s\n", err.Error())
+
+	err = UnmarshalPrimitive(rawMap, "bad_date1", &model.Prop)
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "error unmarshalling property 'bad_date1'"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	err = UnmarshalPrimitive(rawMap, "bad_date2", &model.Prop)
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "error unmarshalling property 'bad_date2'"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	err = UnmarshalPrimitive(rawMap, "bad_date3", &model.Prop)
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "error unmarshalling property 'bad_date3'"))
+	t.Logf("Expected error: %s\n", err.Error())
 }
 
 func TestUnmarshalPrimitiveDateTime(t *testing.T) {
@@ -909,6 +962,9 @@ func TestUnmarshalPrimitiveDateTime(t *testing.T) {
 		"prop_slice_map_slice": [{"key1": ["%d1"]}, {"key2": ["%d2", "%d3", "%d4"]} ],
 		
 		"bad_type":  true,
+		"bad_date1": "",
+		"bad_date2": "10-27-2004T00:00:00Z",
+		"bad_date3": "1970-01-01 18:30:00Z",
 		"not_a_slice": false,
 		"bad_slice_type": [38, 26],
 		"null_prop": null
@@ -941,6 +997,11 @@ func TestUnmarshalPrimitiveDateTime(t *testing.T) {
 	assert.NotNil(t, model.Prop)
 	assert.Equal(t, d1, model.Prop.String())
 
+	var aDateTime strfmt.DateTime
+	err = UnmarshalPrimitive(rawMap, "prop", &aDateTime)
+	assert.Nil(t, err)
+	assert.Equal(t, d1, aDateTime.String())
+
 	err = UnmarshalPrimitive(rawMap, "prop_slice", &model.PropSlice)
 	assert.Nil(t, err)
 	assert.NotNil(t, model.PropSlice)
@@ -1015,6 +1076,23 @@ func TestUnmarshalPrimitiveDateTime(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "error unmarshalling property 'bad_slice_type'"))
 	t.Logf("Expected error: %s\n", err.Error())
+
+	// It turns out that the standard strfmt.DateTime unmarshal code will actually successfully unmarshal ""
+	// as a DateTime value (epoch time - 1970-01-01T00:00:00.000Z).
+	err = UnmarshalPrimitive(rawMap, "bad_date1", &model.Prop)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.Prop)
+	assert.Equal(t, "1970-01-01T00:00:00.000Z", model.Prop.String())
+
+	err = UnmarshalPrimitive(rawMap, "bad_date2", &model.Prop)
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "error unmarshalling property 'bad_date2'"))
+	t.Logf("Expected error: %s\n", err.Error())
+
+	err = UnmarshalPrimitive(rawMap, "bad_date3", &model.Prop)
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "error unmarshalling property 'bad_date3'"))
+	t.Logf("Expected error: %s\n", err.Error())
 }
 
 func TestUnmarshalPrimitiveUUID(t *testing.T) {
@@ -1035,6 +1113,8 @@ func TestUnmarshalPrimitiveUUID(t *testing.T) {
 		"prop_map_slice": [{"key1": "%u1"}, {"key2": "%u2"}],
 		"prop_slice_map_slice": [{"key1": ["%u1"]}, {"key2": ["%u2", "%u3", "%u4"]} ],
 		
+		"empty_uuid": "",
+		"bad_uuid": "not a real uuid",
 		"bad_type":  true,
 		"not_a_slice": false,
 		"bad_slice_type": [38, 26],
@@ -1063,6 +1143,11 @@ func TestUnmarshalPrimitiveUUID(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, model.Prop)
 	assert.Equal(t, u1, model.Prop.String())
+
+	var aUuid strfmt.UUID
+	err = UnmarshalPrimitive(rawMap, "prop", &aUuid)
+	assert.Nil(t, err)
+	assert.Equal(t, u1, aUuid.String())
 
 	err = UnmarshalPrimitive(rawMap, "prop_slice", &model.PropSlice)
 	assert.Nil(t, err)
@@ -1138,6 +1223,14 @@ func TestUnmarshalPrimitiveUUID(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "error unmarshalling property 'bad_slice_type'"))
 	t.Logf("Expected error: %s\n", err.Error())
+
+	err = UnmarshalPrimitive(rawMap, "empty_uuid", &model.Prop)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.Prop)
+
+	err = UnmarshalPrimitive(rawMap, "bad_uuid", &model.Prop)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.Prop)
 }
 
 func TestUnmarshalPrimitiveAny(t *testing.T) {
@@ -1158,9 +1251,9 @@ func TestUnmarshalPrimitiveAny(t *testing.T) {
 		"prop_map_slice": [{"key1": %f1}, {"key2": %f1}],
 		"prop_slice_map_slice": [{"key1": ["%s1"]}, {"key2": [%n1, %n1, %n2]} ],
 		
-		"bad_type":  true,
+		"ok_type":  true,
 		"not_a_slice": false,
-		"bad_slice_type": [38, 26],
+		"ok_slice_type": [38, 26],
 		"null_prop": null
 	}`
 
@@ -1255,7 +1348,7 @@ func TestUnmarshalPrimitiveAny(t *testing.T) {
 
 	// Negative tests
 	model.Prop = nil
-	err = UnmarshalPrimitive(rawMap, "bad_type", &model.Prop)
+	err = UnmarshalPrimitive(rawMap, "ok_type", &model.Prop)
 	assert.Nil(t, err)
 	assert.NotNil(t, model.Prop)
 
@@ -1265,7 +1358,7 @@ func TestUnmarshalPrimitiveAny(t *testing.T) {
 	t.Logf("Expected error: %s\n", err.Error())
 
 	model.PropSlice = nil
-	err = UnmarshalPrimitive(rawMap, "bad_slice_type", &model.PropSlice)
+	err = UnmarshalPrimitive(rawMap, "ok_slice_type", &model.PropSlice)
 	assert.Nil(t, err)
 	assert.NotNil(t, model.PropSlice)
 }
