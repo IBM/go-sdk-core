@@ -1,3 +1,10 @@
+## [3.3.1](https://github.com/IBM/go-sdk-core/compare/v3.3.0...v3.3.1) (2020-04-30)
+
+
+### Bug Fixes
+
+* Pace requests to token server for new auth tokens ([#55](https://github.com/IBM/go-sdk-core/issues/55)) ([578399b](https://github.com/IBM/go-sdk-core/commit/578399b1c8294de8f9e87d516264b864d711ef8e))
+
 # [3.3.0](https://github.com/IBM/go-sdk-core/compare/v3.2.4...v3.3.0) (2020-03-29)
 
 
