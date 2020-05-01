@@ -41,8 +41,7 @@ func UnmarshalMyModel(m map[string]json.RawMessage, result interface{}) (err err
 	if err != nil {
 		return
 	}
-	objPtrPtr := result.(**MyModel)
-	*objPtrPtr = obj
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
 	return
 }
 
@@ -72,8 +71,7 @@ func UnmarshalModelStruct(m map[string]json.RawMessage, result interface{}) (err
 	if err != nil {
 		return
 	}
-	objPtrPtr := result.(**ModelStruct)
-	*objPtrPtr = obj
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
 	return
 }
 
@@ -124,13 +122,7 @@ func UnmarshalCar(m map[string]json.RawMessage, result interface{}) (err error) 
 	if err != nil {
 		return
 	}
-	if reflect.TypeOf(result).Elem().Kind() == reflect.Interface {
-		objIntfPtr := result.(*VehicleIntf)
-		*objIntfPtr = obj
-	} else if reflect.TypeOf(result).Elem().Kind() == reflect.Ptr {
-		objPtrPtr := result.(**Car)
-		*objPtrPtr = obj
-	}
+	reflect.ValueOf(result).Elem().Set(reflect.ValueOf(obj))
 	return
 }
 
@@ -450,7 +442,7 @@ func TestUnmarshalModelAbstractSlice(t *testing.T) {
 	assert.Equal(t, "Car", *(myCar.VehicleType))
 	assert.Equal(t, "Ford", *(myCar.Make))
 	assert.Equal(t, "coupe", *(myCar.BodyStyle))
-	
+
 	// Unmarshal a slice of Cars directly.
 	var myCarSlice []Car
 	err = UnmarshalModel(rawSlice, "", &myCarSlice, UnmarshalCar)
@@ -459,7 +451,7 @@ func TestUnmarshalModelAbstractSlice(t *testing.T) {
 	assert.Equal(t, "Car", *(myCarSlice[0].VehicleType))
 	assert.Equal(t, "Ford", *(myCarSlice[0].Make))
 	assert.Equal(t, "coupe", *(myCarSlice[0].BodyStyle))
-	
+
 }
 
 func TestUnmarshalModelAbstractMap(t *testing.T) {
@@ -478,7 +470,7 @@ func TestUnmarshalModelAbstractMap(t *testing.T) {
 	assert.Equal(t, "Car", *(myCar.VehicleType))
 	assert.Equal(t, "Ford", *(myCar.Make))
 	assert.Equal(t, "coupe", *(myCar.BodyStyle))
-	
+
 	var myCarMap map[string]Car
 	err = UnmarshalModel(rawMap, "", &myCarMap, UnmarshalCar)
 	assert.Nil(t, err)
@@ -504,7 +496,7 @@ func TestUnmarshalModelAbstractSliceMap(t *testing.T) {
 	assert.Equal(t, "Car", *(myCar.VehicleType))
 	assert.Equal(t, "Ford", *(myCar.Make))
 	assert.Equal(t, "coupe", *(myCar.BodyStyle))
-	
+
 	var myCarSliceMap map[string][]Car
 	err = UnmarshalModel(rawMap, "", &myCarSliceMap, UnmarshalVehicle)
 	assert.Nil(t, err)
