@@ -183,7 +183,22 @@ func (service *BaseService) SetUserAgent(userAgentString string) {
 	service.UserAgent = userAgentString
 }
 
+//
 // Request invokes the specified HTTP request and returns the response.
+// 
+// Parameters:
+// req: the http.Request object that holds the request information
+//
+// result: a pointer to the operation result.  This should be one of:
+//   - *io.ReadCloser (for a byte-stream type response)
+//   - *<primitive>, *[]<primitive>, *map[string]<primitive> 
+//   - *map[string]json.RawMessage, *[]json.RawMessage
+//
+// Return values:
+// detailedResponse: a DetailedResponse instance containing the status code, headers, etc.
+//
+// err: a non-nil error object if an error occurred
+//
 func (service *BaseService) Request(req *http.Request, result interface{}) (detailedResponse *DetailedResponse, err error) {
 	// Add default headers.
 	if service.DefaultHeaders != nil {
@@ -272,9 +287,15 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 
 	// Operation was successful and we are expecting a response, so process the response.
 	if result != nil {
-		// For a JSON response, decode it into the response object.
-		resultType := reflect.TypeOf(result).String()
-		if IsJSONMimeType(contentType) && resultType != "*io.ReadCloser" {
+		
+		// If 'result' is a io.ReadCloser, then pass the response body back reflectively via 'result'
+		// and bypass any further unmarshalling of the response.
+		if reflect.TypeOf(result).String() == "*io.ReadCloser" {
+			rResult := reflect.ValueOf(result).Elem()
+			rResult.Set(reflect.ValueOf(httpResponse.Body))
+			detailedResponse.Result = httpResponse.Body
+		} else if IsJSONMimeType(contentType) {
+			// If the content-type indicates JSON, then unmarshal the response body as JSON.
 
 			// First, read the response body into a byte array.
 			defer httpResponse.Body.Close()
@@ -285,7 +306,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			}
 
 			// Decode the byte array as JSON.
-			decodeErr := json.NewDecoder(bytes.NewReader(responseBody)).Decode(&result)
+			decodeErr := json.NewDecoder(bytes.NewReader(responseBody)).Decode(result)
 			if decodeErr != nil {
 				// Error decoding the response body.
 				// Return the response body in RawResult, along with an error.
@@ -295,12 +316,35 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			}
 
 			// Decode step was successful. Return the decoded response object in the Result field.
-			detailedResponse.Result = result
+			detailedResponse.Result = reflect.ValueOf(result).Elem().Interface()
 			return
+		} else {
+			// For any other type of response (i.e. it's not JSON and the caller didn't pass in a io.ReadCloser)
+			// then read the response body bytes into a []byte so that we don't have an open io.ReadCloser hanging
+			// around.
+			defer httpResponse.Body.Close()
+			responseBody, readErr := ioutil.ReadAll(httpResponse.Body)
+			if readErr != nil {
+				err = fmt.Errorf("An error occurred while reading the response body: '%s'", readErr.Error())
+				return
+			}
+			
+			// After reading the response body into a []byte, check to see if the caller wanted the
+			// response body as a string.
+			// If the caller passed in 'result' as the address of *string, 
+			// then we'll reflectively set result to point to it.			
+			if reflect.TypeOf(result).String() == "**string" {
+				responseString := string(responseBody)
+				rResult := reflect.ValueOf(result).Elem()
+				rResult.Set(reflect.ValueOf(&responseString))
+				
+				// And set the string in the Result field.
+				detailedResponse.Result = &responseString
+			} else {
+				// Last resort is to just set the detailedResponse.Result field to be the response body ([]byte).
+				detailedResponse.Result = responseBody
+			}
 		}
-
-		// For a non-JSON response body, just return it as an io.Reader in the Result field.
-		detailedResponse.Result = httpResponse.Body
 	}
 
 	return

@@ -61,7 +61,8 @@ func TestGoodResponseJSON(t *testing.T) {
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
 
-	detailedResponse, err := service.Request(req, new(Foo))
+	var foo *Foo
+	detailedResponse, err := service.Request(req, &foo)
 	assert.Nil(t, err)
 	assert.NotNil(t, detailedResponse)
 	assert.Equal(t, http.StatusCreated, detailedResponse.StatusCode)
@@ -70,6 +71,7 @@ func TestGoodResponseJSON(t *testing.T) {
 	result, ok := detailedResponse.Result.(*Foo)
 	assert.Equal(t, true, ok)
 	assert.NotNil(t, result)
+	assert.NotNil(t, foo)
 	assert.Equal(t, "wonder woman", *(result.Name))
 }
 
@@ -116,11 +118,11 @@ func TestGoodResponseJSONStream(t *testing.T) {
 	assert.NotNil(t, responseBytes)
 
 	// Decode the byte array as JSON.
-	responseObj := new(Foo)
-	err = json.NewDecoder(bytes.NewReader(responseBytes)).Decode(&responseObj)
+	var foo *Foo
+	err = json.NewDecoder(bytes.NewReader(responseBytes)).Decode(&foo)
 	assert.Nil(t, err)
-	assert.NotNil(t, responseObj)
-	assert.Equal(t, "wonder woman", *(responseObj.Name))
+	assert.NotNil(t, foo)
+	assert.Equal(t, "wonder woman", *(foo.Name))
 }
 
 // Verify that extra fields in result are silently ignored.
@@ -142,7 +144,9 @@ func TestGoodResponseJSONExtraFields(t *testing.T) {
 		Authenticator: &NoAuthAuthenticator{},
 	}
 	service, _ := NewBaseService(options)
-	detailedResponse, _ := service.Request(req, new(Foo))
+	
+	var foo *Foo
+	detailedResponse, _ := service.Request(req, &foo)
 	result, ok := detailedResponse.Result.(*Foo)
 	assert.Equal(t, true, ok)
 	assert.NotNil(t, result)
@@ -219,19 +223,53 @@ func TestGoodResponseText(t *testing.T) {
 	assert.Equal(t, "text/plain", detailedResponse.GetHeaders().Get("Content-Type"))
 	assert.Equal(t, http.StatusOK, detailedResponse.GetStatusCode())
 	assert.NotNil(t, detailedResponse.Result)
-	stream, ok := detailedResponse.Result.(io.ReadCloser)
+	responseBytes, ok := detailedResponse.Result.([]byte)
 	assert.Equal(t, true, ok)
-	assert.NotNil(t, stream)
-
-	// Read the bytes from the returned stream and verify.
-	// This is a simulation of what the generated code will need to do once the stream is returned
-	// by the Request method.
-	defer stream.Close()
-	responseBytes, err := ioutil.ReadAll(stream)
-	assert.Nil(t, err)
 	assert.NotNil(t, responseBytes)
-	actualResponse := string(responseBytes)
-	assert.Equal(t, expectedResponse, actualResponse)
+	assert.Equal(t, expectedResponse, string(responseBytes))
+}
+
+// Test a string response.
+func TestGoodResponseString(t *testing.T) {
+	expectedBytes := []byte("This is a string response.")
+	expectedResponse := string(expectedBytes)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "text/plain")
+		fmt.Fprint(w, expectedResponse)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	req, _ := builder.Build()
+
+	authenticator := &NoAuthAuthenticator{}
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
+	
+	var responseString *string
+	detailedResponse, err := service.Request(req, &responseString)
+	assert.Nil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, "text/plain", detailedResponse.GetHeaders().Get("Content-Type"))
+	assert.Equal(t, http.StatusOK, detailedResponse.GetStatusCode())
+	assert.NotNil(t, detailedResponse.Result)
+	assert.NotNil(t, responseString)
+	assert.Equal(t, expectedResponse, *responseString)
+	
+	resultField, ok := detailedResponse.Result.(*string)
+	assert.Equal(t, true, ok)
+	assert.NotNil(t, resultField)
+	assert.Equal(t, responseString, resultField)
+	assert.Equal(t, *responseString, *resultField)
 }
 
 // Test a non-JSON response with no Content-Type set.
@@ -292,7 +330,9 @@ func TestGoodResponseJSONDeserFailure(t *testing.T) {
 		Authenticator: &NoAuthAuthenticator{},
 	}
 	service, _ := NewBaseService(options)
-	detailedResponse, err := service.Request(req, new(Foo))
+	
+	var foo *Foo
+	detailedResponse, err := service.Request(req, &foo)
 	assert.NotNil(t, detailedResponse)
 	assert.NotNil(t, err)
 	assert.NotNil(t, detailedResponse.RawResult)
@@ -397,7 +437,9 @@ func TestErrorResponseJSON(t *testing.T) {
 		Authenticator: &NoAuthAuthenticator{},
 	}
 	service, _ := NewBaseService(options)
-	response, err := service.Request(req, new(Foo))
+	
+	var foo *Foo
+	response, err := service.Request(req, &foo)
 	assert.NotNil(t, err)
 	assert.NotNil(t, response)
 	assert.NotNil(t, response.Result)
@@ -431,7 +473,9 @@ func TestErrorResponseJSONDeserError(t *testing.T) {
 		Authenticator: &NoAuthAuthenticator{},
 	}
 	service, _ := NewBaseService(options)
-	response, err := service.Request(req, new(Foo))
+	
+	var foo *Foo
+	response, err := service.Request(req, &foo)
 	assert.NotNil(t, err)
 	assert.NotNil(t, response)
 	assert.Nil(t, response.Result)
@@ -461,7 +505,9 @@ func TestErrorResponseNotJSON(t *testing.T) {
 		Authenticator: &NoAuthAuthenticator{},
 	}
 	service, _ := NewBaseService(options)
-	response, err := service.Request(req, new(Foo))
+	
+	var foo *Foo
+	response, err := service.Request(req, &foo)
 	assert.NotNil(t, err)
 	assert.NotNil(t, response)
 	assert.Equal(t, http.StatusBadRequest, response.StatusCode)
@@ -499,7 +545,8 @@ func TestErrorResponseNoBody(t *testing.T) {
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
 
-	detailedResponse, err := service.Request(req, new(Foo))
+	var foo *Foo
+	detailedResponse, err := service.Request(req, &foo)
 	assert.NotNil(t, err)
 	assert.NotNil(t, detailedResponse)
 	assert.Equal(t, http.StatusInternalServerError, detailedResponse.StatusCode)
@@ -538,7 +585,9 @@ func TestRequestForDefaultUserAgent(t *testing.T) {
 		Authenticator: authenticator,
 	}
 	service, _ := NewBaseService(options)
-	_, _ = service.Request(req, new(Foo))
+	
+	var foo *Foo
+	_, _ = service.Request(req, &foo)
 }
 
 func TestRequestForProvidedUserAgent(t *testing.T) {
@@ -565,7 +614,9 @@ func TestRequestForProvidedUserAgent(t *testing.T) {
 	headers := http.Header{}
 	headers.Add("User-Agent", "provided user agent")
 	service.SetDefaultHeaders(headers)
-	_, _ = service.Request(req, new(Foo))
+	
+	var foo *Foo
+	_, _ = service.Request(req, &foo)
 }
 
 func TestIncorrectURL(t *testing.T) {
@@ -619,7 +670,8 @@ func TestBasicAuth1(t *testing.T) {
 	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
-	_, err = service.Request(req, new(Foo))
+	var foo *Foo
+	_, err = service.Request(req, &foo)
 	assert.Nil(t, err)
 }
 
@@ -660,7 +712,8 @@ func TestBasicAuth2(t *testing.T) {
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
 
-	_, err = service.Request(req, new(Foo))
+	var foo *Foo
+	_, err = service.Request(req, &foo)
 	assert.Nil(t, err)
 
 	service.Options.Authenticator = &BasicAuthenticator{
@@ -668,7 +721,7 @@ func TestBasicAuth2(t *testing.T) {
 		Password: "betts",
 	}
 
-	_, err = service.Request(req, new(Foo))
+	_, err = service.Request(req, &foo)
 	assert.Nil(t, err)
 }
 
@@ -710,7 +763,8 @@ func TestNoAuth1(t *testing.T) {
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
 
-	_, err = service.Request(req, new(Foo))
+	var foo *Foo
+	_, err = service.Request(req, &foo)
 	assert.Nil(t, err)
 }
 
@@ -745,7 +799,8 @@ func TestNoAuth2(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
 
-	_, err = service.Request(req, new(Foo))
+	var foo *Foo
+	_, err = service.Request(req, &foo)
 	assert.Nil(t, err)
 }
 
@@ -791,14 +846,15 @@ func TestIAMAuth(t *testing.T) {
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_IAM, service.Options.Authenticator.AuthenticationType())
 
-	_, err = service.Request(req, new(Foo))
+	var foo *Foo
+	_, err = service.Request(req, &foo)
 	if err != nil {
 		fmt.Println("Error: ", err)
 	}
 	assert.Nil(t, err)
 
 	// Subsequent request should not request new access token
-	_, err = service.Request(req, new(Foo))
+	_, err = service.Request(req, &foo)
 	if err != nil {
 		fmt.Println("Error: ", err)
 	}
@@ -830,7 +886,8 @@ func TestIAMFailure(t *testing.T) {
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
 
-	_, err = service.Request(req, new(Foo))
+	var foo *Foo
+	_, err = service.Request(req, &foo)
 	assert.NotNil(t, err)
 	assert.Equal(t, "Sorry you are forbidden", err.Error())
 }
@@ -877,7 +934,8 @@ func TestIAMWithIdSecret(t *testing.T) {
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
 
-	_, err = service.Request(req, new(Foo))
+	var foo *Foo
+	_, err = service.Request(req, &foo)
 	assert.Nil(t, err)
 }
 
@@ -962,7 +1020,8 @@ func TestCP4DAuth(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 
-	_, err = service.Request(req, new(Foo))
+	var foo *Foo
+	_, err = service.Request(req, &foo)
 	assert.Nil(t, err)
 }
 
@@ -992,7 +1051,8 @@ func TestCP4DFail(t *testing.T) {
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
 
-	_, err = service.Request(req, new(Foo))
+	var foo *Foo
+	_, err = service.Request(req, &foo)
 	assert.Equal(t, "Sorry you are forbidden", err.Error())
 }
 
