@@ -1,3 +1,11 @@
+# [3.4.0](https://github.com/IBM/go-sdk-core/compare/v3.3.1...v3.4.0) (2020-05-04)
+
+
+### Features
+
+* **BaseService:** return non-JSON responses via 'result' and DetailedResponse.Result ([e46d8c2](https://github.com/IBM/go-sdk-core/commit/e46d8c251c645846e8e61f08fd162c5cefb1d7fa))
+* **unmarshal:** introduce new unmarshal functions for primitives and models ([1a033d6](https://github.com/IBM/go-sdk-core/commit/1a033d6018dfa552caa2f8be45d6b10cd34accc0))
+
 ## [3.3.1](https://github.com/IBM/go-sdk-core/compare/v3.3.0...v3.3.1) (2020-04-30)
 
 
