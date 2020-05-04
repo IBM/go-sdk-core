@@ -1,4 +1,4 @@
-module github.com/IBM/go-sdk-core/v3
+module github.com/IBM/go-sdk-core/v4
 
 go 1.12
 
