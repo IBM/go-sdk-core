@@ -1,3 +1,26 @@
+# [4.0.0](https://github.com/IBM/go-sdk-core/compare/v3.3.1...v4.0.0) (2020-05-04)
+
+
+### Features
+
+* **BaseService:** return non-JSON responses via 'result' and DetailedResponse.Result ([6fd7194](https://github.com/IBM/go-sdk-core/commit/6fd7194a83150f6737ef47c5e62ea6c4df4a595c))
+* **BaseService:** return non-JSON responses via 'result' and DetailedResponse.Result ([e46d8c2](https://github.com/IBM/go-sdk-core/commit/e46d8c251c645846e8e61f08fd162c5cefb1d7fa))
+* **unmarshal:** introduce new unmarshal functions for primitives and models ([1a033d6](https://github.com/IBM/go-sdk-core/commit/1a033d6018dfa552caa2f8be45d6b10cd34accc0))
+
+
+### BREAKING CHANGES
+
+* **BaseService:** This change to the BaseService.Request method introduces
+an incompatibility with respect to the 'result' parameter.
+Projects generated with the SDK generator v3.5.0 and below should
+continue using version 3.x of the Go core.
+Any code generated with the SDK generator version 3.6.0 or above, should use
+this new version 4.0.0 of the Go core.
+
+Note: this commit contains only a trivial change and the
+* **BaseService:** message actually applies to the previous commit
+with the same commit message.
+
 ## [3.3.1](https://github.com/IBM/go-sdk-core/compare/v3.3.0...v3.3.1) (2020-04-30)
 
 
