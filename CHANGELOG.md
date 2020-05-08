@@ -1,3 +1,10 @@
+## [4.0.1](https://github.com/IBM/go-sdk-core/compare/v4.0.0...v4.0.1) (2020-05-08)
+
+
+### Bug Fixes
+
+* allow = in config property values ([13beaae](https://github.com/IBM/go-sdk-core/commit/13beaaebd10564886d87f8b7b516e1907358a776))
+
 # [4.0.0](https://github.com/IBM/go-sdk-core/compare/v3.3.1...v4.0.0) (2020-05-04)
 
 
