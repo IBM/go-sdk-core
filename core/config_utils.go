@@ -189,7 +189,7 @@ func parsePropertyStrings(credentialKey string, propertyStrings []string) map[st
 		}
 
 		// Parse the property string into name and value tokens
-		var tokens = strings.Split(propertyString, "=")
+		var tokens = strings.SplitN(propertyString, "=", 2)
 		if len(tokens) == 2 {
 			// Does the name start with the credential key?
 			// If so, then extract the property name by filtering out the credential key,

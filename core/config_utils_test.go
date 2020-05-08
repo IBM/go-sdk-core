@@ -46,6 +46,8 @@ var testEnvironment = map[string]string{
 	"SERVICE3_USERNAME":          "my-cp4d-user",
 	"SERVICE3_PASSWORD":          "my-cp4d-password",
 	"SERVICE3_AUTH_DISABLE_SSL":  "false",
+	"EQUAL_SERVICE_URL": "https://my=host.com/my=service/api",
+	"EQUAL_SERVICE_APIKEY": "===my=iam=apikey===",
 }
 
 // Set the environment variables described in our map.
@@ -124,6 +126,12 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 	assert.Equal(t, "https://cp4dhost/cp4d/api", props[PROPNAME_AUTH_URL])
 	assert.Equal(t, "false", props[PROPNAME_AUTH_DISABLE_SSL])
 
+	props, err = getServiceProperties("equal_service")
+	assert.Nil(t, err)
+	assert.NotNil(t, props)
+	assert.Equal(t, "=https:/my=host.com/my=service/api", props[PROPNAME_SVC_URL])
+	assert.Equal(t, "=my=api=key=", props[PROPNAME_APIKEY])
+
 	props, err = getServiceProperties("not_a_service")
 	assert.Nil(t, err)
 	assert.Nil(t, props)
@@ -165,6 +173,13 @@ func TestGetServicePropertiesFromEnvironment(t *testing.T) {
 	assert.Equal(t, "my-cp4d-password", props[PROPNAME_PASSWORD])
 	assert.Equal(t, "https://cp4dhost/cp4d/api", props[PROPNAME_AUTH_URL])
 	assert.Equal(t, "false", props[PROPNAME_AUTH_DISABLE_SSL])
+
+	props, err = getServiceProperties("equal_service")
+	assert.Nil(t, err)
+	assert.NotNil(t, props)
+	assert.Equal(t, "https://my=host.com/my=service/api", props[PROPNAME_SVC_URL])
+	assert.Equal(t, "===my=iam=apikey===", props[PROPNAME_APIKEY])
+	
 
 	props, err = getServiceProperties("not_a_service")
 	assert.Nil(t, err)
