@@ -94,7 +94,7 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
 	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
 
-	props, err := getServiceProperties("service-1")
+	props, err := GetServiceProperties("service-1")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://service1/api", props[PROPNAME_SVC_URL])
@@ -126,7 +126,7 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 	assert.Equal(t, "https://cp4dhost/cp4d/api", props[PROPNAME_AUTH_URL])
 	assert.Equal(t, "false", props[PROPNAME_AUTH_DISABLE_SSL])
 
-	props, err = getServiceProperties("equal_service")
+	props, err = GetServiceProperties("equal_service")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "=https:/my=host.com/my=service/api", props[PROPNAME_SVC_URL])
@@ -142,7 +142,7 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 func TestGetServicePropertiesFromEnvironment(t *testing.T) {
 	setTestEnvironment()
 
-	props, err := getServiceProperties("service-1")
+	props, err := GetServiceProperties("service-1")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://service1/api", props[PROPNAME_SVC_URL])
@@ -174,7 +174,7 @@ func TestGetServicePropertiesFromEnvironment(t *testing.T) {
 	assert.Equal(t, "https://cp4dhost/cp4d/api", props[PROPNAME_AUTH_URL])
 	assert.Equal(t, "false", props[PROPNAME_AUTH_DISABLE_SSL])
 
-	props, err = getServiceProperties("equal_service")
+	props, err = GetServiceProperties("equal_service")
 	assert.Nil(t, err)
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://my=host.com/my=service/api", props[PROPNAME_SVC_URL])

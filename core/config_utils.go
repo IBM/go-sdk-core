@@ -35,6 +35,20 @@ const (
 	DEFAULT_CREDENTIAL_FILE_NAME = "ibm-credentials.env"
 )
 
+//
+// GetServiceProperties returns a map containing configuration properties for the specified service
+// that are retrieved from external configuration sources in the following precedence order:
+// 1) credential file
+// 2) environment variables
+// 3) VCAP_SERVICES
+//
+// 'serviceName' is used as a filter against the property names.  For example, if serviceName is
+// passed in as "my_service", then configuration properties whose names begin with "MY_SERVICE_"
+// will be returned in the map.
+func GetServiceProperties(serviceName string) (serviceProps map[string]string, err error) {
+	return getServiceProperties(serviceName)
+}
+
 // getServiceProperties: This function will retrieve configuration properties for the specified service
 // from external config sources in the following precedence order:
 // 1) credential file
