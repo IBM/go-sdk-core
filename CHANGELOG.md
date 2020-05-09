@@ -1,3 +1,10 @@
+## [4.0.2](https://github.com/IBM/go-sdk-core/compare/v4.0.1...v4.0.2) (2020-05-09)
+
+
+### Bug Fixes
+
+* expose GetServiceProperties function ([b908d82](https://github.com/IBM/go-sdk-core/commit/b908d82d59301ffd06c9049c8266b3ee6900d679))
+
 ## [4.0.1](https://github.com/IBM/go-sdk-core/compare/v4.0.0...v4.0.1) (2020-05-08)
 
 
