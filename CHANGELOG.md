@@ -1,3 +1,10 @@
+## [4.0.3](https://github.com/IBM/go-sdk-core/compare/v4.0.2...v4.0.3) (2020-05-29)
+
+
+### Bug Fixes
+
+* support applications that use 'dep' ([70e852a](https://github.com/IBM/go-sdk-core/commit/70e852a54c2acb1724c1188fe2e50cb2466888e9))
+
 ## [4.0.2](https://github.com/IBM/go-sdk-core/compare/v4.0.1...v4.0.2) (2020-05-09)
 
 
