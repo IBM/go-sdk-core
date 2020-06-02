@@ -186,18 +186,21 @@ func TestUnmarshalModelSliceNil(t *testing.T) {
 	mySlice = nil
 	err = UnmarshalModel(rawMap, "missing_slice", &mySlice, UnmarshalMyModel)
 	assert.Nil(t, err)
+	assert.Nil(t, mySlice)
 	assert.Equal(t, 0, len(mySlice))
 
 	// Unmarshal an explicit null value.
 	mySlice = nil
 	err = UnmarshalModel(rawMap, "null_slice", &mySlice, UnmarshalMyModel)
 	assert.Nil(t, err)
+	assert.Nil(t, mySlice)
 	assert.Equal(t, 0, len(mySlice))
 
-	// Unmarshal an explicit null value.
+	// Unmarshal an empty slice.
 	mySlice = nil
 	err = UnmarshalModel(rawMap, "empty_slice", &mySlice, UnmarshalMyModel)
 	assert.Nil(t, err)
+	assert.NotNil(t, mySlice)
 	assert.Equal(t, 0, len(mySlice))
 }
 
@@ -231,13 +234,14 @@ func TestUnmarshalModelMapNil(t *testing.T) {
 	myMap = nil
 	err = UnmarshalModel(rawMap, "missing_map", &myMap, UnmarshalMyModel)
 	assert.Nil(t, err)
+	assert.Nil(t, myMap)
 	assert.Equal(t, 0, len(myMap))
 
 	// Unmarshal an explicit null value.
 	myMap = nil
 	err = UnmarshalModel(rawMap, "null_map", &myMap, UnmarshalMyModel)
 	assert.Nil(t, err)
-	assert.NotNil(t, myMap)
+	assert.Nil(t, myMap)
 	assert.Equal(t, 0, len(myMap))
 
 	// Unmarshal an empty map.
@@ -292,12 +296,14 @@ func TestUnmarshalModelSliceMapNil(t *testing.T) {
 	mySliceMap = nil
 	err = UnmarshalModel(rawMap, "missing_prop", &mySliceMap, UnmarshalMyModel)
 	assert.Nil(t, err)
+	assert.Nil(t, mySliceMap)
 	assert.Equal(t, 0, len(mySliceMap))
 
 	// Unmarshal an explicit null value.
 	mySliceMap = nil
 	err = UnmarshalModel(rawMap, "null_prop", &mySliceMap, UnmarshalMyModel)
 	assert.Nil(t, err)
+	assert.Nil(t, mySliceMap)
 	assert.Equal(t, 0, len(mySliceMap))
 
 	// Unmarshal a map with an empty slice.
@@ -308,13 +314,13 @@ func TestUnmarshalModelSliceMapNil(t *testing.T) {
 	assert.NotNil(t, mySliceMap["empty_slice"])
 	assert.Equal(t, 0, len(mySliceMap["empty_slice"]))
 
-	// Unmarshal a map with an explicit null slice.
+	// Unmarshal a map with an explicit null slice. Result should be an empty map.
 	mySliceMap = nil
 	err = UnmarshalModel(rawMap, "null_slice_map", &mySliceMap, UnmarshalMyModel)
 	assert.Nil(t, err)
-	assert.Equal(t, 1, len(mySliceMap))
-	assert.NotNil(t, mySliceMap["null_slice"])
-	assert.Equal(t, 0, len(mySliceMap["null_slice"]))
+	assert.NotNil(t, mySliceMap)
+	assert.Equal(t, 0, len(mySliceMap))
+	assert.Nil(t, mySliceMap["null_slice"])
 }
 
 func TestUnmarshalModelStruct(t *testing.T) {
