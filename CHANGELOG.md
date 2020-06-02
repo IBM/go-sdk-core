@@ -1,3 +1,10 @@
+## [4.0.4](https://github.com/IBM/go-sdk-core/compare/v4.0.3...v4.0.4) (2020-06-02)
+
+
+### Bug Fixes
+
+* correctly unmarshal JSON 'null' value for maps and slices ([0117461](https://github.com/IBM/go-sdk-core/commit/0117461d47c1a734c8726ecfe4ad5cbd1c971af2))
+
 ## [4.0.3](https://github.com/IBM/go-sdk-core/compare/v4.0.2...v4.0.3) (2020-05-29)
 
 
