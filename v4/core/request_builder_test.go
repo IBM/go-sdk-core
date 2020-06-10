@@ -168,6 +168,18 @@ func TestSetBodyContent2(t *testing.T) {
 	assert.Equal(t, str, readStream(request.Body))
 }
 
+// Test the case when SetBodyContent is given a nil pointer for jsonContent.
+func TestSetBodyContent3(t *testing.T) {
+	var (
+		str  = "hello GO SDK"
+		json *string
+	)
+	request := setup()
+	_, _ = request.SetBodyContent("text/plain", json, nil, &str)
+	assert.NotNil(t, request.Body)
+	assert.Equal(t, str, readStream(request.Body))
+}
+
 func TestSetBodyContentError(t *testing.T) {
 	request := setup()
 	_, err := request.SetBodyContent("", nil, nil, 200)
