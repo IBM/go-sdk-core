@@ -1,3 +1,10 @@
+## [4.0.5](https://github.com/IBM/go-sdk-core/compare/v4.0.4...v4.0.5) (2020-07-13)
+
+
+### Bug Fixes
+
+* correctly handle nil pointer interfaces ([2734d50](https://github.com/IBM/go-sdk-core/commit/2734d50de6e6b075359260b94df2344d9b9bc088))
+
 ## [4.0.4](https://github.com/IBM/go-sdk-core/compare/v4.0.3...v4.0.4) (2020-06-02)
 
 
