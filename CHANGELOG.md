@@ -1,3 +1,10 @@
+## [4.0.6](https://github.com/IBM/go-sdk-core/compare/v4.0.5...v4.0.6) (2020-07-14)
+
+
+### Bug Fixes
+
+* avoid linter error in DetailedResponse.String() ([ad41174](https://github.com/IBM/go-sdk-core/commit/ad4117405502843001e17310f8323af9a3568ae7))
+
 ## [4.0.5](https://github.com/IBM/go-sdk-core/compare/v4.0.4...v4.0.5) (2020-07-13)
 
 
