@@ -46,10 +46,9 @@ func isNil(object interface{}) bool {
 		return true
 	}
 
-	value := reflect.ValueOf(object)
-	kind := value.Kind()
-	if kind >= reflect.Chan && kind <= reflect.Slice && value.IsNil() {
-		return true
+	switch reflect.TypeOf(object).Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
+		return reflect.ValueOf(object).IsNil()
 	}
 
 	return false
@@ -63,18 +62,23 @@ func ValidateNotNil(object interface{}, errorMsg string) error {
 	return nil
 }
 
-// ValidateStruct validates 'param' (assumed to be a struct) according to the
+// ValidateStruct validates 'param' (assumed to be a ptr to a struct) according to the
 // annotations attached to its fields.
 func ValidateStruct(param interface{}, paramName string) error {
-	if param != nil {
-		if err := Validate.Struct(param); err != nil {
-			// If there were validation errors then return an error containing the field errors
-			if fieldErrors, ok := err.(validator.ValidationErrors); ok {
-				return fmt.Errorf("%s failed validation:\n%s", paramName, fieldErrors.Error())
-			}
-			return fmt.Errorf("An unexpected system error occurred while validating %s\n%s", paramName, err.Error())
-		}
+	err := ValidateNotNil(param, paramName + " cannot be nil")
+	if err != nil {
+		return err
 	}
+
+	err = Validate.Struct(param)
+	if err != nil {
+		// If there were validation errors then return an error containing the field errors
+		if fieldErrors, ok := err.(validator.ValidationErrors); ok {
+			return fmt.Errorf("%s failed validation:\n%s", paramName, fieldErrors.Error())
+		}
+		return err
+	}
+	
 	return nil
 }
 

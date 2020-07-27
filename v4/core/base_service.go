@@ -286,7 +286,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	}
 
 	// Operation was successful and we are expecting a response, so process the response.
-	if result != nil {
+	if !isNil(result) {
 		
 		// If 'result' is a io.ReadCloser, then pass the response body back reflectively via 'result'
 		// and bypass any further unmarshalling of the response.
