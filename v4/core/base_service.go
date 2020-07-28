@@ -221,6 +221,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 
 	err = service.Options.Authenticator.Authenticate(req)
 	if err != nil {
+		err = fmt.Errorf(ERRORMSG_AUTHENTICATE_ERROR, err.Error())
 		return
 	}
 
@@ -254,7 +255,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			defer httpResponse.Body.Close()
 			responseBody, readErr = ioutil.ReadAll(httpResponse.Body)
 			if readErr != nil {
-				err = fmt.Errorf("An error occurred while reading the response body: '%s'", readErr.Error())
+				err = fmt.Errorf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error())
 				return
 			}
 		}
@@ -301,7 +302,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			defer httpResponse.Body.Close()
 			responseBody, readErr := ioutil.ReadAll(httpResponse.Body)
 			if readErr != nil {
-				err = fmt.Errorf("An error occurred while reading the response body: '%s'", readErr.Error())
+				err = fmt.Errorf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error())
 				return
 			}
 
@@ -310,7 +311,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			if decodeErr != nil {
 				// Error decoding the response body.
 				// Return the response body in RawResult, along with an error.
-				err = fmt.Errorf("An error occurred while unmarshalling the response body: '%s'", decodeErr.Error())
+				err = fmt.Errorf(ERRORMSG_UNMARSHAL_RESPONSE_BODY, decodeErr.Error())
 				detailedResponse.RawResult = responseBody
 				return
 			}
@@ -325,7 +326,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			defer httpResponse.Body.Close()
 			responseBody, readErr := ioutil.ReadAll(httpResponse.Body)
 			if readErr != nil {
-				err = fmt.Errorf("An error occurred while reading the response body: '%s'", readErr.Error())
+				err = fmt.Errorf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error())
 				return
 			}
 			
