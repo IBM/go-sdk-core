@@ -889,7 +889,7 @@ func TestIAMFailure(t *testing.T) {
 	var foo *Foo
 	_, err = service.Request(req, &foo)
 	assert.NotNil(t, err)
-	assert.Equal(t, "Sorry you are forbidden", err.Error())
+	assert.Contains(t, err.Error(), "Sorry you are forbidden")
 }
 
 func TestIAMWithIdSecret(t *testing.T) {
@@ -1053,7 +1053,7 @@ func TestCP4DFail(t *testing.T) {
 
 	var foo *Foo
 	_, err = service.Request(req, &foo)
-	assert.Equal(t, "Sorry you are forbidden", err.Error())
+	assert.Contains(t, err.Error(), "Sorry you are forbidden")
 }
 
 // Test for the deprecated SetURL method.
