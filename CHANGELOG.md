@@ -1,3 +1,10 @@
+## [4.0.7](https://github.com/IBM/go-sdk-core/compare/v4.0.6...v4.0.7) (2020-07-28)
+
+
+### Bug Fixes
+
+* use isNil() for interface{} values ([e1c27a0](https://github.com/IBM/go-sdk-core/commit/e1c27a00aecba6550c82ead865e1e1b9b5423fe6))
+
 ## [4.0.6](https://github.com/IBM/go-sdk-core/compare/v4.0.5...v4.0.6) (2020-07-14)
 
 
