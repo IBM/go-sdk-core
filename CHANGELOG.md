@@ -1,3 +1,10 @@
+## [4.0.8](https://github.com/IBM/go-sdk-core/compare/v4.0.7...v4.0.8) (2020-07-29)
+
+
+### Bug Fixes
+
+* improve error paths in BaseService.Request() ([c5dd77f](https://github.com/IBM/go-sdk-core/commit/c5dd77f04ccc7440fbb25c17ed687fb6c85cb3c1))
+
 ## [4.0.7](https://github.com/IBM/go-sdk-core/compare/v4.0.6...v4.0.7) (2020-07-28)
 
 
