@@ -185,13 +185,13 @@ func (service *BaseService) SetUserAgent(userAgentString string) {
 
 //
 // Request invokes the specified HTTP request and returns the response.
-// 
+//
 // Parameters:
 // req: the http.Request object that holds the request information
 //
 // result: a pointer to the operation result.  This should be one of:
 //   - *io.ReadCloser (for a byte-stream type response)
-//   - *<primitive>, *[]<primitive>, *map[string]<primitive> 
+//   - *<primitive>, *[]<primitive>, *map[string]<primitive>
 //   - *map[string]json.RawMessage, *[]json.RawMessage
 //
 // Return values:
@@ -287,8 +287,8 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	}
 
 	// Operation was successful and we are expecting a response, so process the response.
-	if !isNil(result) {
-		
+	if !IsNil(result) {
+
 		// If 'result' is a io.ReadCloser, then pass the response body back reflectively via 'result'
 		// and bypass any further unmarshalling of the response.
 		if reflect.TypeOf(result).String() == "*io.ReadCloser" {
@@ -329,16 +329,16 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 				err = fmt.Errorf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error())
 				return
 			}
-			
+
 			// After reading the response body into a []byte, check to see if the caller wanted the
 			// response body as a string.
-			// If the caller passed in 'result' as the address of *string, 
-			// then we'll reflectively set result to point to it.			
+			// If the caller passed in 'result' as the address of *string,
+			// then we'll reflectively set result to point to it.
 			if reflect.TypeOf(result).String() == "**string" {
 				responseString := string(responseBody)
 				rResult := reflect.ValueOf(result).Elem()
 				rResult.Set(reflect.ValueOf(&responseString))
-				
+
 				// And set the string in the Result field.
 				detailedResponse.Result = &responseString
 			} else {

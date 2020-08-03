@@ -264,12 +264,12 @@ func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
 // SetBodyContent sets the body content from one of three different sources.
 func (requestBuilder *RequestBuilder) SetBodyContent(contentType string, jsonContent interface{}, jsonPatchContent interface{},
 	nonJSONContent interface{}) (builder *RequestBuilder, err error) {
-	if !isNil(jsonContent) {
+	if !IsNil(jsonContent) {
 		builder, err = requestBuilder.SetBodyContentJSON(jsonContent)
 		if err != nil {
 			return
 		}
-	} else if !isNil(jsonPatchContent) {
+	} else if !IsNil(jsonPatchContent) {
 		builder, err = requestBuilder.SetBodyContentJSON(jsonPatchContent)
 		if err != nil {
 			return
