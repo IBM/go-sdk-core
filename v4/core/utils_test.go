@@ -68,8 +68,8 @@ func TestValidateNotNil(t *testing.T) {
 }
 
 func TestIsNil(t *testing.T) {
-	assert.Equal(t, true, isNil(nil))
-	assert.Equal(t, false, isNil("test"))
+	assert.Equal(t, true, IsNil(nil))
+	assert.Equal(t, false, IsNil("test"))
 }
 
 func TestValidateStruct(t *testing.T) {
@@ -79,16 +79,16 @@ func TestValidateStruct(t *testing.T) {
 	}
 
 	type User struct {
-		FirstName *string    `json:"fname" validate:"required"`
-		LastName  *string    `json:"lname" validate:"required"`
-		Addresses []Address  `json:"address" validate:"dive"`
+		FirstName *string   `json:"fname" validate:"required"`
+		LastName  *string   `json:"lname" validate:"required"`
+		Addresses []Address `json:"address" validate:"dive"`
 	}
-	
+
 	type NoRequiredFields struct {
-		FirstName *string    `json:"fname"`
-		LastName  *string    `json:"lname"`
+		FirstName *string `json:"fname"`
+		LastName  *string `json:"lname"`
 	}
-	
+
 	address := &Address{
 		Street: "Eavesdown Docks",
 		City:   "",
@@ -110,29 +110,29 @@ func TestValidateStruct(t *testing.T) {
 	badStruct := &Address{
 		Street: "Beltorre Drive",
 	}
-	
+
 	noReqFields := &NoRequiredFields{}
 
 	var err error
-	
+
 	err = ValidateStruct(goodStruct, "goodStruct")
 	assert.Nil(t, err)
-	
+
 	err = ValidateStruct(noReqFields, "noReqFields")
 	assert.Nil(t, err)
-	
+
 	err = ValidateStruct(user, "userPtr")
 	assert.NotNil(t, err)
 	t.Logf("[01] Expected error: %s\n", err.Error())
-	
+
 	err = ValidateStruct(nil, "nilPtr")
-	assert.NotNil(t, err )
+	assert.NotNil(t, err)
 	t.Logf("[02] Expected error: %s\n", err.Error())
-	
+
 	err = ValidateStruct(badStruct, "badStruct")
 	assert.NotNil(t, err)
 	t.Logf("[03] Expected error: %s\n", err.Error())
-	
+
 	var addressPtr *Address = nil
 	err = ValidateStruct(addressPtr, "addressPtr")
 	assert.NotNil(t, err)

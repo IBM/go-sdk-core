@@ -40,8 +40,8 @@ const (
 	jsonPatchMimePattern = "(?i)^application\\/json\\-patch\\+json(;.*)?$"
 )
 
-// isNil checks if the specified object is nil or not.
-func isNil(object interface{}) bool {
+// IsNil checks if the specified object is nil or not.
+func IsNil(object interface{}) bool {
 	if object == nil {
 		return true
 	}
@@ -56,7 +56,7 @@ func isNil(object interface{}) bool {
 
 // ValidateNotNil returns the specified error if 'object' is nil, nil otherwise.
 func ValidateNotNil(object interface{}, errorMsg string) error {
-	if isNil(object) {
+	if IsNil(object) {
 		return errors.New(errorMsg)
 	}
 	return nil
@@ -65,7 +65,7 @@ func ValidateNotNil(object interface{}, errorMsg string) error {
 // ValidateStruct validates 'param' (assumed to be a ptr to a struct) according to the
 // annotations attached to its fields.
 func ValidateStruct(param interface{}, paramName string) error {
-	err := ValidateNotNil(param, paramName + " cannot be nil")
+	err := ValidateNotNil(param, paramName+" cannot be nil")
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func ValidateStruct(param interface{}, paramName string) error {
 		}
 		return err
 	}
-	
+
 	return nil
 }
 
