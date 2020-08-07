@@ -1,3 +1,10 @@
+# [4.1.0](https://github.com/IBM/go-sdk-core/compare/v4.0.8...v4.1.0) (2020-08-07)
+
+
+### Features
+
+* rename isNil to be IsNil (public) ([1698f78](https://github.com/IBM/go-sdk-core/commit/1698f787b6e518525f2360864a672faa0b04a17f))
+
 ## [4.0.8](https://github.com/IBM/go-sdk-core/compare/v4.0.7...v4.0.8) (2020-07-29)
 
 
