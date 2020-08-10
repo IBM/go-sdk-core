@@ -129,7 +129,7 @@ func (IamAuthenticator) AuthenticationType() string {
 //
 // 		Authorization: Bearer <bearer-token>
 //
-func (authenticator *IamAuthenticator) Authenticate(request *http.Request) error {
+func (authenticator *IamAuthenticator) Authenticate(request *http.Request) *AuthenticationError {
 	token, err := authenticator.getToken()
 	if err != nil {
 		return err
@@ -172,7 +172,7 @@ func (this IamAuthenticator) Validate() error {
 // getToken: returns an access token to be used in an Authorization header.
 // Whenever a new token is needed (when a token doesn't yet exist, needs to be refreshed,
 // or the existing token has expired), a new access token is fetched from the token server.
-func (authenticator *IamAuthenticator) getToken() (string, error) {
+func (authenticator *IamAuthenticator) getToken() (string, *AuthenticationError) {
 	if authenticator.tokenData == nil || !authenticator.tokenData.isTokenValid() {
 		// synchronously request the token
 		err := authenticator.synchronizedRequestToken()
@@ -181,7 +181,7 @@ func (authenticator *IamAuthenticator) getToken() (string, error) {
 		}
 	} else if authenticator.tokenData.needsRefresh() {
 		// If refresh needed, kick off a go routine in the background to get a new token
-		ch := make(chan error)
+		ch := make(chan *AuthenticationError)
 		go func() {
 			ch <- authenticator.getTokenData()
 		}()
@@ -194,9 +194,12 @@ func (authenticator *IamAuthenticator) getToken() (string, error) {
 		}
 	}
 
+	authError := &AuthenticationError{}
 	// return an error if the access token is not valid or was not fetched
 	if authenticator.tokenData == nil || authenticator.tokenData.AccessToken == "" {
-		return "", fmt.Errorf("Error while trying to get access token")
+		errorMsg := fmt.Errorf("Error while trying to get access token")
+		authError.err = errorMsg
+		return "", authError
 	}
 
 	return authenticator.tokenData.AccessToken, nil
@@ -205,7 +208,7 @@ func (authenticator *IamAuthenticator) getToken() (string, error) {
 // synchronizedRequestToken: synchronously checks if the current token in cache
 // is valid. If token is not valid or does not exist, it will fetch a new token
 // and set the tokenRefreshTime
-func (authenticator *IamAuthenticator) synchronizedRequestToken() error {
+func (authenticator *IamAuthenticator) synchronizedRequestToken() *AuthenticationError {
 	iamRequestTokenMutex.Lock()
 	defer iamRequestTokenMutex.Unlock()
 	// if cached token is still valid, then just continue to use it
@@ -219,32 +222,39 @@ func (authenticator *IamAuthenticator) synchronizedRequestToken() error {
 // getTokenData: requests a new token from the access server and
 // unmarshals the token information to the tokenData cache. Returns
 // an error if the token was unable to be fetched, otherwise returns nil
-func (authenticator *IamAuthenticator) getTokenData() error {
-	tokenResponse, err := authenticator.requestToken()
-	if err != nil {
-		return err
+func (authenticator *IamAuthenticator) getTokenData() *AuthenticationError {
+	var err error
+	tokenResponse, authErr := authenticator.requestToken()
+	if authErr != nil {
+		return authErr
 	}
+
+	newAuthenticationError := &AuthenticationError{}
 
 	authenticator.tokenData, err = newIamTokenData(tokenResponse)
 	if err != nil {
-		return err
+		newAuthenticationError.err = err
+		return newAuthenticationError
 	}
 
 	return nil
 }
 
 // requestToken: fetches a new access token from the token server.
-func (authenticator *IamAuthenticator) requestToken() (*iamTokenServerResponse, error) {
+func (authenticator *IamAuthenticator) requestToken() (*iamTokenServerResponse, *AuthenticationError) {
 	// Use the default IAM URL if one was not specified by the user.
 	url := authenticator.URL
 	if url == "" {
 		url = DEFAULT_IAM_URL
 	}
 
+	authError := &AuthenticationError{}
+
 	builder := NewRequestBuilder(POST)
 	_, err := builder.ConstructHTTPURL(url, nil, nil)
 	if err != nil {
-		return nil, err
+		authError.err = err
+		return nil, authError
 	}
 
 	builder.AddHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE).
@@ -260,7 +270,8 @@ func (authenticator *IamAuthenticator) requestToken() (*iamTokenServerResponse, 
 
 	req, err := builder.Build()
 	if err != nil {
-		return nil, err
+		authError.err = err
+		return nil, authError
 	}
 
 	// If client id and secret were configured by the user, then set them on the request
@@ -286,14 +297,26 @@ func (authenticator *IamAuthenticator) requestToken() (*iamTokenServerResponse, 
 
 	resp, err := authenticator.Client.Do(req)
 	if err != nil {
-		return nil, err
+		authError.err = err
+		return nil, authError
 	}
 
+	// Start to populate the DetailedResponse.
+	detailedResponse := &DetailedResponse{
+		StatusCode: resp.StatusCode,
+		Headers:    resp.Header,
+	}
+
+	// If the operation was unsuccessful, then set up the DetailedResponse
+	// and error objects appropriately.
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		if resp != nil {
 			buff := new(bytes.Buffer)
 			_, _ = buff.ReadFrom(resp.Body)
-			return nil, fmt.Errorf(buff.String())
+			authError.err = fmt.Errorf(buff.String())
+			detailedResponse.RawResult = buff.Bytes()
+			authError.Response = detailedResponse
+			return nil, authError
 		}
 	}
 

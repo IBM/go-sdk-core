@@ -64,7 +64,7 @@ func (BasicAuthenticator) AuthenticationType() string {
 //
 // 		Authorization: Basic <encoded username and password>
 //
-func (this *BasicAuthenticator) Authenticate(request *http.Request) error {
+func (this *BasicAuthenticator) Authenticate(request *http.Request) *AuthenticationError {
 	request.SetBasicAuth(this.Username, this.Password)
 	return nil
 }

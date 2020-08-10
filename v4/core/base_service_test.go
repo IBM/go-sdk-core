@@ -144,7 +144,7 @@ func TestGoodResponseJSONExtraFields(t *testing.T) {
 		Authenticator: &NoAuthAuthenticator{},
 	}
 	service, _ := NewBaseService(options)
-	
+
 	var foo *Foo
 	detailedResponse, _ := service.Request(req, &foo)
 	result, ok := detailedResponse.Result.(*Foo)
@@ -254,7 +254,7 @@ func TestGoodResponseString(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
-	
+
 	var responseString *string
 	detailedResponse, err := service.Request(req, &responseString)
 	assert.Nil(t, err)
@@ -264,7 +264,7 @@ func TestGoodResponseString(t *testing.T) {
 	assert.NotNil(t, detailedResponse.Result)
 	assert.NotNil(t, responseString)
 	assert.Equal(t, expectedResponse, *responseString)
-	
+
 	resultField, ok := detailedResponse.Result.(*string)
 	assert.Equal(t, true, ok)
 	assert.NotNil(t, resultField)
@@ -330,7 +330,7 @@ func TestGoodResponseJSONDeserFailure(t *testing.T) {
 		Authenticator: &NoAuthAuthenticator{},
 	}
 	service, _ := NewBaseService(options)
-	
+
 	var foo *Foo
 	detailedResponse, err := service.Request(req, &foo)
 	assert.NotNil(t, detailedResponse)
@@ -437,7 +437,7 @@ func TestErrorResponseJSON(t *testing.T) {
 		Authenticator: &NoAuthAuthenticator{},
 	}
 	service, _ := NewBaseService(options)
-	
+
 	var foo *Foo
 	response, err := service.Request(req, &foo)
 	assert.NotNil(t, err)
@@ -473,7 +473,7 @@ func TestErrorResponseJSONDeserError(t *testing.T) {
 		Authenticator: &NoAuthAuthenticator{},
 	}
 	service, _ := NewBaseService(options)
-	
+
 	var foo *Foo
 	response, err := service.Request(req, &foo)
 	assert.NotNil(t, err)
@@ -505,7 +505,7 @@ func TestErrorResponseNotJSON(t *testing.T) {
 		Authenticator: &NoAuthAuthenticator{},
 	}
 	service, _ := NewBaseService(options)
-	
+
 	var foo *Foo
 	response, err := service.Request(req, &foo)
 	assert.NotNil(t, err)
@@ -585,7 +585,7 @@ func TestRequestForDefaultUserAgent(t *testing.T) {
 		Authenticator: authenticator,
 	}
 	service, _ := NewBaseService(options)
-	
+
 	var foo *Foo
 	_, _ = service.Request(req, &foo)
 }
@@ -614,7 +614,7 @@ func TestRequestForProvidedUserAgent(t *testing.T) {
 	headers := http.Header{}
 	headers.Add("User-Agent", "provided user agent")
 	service.SetDefaultHeaders(headers)
-	
+
 	var foo *Foo
 	_, _ = service.Request(req, &foo)
 }
@@ -887,9 +887,55 @@ func TestIAMFailure(t *testing.T) {
 	assert.NotNil(t, service.Options.Authenticator)
 
 	var foo *Foo
-	_, err = service.Request(req, &foo)
+	detailedResponse, err := service.Request(req, &foo)
 	assert.NotNil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.NotNil(t, detailedResponse.GetHeaders())
+	assert.NotNil(t, detailedResponse.GetRawResult())
+	statusCode := detailedResponse.GetStatusCode()
+	assert.NotNil(t, statusCode)
+	assert.Equal(t, http.StatusForbidden, statusCode)
 	assert.Contains(t, err.Error(), "Sorry you are forbidden")
+}
+
+func TestIAMFailureRetryAfter(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Retry-After", "20")
+		w.WriteHeader(http.StatusTooManyRequests)
+		_, _ = w.Write([]byte("Sorry rate limit has been exceeded"))
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	options := &ServiceOptions{
+		URL: server.URL,
+		Authenticator: &IamAuthenticator{
+			URL:    server.URL,
+			ApiKey: "xxxxx",
+		},
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.NotNil(t, service.Options.Authenticator)
+
+	var foo *Foo
+	detailedResponse, err := service.Request(req, &foo)
+	assert.NotNil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.NotNil(t, detailedResponse.GetRawResult())
+	statusCode := detailedResponse.GetStatusCode()
+	headers := detailedResponse.GetHeaders()
+	assert.NotNil(t, statusCode)
+	assert.NotNil(t, headers)
+	assert.Equal(t, http.StatusTooManyRequests, statusCode)
+	assert.Contains(t, headers, "Retry-After")
+	assert.Contains(t, err.Error(), "Sorry rate limit has been exceeded")
 }
 
 func TestIAMWithIdSecret(t *testing.T) {
@@ -1052,8 +1098,56 @@ func TestCP4DFail(t *testing.T) {
 	assert.NotNil(t, service.Options.Authenticator)
 
 	var foo *Foo
-	_, err = service.Request(req, &foo)
+	detailedResponse, err := service.Request(req, &foo)
+	assert.NotNil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.NotNil(t, detailedResponse.GetHeaders())
+	assert.NotNil(t, detailedResponse.GetRawResult())
+	statusCode := detailedResponse.GetStatusCode()
+	assert.NotNil(t, statusCode)
+	assert.Equal(t, http.StatusForbidden, statusCode)
 	assert.Contains(t, err.Error(), "Sorry you are forbidden")
+}
+
+func TestCp4dFailureRetryAfter(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Retry-After", "20")
+		w.WriteHeader(http.StatusTooManyRequests)
+		_, _ = w.Write([]byte("Sorry rate limit has been exceeded"))
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	builder.AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	options := &ServiceOptions{
+		URL: server.URL,
+		Authenticator: &CloudPakForDataAuthenticator{
+			URL:      server.URL,
+			Username: "bogus",
+			Password: "bogus",
+		},
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.NotNil(t, service.Options.Authenticator)
+
+	var foo *Foo
+	detailedResponse, err := service.Request(req, &foo)
+	assert.NotNil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.NotNil(t, detailedResponse.GetRawResult())
+	statusCode := detailedResponse.GetStatusCode()
+	headers := detailedResponse.GetHeaders()
+	assert.NotNil(t, statusCode)
+	assert.NotNil(t, headers)
+	assert.Equal(t, http.StatusTooManyRequests, statusCode)
+	assert.Contains(t, headers, "Retry-After")
+	assert.Contains(t, err.Error(), "Sorry rate limit has been exceeded")
 }
 
 // Test for the deprecated SetURL method.

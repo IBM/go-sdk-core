@@ -219,10 +219,10 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		return
 	}
 
-	err = service.Options.Authenticator.Authenticate(req)
-	if err != nil {
-		err = fmt.Errorf(ERRORMSG_AUTHENTICATE_ERROR, err.Error())
-		return
+	authError := service.Options.Authenticator.Authenticate(req)
+	if authError != nil {
+		err = fmt.Errorf(ERRORMSG_AUTHENTICATE_ERROR, authError.Error())
+		return authError.Response, err
 	}
 
 	// Invoke the request.

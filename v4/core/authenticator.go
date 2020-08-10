@@ -21,6 +21,16 @@ import (
 // Authenticator describes the set of methods implemented by each authenticator.
 type Authenticator interface {
 	AuthenticationType() string
-	Authenticate(*http.Request) error
+	Authenticate(*http.Request) *AuthenticationError
 	Validate() error
+}
+
+// AuthenticationError describes the error returned when authentication fails
+type AuthenticationError struct {
+	Response *DetailedResponse
+	err      error
+}
+
+func (e *AuthenticationError) Error() string {
+	return e.err.Error()
 }
