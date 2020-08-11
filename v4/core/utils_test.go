@@ -67,9 +67,39 @@ func TestValidateNotNil(t *testing.T) {
 	assert.Nil(t, err)
 }
 
+// This function is used to demonstrate the problem with comparing
+// a function argument received as an "interface{}"" value with nil.
+func isitnil(obj interface{}) bool {
+	return obj == nil
+}
+
 func TestIsNil(t *testing.T) {
 	assert.Equal(t, true, IsNil(nil))
 	assert.Equal(t, false, IsNil("test"))
+
+	type MyInnerModel struct {
+		Name *string
+	}
+
+	type MyModel struct {
+		InnerModel *MyInnerModel
+		MyMap      map[string]interface{}
+		MySlice    []string
+	}
+	myModel := &MyModel{}
+	assert.NotNil(t, myModel)
+
+	assert.True(t, IsNil(myModel.InnerModel))
+	assert.True(t, myModel.InnerModel == nil)
+	assert.False(t, isitnil(myModel.InnerModel))
+
+	assert.True(t, IsNil(myModel.MyMap))
+	assert.True(t, myModel.MyMap == nil)
+	assert.False(t, isitnil(myModel.MyMap))
+
+	assert.True(t, IsNil(myModel.MySlice))
+	assert.True(t, myModel.MySlice == nil)
+	assert.False(t, isitnil(myModel.MySlice))
 }
 
 func TestValidateStruct(t *testing.T) {
