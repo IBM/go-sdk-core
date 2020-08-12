@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 
 // Validate is a shared validator instance used to perform validation of structs.
 var Validate *validator.Validate
+var re = regexp.MustCompile(`(?s)\[(\S*)\]`)
 
 func init() {
 	Validate = validator.New()
@@ -178,4 +180,68 @@ func PrettyPrint(result interface{}, resultName string) {
 // GetCurrentTime returns the current Unix time.
 func GetCurrentTime() int64 {
 	return time.Now().Unix()
+}
+
+// ConvertSlice Marshals 'slice' to a json string, performs
+// string manipulation on the resulting string, and converts
+// the string to a '[]string'. If 'slice' is nil, not a 'slice' type,
+// or an error occurred during conversion, an error will be returned
+func ConvertSlice(slice interface{}) (s []string, err error) {
+	inputIsSlice := false
+
+	if IsNil(slice) {
+		err = fmt.Errorf(ERRORMSG_NIL_SLICE)
+		return
+	}
+
+	// Reflect on 'slice' to validate the input is in fact a slice
+	rResultType := reflect.TypeOf(slice)
+
+	switch rResultType.Kind() {
+	case reflect.Slice:
+		inputIsSlice = true
+	default:
+	}
+
+	// If it's not a slice, just return an error
+	if !inputIsSlice {
+		err = fmt.Errorf(ERRORMSG_PARAM_NOT_SLICE)
+		return
+	} else if reflect.ValueOf(slice).Len() == 0 {
+		s = []string{}
+		return
+	}
+
+	jsonBuffer, err := json.Marshal(slice)
+	if err != nil {
+		err = fmt.Errorf(ERRORMSG_MARSHAL_SLICE, err.Error())
+		return
+	}
+
+	jsonString := string(jsonBuffer)
+
+	// Use regex to convert the json string to a string slice
+	match := re.FindStringSubmatch(jsonString)
+	if match != nil && match[1] != "" {
+		newString := match[1]
+		s = strings.Split(newString, ",")
+		// For each slice element, attempt to remove any surrounding quotes
+		// added by marshaling into a json string
+		for i := range s {
+			unquotedString, unquoteErr := strconv.Unquote(s[i])
+			if unquoteErr == nil && unquotedString != "" {
+				s[i] = unquotedString
+			}
+		}
+		return
+	}
+
+	// If we returned a plain string that's not in "slice format",
+	// then attempt to just convert it to a string slice.
+	if jsonString != "" {
+		s = strings.Split(jsonString, ",")
+		return
+	}
+
+	return nil, fmt.Errorf(ERRORMSG_CONVERT_SLICE)
 }
