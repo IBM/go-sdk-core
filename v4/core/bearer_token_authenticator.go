@@ -61,7 +61,7 @@ func (BearerTokenAuthenticator) AuthenticationType() string {
 //
 // 		Authorization: Bearer <bearer-token>
 //
-func (this *BearerTokenAuthenticator) Authenticate(request *http.Request) *AuthenticationError {
+func (this *BearerTokenAuthenticator) Authenticate(request *http.Request) error {
 	request.Header.Set("Authorization", fmt.Sprintf(`Bearer %s`, this.BearerToken))
 	return nil
 }

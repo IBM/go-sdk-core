@@ -152,7 +152,7 @@ func TestUnmarshalPrimitiveString(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "error unmarshalling property 'bad_slice_type'"))
 	t.Logf("Expected error: %s\n", err.Error())
-	
+
 	err = UnmarshalPrimitive(rawMap, "", &model.Prop)
 	assert.NotNil(t, err)
 	assert.Equal(t, "the 'propertyName' parameter is required", err.Error())
@@ -979,7 +979,7 @@ func TestUnmarshalPrimitiveDateTime(t *testing.T) {
 	jsonString = strings.ReplaceAll(jsonString, "%d2", d2)
 	jsonString = strings.ReplaceAll(jsonString, "%d3", d3)
 	jsonString = strings.ReplaceAll(jsonString, "%d4", d4)
-	
+
 	// Expected values need to include ms
 	d1 = "1969-07-20T20:17:00.000Z"
 	d2 = "1963-11-22T18:30:00.000Z"
@@ -1329,7 +1329,7 @@ func TestUnmarshalPrimitiveAny(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, model.PropSlice)
 
-	model.PropMap = map[string]interface{}{ "key1": "value1" }
+	model.PropMap = map[string]interface{}{"key1": "value1"}
 	err = UnmarshalPrimitive(rawMap, "null_prop", &model.PropMap)
 	assert.Nil(t, err)
 	assert.Nil(t, model.PropMap)
@@ -1386,7 +1386,7 @@ func TestUnmarshalPrimitiveObject(t *testing.T) {
 		"bad_slice_type": [38, 26],
 		"null_prop": null
 	}`
-	
+
 	o1 := `{"field1": "value1"}`
 	o2 := `{"field2": "value2"}`
 

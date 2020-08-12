@@ -21,7 +21,7 @@ import (
 // Authenticator describes the set of methods implemented by each authenticator.
 type Authenticator interface {
 	AuthenticationType() string
-	Authenticate(*http.Request) *AuthenticationError
+	Authenticate(*http.Request) error
 	Validate() error
 }
 

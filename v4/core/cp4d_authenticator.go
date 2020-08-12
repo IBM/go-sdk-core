@@ -137,7 +137,7 @@ func (authenticator CloudPakForDataAuthenticator) Validate() error {
 //
 // 		Authorization: Bearer <bearer-token>
 //
-func (authenticator *CloudPakForDataAuthenticator) Authenticate(request *http.Request) *AuthenticationError {
+func (authenticator *CloudPakForDataAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.getToken()
 	if err != nil {
 		return err

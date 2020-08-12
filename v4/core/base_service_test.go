@@ -893,7 +893,6 @@ func TestIAMFailure(t *testing.T) {
 	assert.NotNil(t, detailedResponse.GetHeaders())
 	assert.NotNil(t, detailedResponse.GetRawResult())
 	statusCode := detailedResponse.GetStatusCode()
-	assert.NotNil(t, statusCode)
 	assert.Equal(t, http.StatusForbidden, statusCode)
 	assert.Contains(t, err.Error(), "Sorry you are forbidden")
 }
@@ -931,7 +930,6 @@ func TestIAMFailureRetryAfter(t *testing.T) {
 	assert.NotNil(t, detailedResponse.GetRawResult())
 	statusCode := detailedResponse.GetStatusCode()
 	headers := detailedResponse.GetHeaders()
-	assert.NotNil(t, statusCode)
 	assert.NotNil(t, headers)
 	assert.Equal(t, http.StatusTooManyRequests, statusCode)
 	assert.Contains(t, headers, "Retry-After")
@@ -1104,7 +1102,6 @@ func TestCP4DFail(t *testing.T) {
 	assert.NotNil(t, detailedResponse.GetHeaders())
 	assert.NotNil(t, detailedResponse.GetRawResult())
 	statusCode := detailedResponse.GetStatusCode()
-	assert.NotNil(t, statusCode)
 	assert.Equal(t, http.StatusForbidden, statusCode)
 	assert.Contains(t, err.Error(), "Sorry you are forbidden")
 }
@@ -1143,7 +1140,6 @@ func TestCp4dFailureRetryAfter(t *testing.T) {
 	assert.NotNil(t, detailedResponse.GetRawResult())
 	statusCode := detailedResponse.GetStatusCode()
 	headers := detailedResponse.GetHeaders()
-	assert.NotNil(t, statusCode)
 	assert.NotNil(t, headers)
 	assert.Equal(t, http.StatusTooManyRequests, statusCode)
 	assert.Contains(t, headers, "Retry-After")

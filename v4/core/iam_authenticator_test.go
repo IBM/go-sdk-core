@@ -44,6 +44,37 @@ func TestIamConfigErrors(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestIamAuthenticateFail(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte("Sorry you are not authorized"))
+	}))
+	defer server.Close()
+
+	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, authenticator.AuthenticationType(), AUTHTYPE_IAM)
+
+	// Create a new Request object.
+	builder, err := NewRequestBuilder("GET").ConstructHTTPURL("https://localhost/placeholder/url", nil, nil)
+	assert.Nil(t, err)
+
+	request, err := builder.Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, request)
+
+	authErr := authenticator.Authenticate(request)
+	// Validate the resulting error is a valid
+	assert.NotNil(t, authErr)
+	castErr, ok := authErr.(*AuthenticationError)
+	assert.True(t, ok)
+	assert.NotNil(t, castErr)
+	assert.EqualValues(t, authErr, castErr)
+	// The casted error should match the original error message
+	assert.Equal(t, authErr.Error(), castErr.Error())
+}
+
 func TestIamGetTokenSuccess(t *testing.T) {
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

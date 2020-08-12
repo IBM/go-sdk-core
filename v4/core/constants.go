@@ -56,4 +56,5 @@ const (
 	ERRORMSG_AUTHENTICATE_ERROR      = "An error occurred while performing the 'authenticate' step: %s"
 	ERRORMSG_READ_RESPONSE_BODY      = "An error occurred while reading the response body: %s"
 	ERRORMSG_UNMARSHAL_RESPONSE_BODY = "An error occurred while unmarshalling the response body: %s"
+	ERRORMSG_CAST_ERROR              = "An error occurred while casting to AuthenticationError type. Value: %s"
 )
