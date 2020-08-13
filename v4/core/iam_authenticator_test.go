@@ -64,15 +64,15 @@ func TestIamAuthenticateFail(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, request)
 
-	authErr := authenticator.Authenticate(request)
+	err = authenticator.Authenticate(request)
 	// Validate the resulting error is a valid
-	assert.NotNil(t, authErr)
-	castErr, ok := authErr.(*AuthenticationError)
+	assert.NotNil(t, err)
+	authErr, ok := err.(*AuthenticationError)
 	assert.True(t, ok)
-	assert.NotNil(t, castErr)
-	assert.EqualValues(t, authErr, castErr)
+	assert.NotNil(t, authErr)
+	assert.EqualValues(t, authErr, err)
 	// The casted error should match the original error message
-	assert.Equal(t, authErr.Error(), castErr.Error())
+	assert.Equal(t, err.Error(), authErr.Error())
 }
 
 func TestIamGetTokenSuccess(t *testing.T) {
@@ -112,8 +112,8 @@ func TestIamGetTokenSuccess(t *testing.T) {
 	assert.Nil(t, authenticator.tokenData)
 
 	// Force the first fetch and verify we got the first access token.
-	token, errResponse := authenticator.getToken()
-	assert.Nil(t, errResponse)
+	token, err := authenticator.getToken()
+	assert.Nil(t, err)
 	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
 		token)
 	assert.NotNil(t, authenticator.tokenData)
@@ -122,8 +122,8 @@ func TestIamGetTokenSuccess(t *testing.T) {
 	authenticator.tokenData.Expiration = GetCurrentTime() - 3600
 	authenticator.ClientId = "mookie"
 	authenticator.ClientSecret = "betts"
-	_, errResponse = authenticator.getToken()
-	assert.Nil(t, errResponse)
+	_, err = authenticator.getToken()
+	assert.Nil(t, err)
 	assert.NotNil(t, authenticator.tokenData)
 	assert.Equal(t, "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
 		authenticator.tokenData.AccessToken)
@@ -164,15 +164,15 @@ func TestIamGetCachedToken(t *testing.T) {
 	assert.Nil(t, authenticator.tokenData)
 
 	// Force the first fetch and verify we got the first access token.
-	token, errResponse := authenticator.getToken()
-	assert.Nil(t, errResponse)
+	token, err := authenticator.getToken()
+	assert.Nil(t, err)
 	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
 		token)
 	assert.NotNil(t, authenticator.tokenData)
 
 	// Subsequent fetch should still return first access token.
-	token, errResponse = authenticator.getToken()
-	assert.Nil(t, errResponse)
+	token, err = authenticator.getToken()
+	assert.Nil(t, err)
 	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
 		token)
 	assert.NotNil(t, authenticator.tokenData)
@@ -213,8 +213,8 @@ func TestIamBackgroundTokenRefresh(t *testing.T) {
 	assert.Nil(t, authenticator.tokenData)
 
 	// Force the first fetch and verify we got the first access token.
-	token, errResponse := authenticator.getToken()
-	assert.Nil(t, errResponse)
+	token, err := authenticator.getToken()
+	assert.Nil(t, err)
 	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
 		token)
 	assert.NotNil(t, authenticator.tokenData)
@@ -224,15 +224,15 @@ func TestIamBackgroundTokenRefresh(t *testing.T) {
 	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
 	// getToken() again. The immediate response should be the token which was already stored, since it's not yet
 	// expired.
-	token, errResponse = authenticator.getToken()
-	assert.Nil(t, errResponse)
+	token, err = authenticator.getToken()
+	assert.Nil(t, err)
 	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
 		token)
 	assert.NotNil(t, authenticator.tokenData)
 	// Wait for the background thread to finish
 	time.Sleep(5 * time.Second)
-	token, errResponse = authenticator.getToken()
-	assert.Nil(t, errResponse)
+	token, err = authenticator.getToken()
+	assert.Nil(t, err)
 	assert.Equal(t, "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
 		token)
 	assert.NotNil(t, authenticator.tokenData)
@@ -266,8 +266,8 @@ func TestIamBackgroundTokenRefreshFailure(t *testing.T) {
 	assert.Nil(t, authenticator.tokenData)
 
 	// Successfully fetch the first token.
-	token, errResponse := authenticator.getToken()
-	assert.Nil(t, errResponse)
+	token, err := authenticator.getToken()
+	assert.Nil(t, err)
 	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
 		token)
 	assert.NotNil(t, authenticator.tokenData)
@@ -277,19 +277,19 @@ func TestIamBackgroundTokenRefreshFailure(t *testing.T) {
 	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
 	// getToken() again. The immediate response should be the token which was already stored, since it's not yet
 	// expired.
-	token, errResponse = authenticator.getToken()
-	assert.Nil(t, errResponse)
+	token, err = authenticator.getToken()
+	assert.Nil(t, err)
 	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
 		token)
 	assert.NotNil(t, authenticator.tokenData)
 	// Wait for the background thread to finish
 	time.Sleep(5 * time.Second)
-	_, errResponse = authenticator.getToken()
-	assert.NotNil(t, errResponse)
-	errorMessage := errResponse.err
-	assert.NotNil(t, errorMessage)
-	assert.Equal(t, "Error while trying to get access token", errResponse.Error())
-	assert.Nil(t, errResponse.Response)
+	_, err = authenticator.getToken()
+	assert.NotNil(t, err)
+	assert.Equal(t, "Error while trying to get access token", err.Error())
+	// We don't expect a AuthenticateError to be returned, so casting should fail
+	_, ok := err.(*AuthenticationError)
+	assert.False(t, ok)
 
 }
 
@@ -317,9 +317,9 @@ func TestIamClientIdAndSecret(t *testing.T) {
 		ClientSecret: "betts",
 	}
 
-	token, errResponse := authenticator.getToken()
+	token, err := authenticator.getToken()
 	assert.Equal(t, "oAeisG8yqPY7sFR_x66Z15", token)
-	assert.Nil(t, errResponse)
+	assert.Nil(t, err)
 }
 
 func TestIamRefreshTimeCalculation(t *testing.T) {
@@ -357,9 +357,9 @@ func TestIamDisableSSL(t *testing.T) {
 	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", true, nil)
 	assert.Nil(t, err)
 
-	token, errResponse := authenticator.getToken()
+	token, err := authenticator.getToken()
 	assert.Equal(t, token, "oAeisG8yqPY7sFR_x66Z15")
-	assert.Nil(t, errResponse)
+	assert.Nil(t, err)
 	assert.NotNil(t, authenticator.Client)
 	assert.NotNil(t, authenticator.Client.Transport)
 	transport, ok := authenticator.Client.Transport.(*http.Transport)
@@ -392,9 +392,9 @@ func TestIamUserHeaders(t *testing.T) {
 	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, headers)
 	assert.Nil(t, err)
 
-	token, errResponse := authenticator.getToken()
+	token, err := authenticator.getToken()
 	assert.Equal(t, "oAeisG8yqPY7sFR_x66Z15", token)
-	assert.Nil(t, errResponse)
+	assert.Nil(t, err)
 }
 
 func TestIamGetTokenFailure(t *testing.T) {
@@ -411,16 +411,20 @@ func TestIamGetTokenFailure(t *testing.T) {
 
 	var expectedResponse = []byte("Sorry you are forbidden")
 
-	_, errResponse := authenticator.getToken()
-	assert.NotNil(t, errResponse)
-	errorMessage := errResponse.err
-	assert.NotNil(t, errorMessage)
-	assert.NotNil(t, errResponse.Response)
-	rawResult := errResponse.Response.GetRawResult()
+	_, err := authenticator.getToken()
+	assert.NotNil(t, err)
+	assert.Equal(t, "Sorry you are forbidden", err.Error())
+	// We expect an AuthenticationError to be returned, so cast the returned error
+	authError, ok := err.(*AuthenticationError)
+	assert.True(t, ok)
+	assert.NotNil(t, authError)
+	assert.NotNil(t, authError.Error())
+	assert.NotNil(t, authError.Response)
+	rawResult := authError.Response.GetRawResult()
 	assert.NotNil(t, rawResult)
 	assert.Equal(t, expectedResponse, rawResult)
-	statusCode := errResponse.Response.GetStatusCode()
-	assert.Equal(t, "Sorry you are forbidden", errResponse.Error())
+	statusCode := authError.Response.GetStatusCode()
+	assert.Equal(t, "Sorry you are forbidden", authError.Error())
 	assert.Equal(t, http.StatusForbidden, statusCode)
 }
 
@@ -458,8 +462,8 @@ func TestIamGetTokenTimeoutError(t *testing.T) {
 	assert.Nil(t, authenticator.tokenData)
 
 	// Force the first fetch and verify we got the first access token.
-	token, errResponse := authenticator.getToken()
-	assert.Nil(t, errResponse)
+	token, err := authenticator.getToken()
+	assert.Nil(t, err)
 	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
 		token)
 	assert.NotNil(t, authenticator.tokenData)
@@ -468,11 +472,13 @@ func TestIamGetTokenTimeoutError(t *testing.T) {
 	authenticator.tokenData.Expiration = GetCurrentTime() - 3600
 	// Set the client timeout to something very low
 	authenticator.Client.Timeout = time.Second * 2
-	token, errResponse = authenticator.getToken()
-	assert.NotNil(t, errResponse)
-	assert.NotNil(t, errResponse.err)
-	assert.Nil(t, errResponse.Response)
+	token, err = authenticator.getToken()
 	assert.Equal(t, "", token)
+	assert.NotNil(t, err)
+	assert.NotNil(t, err.Error())
+	// We don't expect a AuthenticateError to be returned, so casting should fail
+	_, ok := err.(*AuthenticationError)
+	assert.False(t, ok)
 }
 
 func TestIamGetTokenServerError(t *testing.T) {
@@ -503,8 +509,8 @@ func TestIamGetTokenServerError(t *testing.T) {
 	assert.Nil(t, authenticator.tokenData)
 
 	// Force the first fetch and verify we got the first access token.
-	token, errResponse := authenticator.getToken()
-	assert.Nil(t, errResponse)
+	token, err := authenticator.getToken()
+	assert.Nil(t, err)
 	assert.Equal(t, "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
 		token)
 	assert.NotNil(t, authenticator.tokenData)
@@ -513,14 +519,17 @@ func TestIamGetTokenServerError(t *testing.T) {
 
 	// Force expiration and verify that we got a server error
 	authenticator.tokenData.Expiration = GetCurrentTime() - 3600
-	token, errResponse = authenticator.getToken()
-	assert.NotNil(t, errResponse)
-	assert.NotNil(t, errResponse.Response)
-	errorMessage := errResponse.err
-	rawResult := errResponse.Response.GetRawResult()
-	statusCode := errResponse.Response.GetStatusCode()
-	assert.NotNil(t, errorMessage)
-	assert.Equal(t, "Gateway Timeout", errResponse.Error())
+	token, err = authenticator.getToken()
+	assert.NotNil(t, err)
+	// We expect an AuthenticationError to be returned, so cast the returned error
+	authError, ok := err.(*AuthenticationError)
+	assert.True(t, ok)
+	assert.NotNil(t, authError)
+	assert.NotNil(t, authError.Response)
+	assert.NotNil(t, authError.Error())
+	rawResult := authError.Response.GetRawResult()
+	statusCode := authError.Response.GetStatusCode()
+	assert.Equal(t, "Gateway Timeout", authError.Error())
 	assert.Equal(t, expectedResponse, rawResult)
 	assert.NotNil(t, rawResult)
 	assert.Equal(t, http.StatusGatewayTimeout, statusCode)

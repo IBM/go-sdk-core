@@ -221,13 +221,11 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 
 	authError := service.Options.Authenticator.Authenticate(req)
 	if authError != nil {
+		err = fmt.Errorf(ERRORMSG_AUTHENTICATE_ERROR, authError.Error())
 		castErr, ok := authError.(*AuthenticationError)
-		if !ok {
-			err = fmt.Errorf(ERRORMSG_CAST_ERROR, err)
-			return
+		if ok {
+			detailedResponse = castErr.Response
 		}
-		detailedResponse = castErr.Response
-		err = fmt.Errorf(ERRORMSG_AUTHENTICATE_ERROR, castErr.Error())
 		return
 	}
 

@@ -150,7 +150,7 @@ func (authenticator *CloudPakForDataAuthenticator) Authenticate(request *http.Re
 // getToken: returns an access token to be used in an Authorization header.
 // Whenever a new token is needed (when a token doesn't yet exist, needs to be refreshed,
 // or the existing token has expired), a new access token is fetched from the token server.
-func (authenticator *CloudPakForDataAuthenticator) getToken() (string, *AuthenticationError) {
+func (authenticator *CloudPakForDataAuthenticator) getToken() (string, error) {
 	if authenticator.tokenData == nil || !authenticator.tokenData.isTokenValid() {
 		// synchronously request the token
 		err := authenticator.synchronizedRequestToken()
@@ -159,7 +159,7 @@ func (authenticator *CloudPakForDataAuthenticator) getToken() (string, *Authenti
 		}
 	} else if authenticator.tokenData.needsRefresh() {
 		// If refresh needed, kick off a go routine in the background to get a new token
-		ch := make(chan *AuthenticationError)
+		ch := make(chan error)
 		go func() {
 			ch <- authenticator.getTokenData()
 		}()
@@ -172,13 +172,9 @@ func (authenticator *CloudPakForDataAuthenticator) getToken() (string, *Authenti
 		}
 	}
 
-	authError := &AuthenticationError{}
-
 	// return an error if the access token is not valid or was not fetched
 	if authenticator.tokenData == nil || authenticator.tokenData.AccessToken == "" {
-		errorMsg := fmt.Errorf("Error while trying to get access token")
-		authError.err = errorMsg
-		return "", authError
+		return "", fmt.Errorf("Error while trying to get access token")
 	}
 
 	return authenticator.tokenData.AccessToken, nil
@@ -187,7 +183,7 @@ func (authenticator *CloudPakForDataAuthenticator) getToken() (string, *Authenti
 // synchronizedRequestToken: synchronously checks if the current token in cache
 // is valid. If token is not valid or does not exist, it will fetch a new token
 // and set the tokenRefreshTime
-func (authenticator *CloudPakForDataAuthenticator) synchronizedRequestToken() *AuthenticationError {
+func (authenticator *CloudPakForDataAuthenticator) synchronizedRequestToken() error {
 	cp4dRequestTokenMutex.Lock()
 	defer cp4dRequestTokenMutex.Unlock()
 	// if cached token is still valid, then just continue to use it
@@ -201,26 +197,22 @@ func (authenticator *CloudPakForDataAuthenticator) synchronizedRequestToken() *A
 // getTokenData: requests a new token from the access server and
 // unmarshals the token information to the tokenData cache. Returns
 // an error if the token was unable to be fetched, otherwise returns nil
-func (authenticator *CloudPakForDataAuthenticator) getTokenData() *AuthenticationError {
-	var err error
-	tokenResponse, authErr := authenticator.requestToken()
-	if authErr != nil {
-		return authErr
+func (authenticator *CloudPakForDataAuthenticator) getTokenData() error {
+	tokenResponse, err := authenticator.requestToken()
+	if err != nil {
+		return err
 	}
-
-	newAuthenticationError := &AuthenticationError{}
 
 	authenticator.tokenData, err = newCp4dTokenData(tokenResponse)
 	if err != nil {
-		newAuthenticationError.err = err
-		return newAuthenticationError
+		return err
 	}
 
 	return nil
 }
 
 // requestToken: fetches a new access token from the token server.
-func (authenticator *CloudPakForDataAuthenticator) requestToken() (*cp4dTokenServerResponse, *AuthenticationError) {
+func (authenticator *CloudPakForDataAuthenticator) requestToken() (*cp4dTokenServerResponse, error) {
 	// If the user-specified URL does not end with the required path,
 	// then add it now.
 	url := authenticator.URL
@@ -228,12 +220,9 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (*cp4dTokenSer
 		url = fmt.Sprintf("%s%s", url, PRE_AUTH_PATH)
 	}
 
-	authError := &AuthenticationError{}
-
 	builder, err := NewRequestBuilder(GET).ConstructHTTPURL(url, nil, nil)
 	if err != nil {
-		authError.err = err
-		return nil, authError
+		return nil, err
 	}
 
 	// Add user-defined headers to request.
@@ -243,8 +232,7 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (*cp4dTokenSer
 
 	req, err := builder.Build()
 	if err != nil {
-		authError.err = err
-		return nil, authError
+		return nil, err
 	}
 
 	req.SetBasicAuth(authenticator.Username, authenticator.Password)
@@ -266,25 +254,24 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (*cp4dTokenSer
 
 	resp, err := authenticator.Client.Do(req)
 	if err != nil {
-		authError.err = err
-		return nil, authError
-	}
-
-	// Start to populate the DetailedResponse.
-	detailedResponse := &DetailedResponse{
-		StatusCode: resp.StatusCode,
-		Headers:    resp.Header,
+		return nil, err
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		if resp != nil {
-			buff := new(bytes.Buffer)
-			_, _ = buff.ReadFrom(resp.Body)
-			authError.err = fmt.Errorf(buff.String())
-			detailedResponse.RawResult = buff.Bytes()
-			authError.Response = detailedResponse
-			return nil, authError
+		buff := new(bytes.Buffer)
+		_, _ = buff.ReadFrom(resp.Body)
+		// Start to populate the DetailedResponse.
+		detailedResponse := &DetailedResponse{
+			StatusCode: resp.StatusCode,
+			Headers:    resp.Header,
+			RawResult:  buff.Bytes(),
 		}
+		// Return a AuthenticationError in place of a generic "error"
+		authError := &AuthenticationError{
+			Response: detailedResponse,
+			err:      fmt.Errorf(buff.String()),
+		}
+		return nil, authError
 	}
 
 	tokenResponse := &cp4dTokenServerResponse{}
