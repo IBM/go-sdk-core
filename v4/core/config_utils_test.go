@@ -46,8 +46,8 @@ var testEnvironment = map[string]string{
 	"SERVICE3_USERNAME":          "my-cp4d-user",
 	"SERVICE3_PASSWORD":          "my-cp4d-password",
 	"SERVICE3_AUTH_DISABLE_SSL":  "false",
-	"EQUAL_SERVICE_URL": "https://my=host.com/my=service/api",
-	"EQUAL_SERVICE_APIKEY": "===my=iam=apikey===",
+	"EQUAL_SERVICE_URL":          "https://my=host.com/my=service/api",
+	"EQUAL_SERVICE_APIKEY":       "===my=iam=apikey===",
 }
 
 // Set the environment variables described in our map.
@@ -179,7 +179,6 @@ func TestGetServicePropertiesFromEnvironment(t *testing.T) {
 	assert.NotNil(t, props)
 	assert.Equal(t, "https://my=host.com/my=service/api", props[PROPNAME_SVC_URL])
 	assert.Equal(t, "===my=iam=apikey===", props[PROPNAME_APIKEY])
-	
 
 	props, err = getServiceProperties("not_a_service")
 	assert.Nil(t, err)

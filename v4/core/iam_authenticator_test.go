@@ -44,6 +44,37 @@ func TestIamConfigErrors(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestIamAuthenticateFail(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte("Sorry you are not authorized"))
+	}))
+	defer server.Close()
+
+	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, authenticator.AuthenticationType(), AUTHTYPE_IAM)
+
+	// Create a new Request object.
+	builder, err := NewRequestBuilder("GET").ConstructHTTPURL("https://localhost/placeholder/url", nil, nil)
+	assert.Nil(t, err)
+
+	request, err := builder.Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, request)
+
+	err = authenticator.Authenticate(request)
+	// Validate the resulting error is a valid
+	assert.NotNil(t, err)
+	authErr, ok := err.(*AuthenticationError)
+	assert.True(t, ok)
+	assert.NotNil(t, authErr)
+	assert.EqualValues(t, authErr, err)
+	// The casted error should match the original error message
+	assert.Equal(t, err.Error(), authErr.Error())
+}
+
 func TestIamGetTokenSuccess(t *testing.T) {
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -256,6 +287,9 @@ func TestIamBackgroundTokenRefreshFailure(t *testing.T) {
 	_, err = authenticator.getToken()
 	assert.NotNil(t, err)
 	assert.Equal(t, "Error while trying to get access token", err.Error())
+	// We don't expect a AuthenticateError to be returned, so casting should fail
+	_, ok := err.(*AuthenticationError)
+	assert.False(t, ok)
 
 }
 
@@ -375,8 +409,23 @@ func TestIamGetTokenFailure(t *testing.T) {
 		URL:    server.URL,
 	}
 
+	var expectedResponse = []byte("Sorry you are forbidden")
+
 	_, err := authenticator.getToken()
+	assert.NotNil(t, err)
 	assert.Equal(t, "Sorry you are forbidden", err.Error())
+	// We expect an AuthenticationError to be returned, so cast the returned error
+	authError, ok := err.(*AuthenticationError)
+	assert.True(t, ok)
+	assert.NotNil(t, authError)
+	assert.NotNil(t, authError.Error())
+	assert.NotNil(t, authError.Response)
+	rawResult := authError.Response.GetRawResult()
+	assert.NotNil(t, rawResult)
+	assert.Equal(t, expectedResponse, rawResult)
+	statusCode := authError.Response.GetStatusCode()
+	assert.Equal(t, "Sorry you are forbidden", authError.Error())
+	assert.Equal(t, http.StatusForbidden, statusCode)
 }
 
 func TestIamGetTokenTimeoutError(t *testing.T) {
@@ -424,8 +473,12 @@ func TestIamGetTokenTimeoutError(t *testing.T) {
 	// Set the client timeout to something very low
 	authenticator.Client.Timeout = time.Second * 2
 	token, err = authenticator.getToken()
-	assert.NotNil(t, err)
 	assert.Equal(t, "", token)
+	assert.NotNil(t, err)
+	assert.NotNil(t, err.Error())
+	// We don't expect a AuthenticateError to be returned, so casting should fail
+	_, ok := err.(*AuthenticationError)
+	assert.False(t, ok)
 }
 
 func TestIamGetTokenServerError(t *testing.T) {
@@ -462,10 +515,24 @@ func TestIamGetTokenServerError(t *testing.T) {
 		token)
 	assert.NotNil(t, authenticator.tokenData)
 
+	var expectedResponse = []byte("Gateway Timeout")
+
 	// Force expiration and verify that we got a server error
 	authenticator.tokenData.Expiration = GetCurrentTime() - 3600
 	token, err = authenticator.getToken()
 	assert.NotNil(t, err)
+	// We expect an AuthenticationError to be returned, so cast the returned error
+	authError, ok := err.(*AuthenticationError)
+	assert.True(t, ok)
+	assert.NotNil(t, authError)
+	assert.NotNil(t, authError.Response)
+	assert.NotNil(t, authError.Error())
+	rawResult := authError.Response.GetRawResult()
+	statusCode := authError.Response.GetStatusCode()
+	assert.Equal(t, "Gateway Timeout", authError.Error())
+	assert.Equal(t, expectedResponse, rawResult)
+	assert.NotNil(t, rawResult)
+	assert.Equal(t, http.StatusGatewayTimeout, statusCode)
 	assert.Equal(t, "", token)
 }
 

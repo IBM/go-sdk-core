@@ -8,7 +8,6 @@ import (
 	"testing"
 )
 
-
 //
 // The purpose of this testcase is to ensure that dynamic properties with nil values are
 // correctly serialized as JSON null values.
@@ -23,8 +22,8 @@ import (
 // serve as a test of serialize null dynamic property values.
 
 type dynamicModel struct {
-	Prop1 *string `json:"prop1,omitempty"`
-	Prop2 *int64 `json:"prop2,omitempty"`
+	Prop1                *string `json:"prop1,omitempty"`
+	Prop2                *int64  `json:"prop2,omitempty"`
 	additionalProperties map[string]*string
 }
 
@@ -88,14 +87,14 @@ func TestAdditionalPropertiesNull(t *testing.T) {
 		Prop2: Int64Ptr(38),
 	}
 	model.SetProperty("bar", nil)
-	
+
 	// Serialize to JSON and ensure that the nil dynamic property value was explicitly serialized as JSON null.
 	b, err := json.Marshal(model)
 	jsonString := string(b)
 	assert.Nil(t, err)
 	t.Logf("Serialized model: %s\n", jsonString)
 	assert.Contains(t, jsonString, `"bar":null`)
-	
+
 	// Next, deserialize the json string into a map of RawMessages to simulate how the SDK code will
 	// deserialize a response body.
 	var rawMap map[string]json.RawMessage
@@ -109,7 +108,7 @@ func TestAdditionalPropertiesNull(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, newModel)
 	t.Logf("newModel: %+v\n", *newModel)
-	
+
 	// Make sure the new model is the same as the original model.
 	assert.Equal(t, model, newModel)
 }
