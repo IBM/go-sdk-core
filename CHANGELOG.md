@@ -1,3 +1,10 @@
+# [4.2.0](https://github.com/IBM/go-sdk-core/compare/v4.1.0...v4.2.0) (2020-08-14)
+
+
+### Features
+
+* add detailed error response to iam/cp4d authenticators ([#66](https://github.com/IBM/go-sdk-core/issues/66)) ([3485263](https://github.com/IBM/go-sdk-core/commit/3485263179566e258883cc8ce55144b5b99fa308))
+
 # [4.1.0](https://github.com/IBM/go-sdk-core/compare/v4.0.8...v4.1.0) (2020-08-07)
 
 
