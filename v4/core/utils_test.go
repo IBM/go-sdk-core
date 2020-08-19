@@ -16,7 +16,9 @@ package core
 
 import (
 	"testing"
+	"time"
 
+	"github.com/go-openapi/strfmt"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -191,4 +193,243 @@ func TestPointers(t *testing.T) {
 
 	var float64Var = float64(23)
 	assert.Equal(t, &float64Var, Float64Ptr(float64Var))
+}
+
+func TestConvertSliceFloat64(t *testing.T) {
+	float64Slice := []float64{float64(9.56), float64(4.56), float64(2.4)}
+	expected := []string{"9.56", "4.56", "2.4"}
+	convertedSlice, err := ConvertSlice(float64Slice)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, convertedSlice)
+	assert.NotEmpty(t, convertedSlice)
+	assert.Equal(t, expected, convertedSlice)
+
+	float64Slice = []float64{}
+	convertedSlice, err = ConvertSlice(float64Slice)
+
+	assert.Nil(t, err)
+	assert.Empty(t, convertedSlice)
+}
+
+func TestConvertSliceFloat32(t *testing.T) {
+	float32Slice := []float32{float32(9.56), float32(4.56), float32(2.4)}
+	expected := []string{"9.56", "4.56", "2.4"}
+	convertedSlice, err := ConvertSlice(float32Slice)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, convertedSlice)
+	assert.NotEmpty(t, convertedSlice)
+	assert.Equal(t, expected, convertedSlice)
+
+	float32Slice = []float32{}
+	convertedSlice, err = ConvertSlice(float32Slice)
+
+	assert.Nil(t, err)
+	assert.Empty(t, convertedSlice)
+}
+
+func TestConvertSliceInt64(t *testing.T) {
+	int64Slice := []int64{int64(38), int64(26), int64(22)}
+	expected := []string{"38", "26", "22"}
+	convertedSlice, err := ConvertSlice(int64Slice)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, convertedSlice)
+	assert.NotEmpty(t, convertedSlice)
+	assert.Equal(t, expected, convertedSlice)
+
+	int64Slice = []int64{}
+	convertedSlice, err = ConvertSlice(int64Slice)
+
+	assert.Nil(t, err)
+	assert.Empty(t, convertedSlice)
+}
+
+func TestConvertSliceInt(t *testing.T) {
+	intSlice := []int{3, 2, 1}
+	expected := []string{"3", "2", "1"}
+	convertedSlice, err := ConvertSlice(intSlice)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, convertedSlice)
+	assert.NotEmpty(t, convertedSlice)
+	assert.Equal(t, expected, convertedSlice)
+
+	intSlice = []int{}
+	convertedSlice, err = ConvertSlice(intSlice)
+
+	assert.Nil(t, err)
+	assert.Empty(t, convertedSlice)
+}
+
+func TestConvertSliceByteArray(t *testing.T) {
+	testString := "test string 1..."
+	testString2 := "test string 2..."
+	byteArray := []byte(testString)
+	byteArray2 := []byte(testString2)
+	byteArraySlice := [][]byte{byteArray, byteArray2}
+
+	// base64 encoded value
+	expected := []string{"dGVzdCBzdHJpbmcgMS4uLg==", "dGVzdCBzdHJpbmcgMi4uLg=="}
+	convertedSlice, err := ConvertSlice(byteArraySlice)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, convertedSlice)
+	assert.NotEmpty(t, convertedSlice)
+	assert.Equal(t, expected, convertedSlice)
+
+	byteArraySlice = [][]byte{}
+	convertedSlice, err = ConvertSlice(byteArraySlice)
+
+	assert.Nil(t, err)
+	assert.Empty(t, convertedSlice)
+}
+
+func TestConvertSliceDate(t *testing.T) {
+	date1 := strfmt.Date(time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC))
+	date2 := strfmt.Date(time.Date(2020, time.November, 10, 23, 0, 0, 0, time.UTC))
+
+	dateSlice := []strfmt.Date{date1, date2}
+	expected := []string{"2009-11-10", "2020-11-10"}
+	convertedSlice, err := ConvertSlice(dateSlice)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, convertedSlice)
+	assert.NotEmpty(t, convertedSlice)
+	assert.Equal(t, expected, convertedSlice)
+
+	dateSlice = []strfmt.Date{}
+	convertedSlice, err = ConvertSlice(dateSlice)
+
+	assert.Nil(t, err)
+	assert.Empty(t, convertedSlice)
+}
+
+func TestConvertSliceDateTime(t *testing.T) {
+	date1 := strfmt.DateTime(time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC))
+	date2 := strfmt.DateTime(time.Date(2020, time.November, 10, 23, 0, 0, 0, time.UTC))
+
+	dateTimeSlice := []strfmt.DateTime{date1, date2}
+	expected := []string{"2009-11-10T23:00:00.000Z", "2020-11-10T23:00:00.000Z"}
+	convertedSlice, err := ConvertSlice(dateTimeSlice)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, convertedSlice)
+	assert.NotEmpty(t, convertedSlice)
+	assert.Equal(t, expected, convertedSlice)
+
+	dateTimeSlice = []strfmt.DateTime{}
+	convertedSlice, err = ConvertSlice(dateTimeSlice)
+
+	assert.Nil(t, err)
+	assert.Empty(t, convertedSlice)
+}
+
+func TestConvertSliceString(t *testing.T) {
+	stringSlice := []string{"testString1", "testString2"}
+	expected := []string{"testString1", "testString2"}
+	convertedSlice, err := ConvertSlice(stringSlice)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, convertedSlice)
+	assert.NotEmpty(t, convertedSlice)
+	assert.Equal(t, expected, convertedSlice)
+
+	stringSlice = []string{"\"testString1\"", "\"testString2\"", "C:\\Program_Files"}
+	expected = []string{"\"testString1\"", "\"testString2\"", "C:\\Program_Files"}
+	convertedSlice, err = ConvertSlice(stringSlice)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, convertedSlice)
+	assert.NotEmpty(t, convertedSlice)
+	assert.Equal(t, expected, convertedSlice)
+
+	stringSlice = []string{}
+	convertedSlice, err = ConvertSlice(stringSlice)
+
+	assert.Nil(t, err)
+	assert.Empty(t, convertedSlice)
+}
+
+func TestConvertSliceUUID(t *testing.T) {
+	uuidSlice := []strfmt.UUID{
+		"9fab83da-98cb-4f18-a7ba-b6f0435c9673",
+		"aaffca34-de6d-11ea-87d0-0242ac130003",
+	}
+	expected := []string{
+		"9fab83da-98cb-4f18-a7ba-b6f0435c9673",
+		"aaffca34-de6d-11ea-87d0-0242ac130003",
+	}
+	convertedSlice, err := ConvertSlice(uuidSlice)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, convertedSlice)
+	assert.NotEmpty(t, convertedSlice)
+	assert.Equal(t, expected, convertedSlice)
+
+	uuidSlice = []strfmt.UUID{}
+	convertedSlice, err = ConvertSlice(uuidSlice)
+
+	assert.Nil(t, err)
+	assert.Empty(t, convertedSlice)
+}
+
+func TestConvertSliceBool(t *testing.T) {
+	boolSlice := []bool{true, false, true}
+	expected := []string{"true", "false", "true"}
+	convertedSlice, err := ConvertSlice(boolSlice)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, convertedSlice)
+	assert.NotEmpty(t, convertedSlice)
+	assert.Equal(t, expected, convertedSlice)
+
+	boolSlice = []bool{}
+	convertedSlice, err = ConvertSlice(boolSlice)
+
+	assert.Nil(t, err)
+	assert.Empty(t, convertedSlice)
+}
+
+func TestConvertSliceBadInput(t *testing.T) {
+	// map[string]string
+	convertedSlice, err := ConvertSlice(map[string]string{"foo": "bar"})
+	assert.NotNil(t, err)
+	assert.Nil(t, convertedSlice)
+
+	// map[string]byte
+	myByteMap := map[string][]byte{"myByteArray": []byte{01, 02, 03, 04}}
+	convertedSlice, err = ConvertSlice(myByteMap)
+	assert.NotNil(t, err)
+	assert.Nil(t, convertedSlice)
+
+	//map[string]interface{}
+	myGenericMap := make(map[string]interface{})
+	convertedSlice, err = ConvertSlice(myGenericMap)
+	assert.NotNil(t, err)
+	assert.Nil(t, convertedSlice)
+
+	// empty string
+	convertedSlice, err = ConvertSlice("")
+	assert.NotNil(t, err)
+	assert.Nil(t, convertedSlice)
+
+	// simple string
+	convertedSlice, err = ConvertSlice("testString")
+	assert.NotNil(t, err)
+	assert.Nil(t, convertedSlice)
+
+	// nil input
+	var input string
+	convertedSlice, err = ConvertSlice(input)
+	assert.NotNil(t, err)
+	assert.Nil(t, convertedSlice)
+
+	// generic interface
+	var i interface{}
+	convertedSlice, err = ConvertSlice(i)
+	assert.NotNil(t, err)
+	assert.Nil(t, convertedSlice)
+
 }
