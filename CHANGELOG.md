@@ -1,3 +1,10 @@
+# [4.3.0](https://github.com/IBM/go-sdk-core/compare/v4.2.0...v4.3.0) (2020-08-19)
+
+
+### Features
+
+* add utility function to convert primitive type slices to string slices ([#68](https://github.com/IBM/go-sdk-core/issues/68)) ([136d316](https://github.com/IBM/go-sdk-core/commit/136d31608d13a88dfbfb1257611bc3367b9d4821))
+
 # [4.2.0](https://github.com/IBM/go-sdk-core/compare/v4.1.0...v4.2.0) (2020-08-14)
 
 
