@@ -292,3 +292,17 @@ func (requestBuilder *RequestBuilder) SetBodyContent(contentType string, jsonCon
 	}
 	return
 }
+
+// AddQuerySlice converts the passed in slice 'slice' by calling the ConverSlice method,
+// and adds the converted slice to the request's query string. An error is returned when
+// conversion fails.
+func (requestBuilder *RequestBuilder) AddQuerySlice(param string, slice interface{}) (err error) {
+	convertedSlice, err := ConvertSlice(slice)
+	if err != nil {
+		return
+	}
+
+	requestBuilder.AddQuery(param, strings.Join(convertedSlice, ","))
+
+	return
+}

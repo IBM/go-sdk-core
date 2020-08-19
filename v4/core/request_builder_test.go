@@ -85,6 +85,28 @@ func TestAddQuery(t *testing.T) {
 	assert.Equal(t, 1, len(request.Query), "Didnt set the query param")
 }
 
+func TestAddQuerySlice(t *testing.T) {
+	request := setup()
+	float64Slice := []float64{float64(9.56), float64(4.56), float64(2.4)}
+	err := request.AddQuerySlice("float_64_params_array", float64Slice)
+
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(request.Query), "Didnt set the query param")
+	builtQuery := request.Query["float_64_params_array"][0]
+	expected := "9.56,4.56,2.4"
+	assert.NotNil(t, builtQuery)
+	assert.Equal(t, expected, builtQuery)
+}
+
+func TestAddQuerySliceError(t *testing.T) {
+	request := setup()
+	var slice interface{}
+	err := request.AddQuerySlice("bad_input_param", slice)
+
+	assert.NotNil(t, err)
+	assert.Equal(t, 0, len(request.Query), "Query should be empty")
+}
+
 func TestAddHeader(t *testing.T) {
 	request := setup()
 	request.AddHeader("Content-Type", "application/json")
