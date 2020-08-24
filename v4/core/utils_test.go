@@ -121,6 +121,10 @@ func TestValidateStruct(t *testing.T) {
 		LastName  *string `json:"lname"`
 	}
 
+	type StringPtrs struct {
+		Field  *string `validate:"required"`
+	}
+
 	address := &Address{
 		Street: "Eavesdown Docks",
 		City:   "",
@@ -145,6 +149,8 @@ func TestValidateStruct(t *testing.T) {
 
 	noReqFields := &NoRequiredFields{}
 
+	stringPtrs := &StringPtrs{}
+
 	var err error
 
 	err = ValidateStruct(goodStruct, "goodStruct")
@@ -164,6 +170,14 @@ func TestValidateStruct(t *testing.T) {
 	err = ValidateStruct(badStruct, "badStruct")
 	assert.NotNil(t, err)
 	t.Logf("[03] Expected error: %s\n", err.Error())
+
+	err = ValidateStruct(address, "emptyRequiredFeild")
+	assert.NotNil(t, err)
+	t.Logf("[04] Expected error: %s\n", err.Error())
+
+	err = ValidateStruct(stringPtrs, "stringPtrs")
+	assert.NotNil(t, err)
+	t.Logf("[05] Expected error: %s\n", err.Error())
 
 	var addressPtr *Address = nil
 	err = ValidateStruct(addressPtr, "addressPtr")
