@@ -292,18 +292,15 @@ func (authenticator *IamAuthenticator) requestToken() (*iamTokenServerResponse, 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		buff := new(bytes.Buffer)
 		_, _ = buff.ReadFrom(resp.Body)
-		// Start to populate the DetailedResponse.
+
+		// Create a DetailedResponse to be included in the error below.
 		detailedResponse := &DetailedResponse{
 			StatusCode: resp.StatusCode,
 			Headers:    resp.Header,
 			RawResult:  buff.Bytes(),
 		}
-		// Return a AuthenticationError in place of a generic "error"
-		authError := &AuthenticationError{
-			Response: detailedResponse,
-			err:      fmt.Errorf(buff.String()),
-		}
-		return nil, authError
+		
+		return nil, NewAuthenticationError(detailedResponse, fmt.Errorf(buff.String()))
 	}
 
 	tokenResponse := &iamTokenServerResponse{}
