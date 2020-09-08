@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"io"
 	"os"
-	"strings"
 	"testing"
 
 	assert "github.com/stretchr/testify/assert"
@@ -31,6 +30,89 @@ func setup() *RequestBuilder {
 func TestNewRequestBuilder(t *testing.T) {
 	request := setup()
 	assert.Equal(t, "GET", request.Method, "Got incorrect method types")
+}
+
+func TestResolveRequestURL(t *testing.T) {
+	request := setup()
+	pathParams := map[string]string{
+		"workspace_id": "xxxxx",
+		"message_id":   "yyyyy",
+	}
+
+	expectedURL := "https://myservice.cloud.ibm.com/assistant/v1/workspaces/xxxxx/message/yyyyy"
+
+	_, err := request.ResolveRequestURL("https://myservice.cloud.ibm.com/assistant", "v1/workspaces/{workspace_id}/message/{message_id}", pathParams)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedURL, request.URL.String())
+
+	_, err = request.ResolveRequestURL("https://myservice.cloud.ibm.com/assistant/", "v1/workspaces/{workspace_id}/message/{message_id}", pathParams)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedURL, request.URL.String())
+
+	_, err = request.ResolveRequestURL("https://myservice.cloud.ibm.com/assistant/", "/v1/workspaces/{workspace_id}/message/{message_id}", pathParams)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedURL, request.URL.String())
+
+	_, err = request.ResolveRequestURL("https://myservice.cloud.ibm.com", "/assistant/v1/workspaces/{workspace_id}/message/{message_id}", pathParams)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedURL, request.URL.String())
+
+	expectedURL = "https://myservice.cloud.ibm.com/assistant/v1/workspaces/xxxxx/message/yyyyy/again/yyyyy"
+
+	_, err = request.ResolveRequestURL("https://myservice.cloud.ibm.com", "/assistant/v1/workspaces/{workspace_id}/message/{message_id}/again/{message_id}", pathParams)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedURL, request.URL.String())
+
+	expectedURL = "https://myservice.cloud.ibm.com/api/v1"
+
+	_, err = request.ResolveRequestURL("https://myservice.cloud.ibm.com/api/v1", "", nil)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedURL, request.URL.String())
+
+	expectedURL = "https://myservice.cloud.ibm.com/api/v1/"
+
+	_, err = request.ResolveRequestURL("https://myservice.cloud.ibm.com/api/v1", "/", nil)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedURL, request.URL.String())
+
+	_, err = request.ResolveRequestURL("https://myservice.cloud.ibm.com/api/v1/", "/", nil)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedURL, request.URL.String())
+}
+
+func TestResolveRequestURLEncodedValues(t *testing.T) {
+	request := setup()
+	pathParams := map[string]string{
+		"workspace_id": "ws/1",
+		"message_id":   "message #2",
+	}
+
+	expectedURL := "https://host.com/assistant/v1/workspaces/ws%2F1/message/message%20%232"
+
+	_, err := request.ResolveRequestURL("https://host.com/assistant", "v1/workspaces/{workspace_id}/message/{message_id}", pathParams)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedURL, request.URL.String())
+}
+
+func TestResolveRequestURLErrors(t *testing.T) {
+	request := setup()
+
+	pathParams1 := map[string]string{
+		"tenant_id":   "tenant-123",
+		"resource_id": "",
+	}
+
+	_, err := request.ResolveRequestURL("https://host.com", "/v1/{tenant_id}/resources/{resource_id}/", pathParams1)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "'resource_id' is empty")
+
+	_, err = request.ResolveRequestURL("", "/v1/{tenant_id}/resources/{resource_id}/", pathParams1)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "service URL is empty")
+
+	_, err = request.ResolveRequestURL("://host.com", "/v1/path1", nil)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "error parsing service URL")
 }
 
 func TestConstructHTTPURL(t *testing.T) {
@@ -65,6 +147,16 @@ func TestConstructHTTPURLWithEmptyPathSegments(t *testing.T) {
 	assert.Equal(t, want, request.URL.String(), "Invalid construction of url")
 }
 
+func TestConstructHTTPURLWithEmptyPathParam(t *testing.T) {
+	endPoint := "https://gateway.watsonplatform.net/assistant/api"
+	pathSegments := []string{"v1/workspaces", "segment"}
+	pathParameters := []string{""}
+	request := setup()
+	_, err := request.ConstructHTTPURL(endPoint, pathSegments, pathParameters)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "'[0]' is empty")
+}
+
 func TestConstructHTTPURLMissingURL(t *testing.T) {
 	request := setup()
 	_, err := request.ConstructHTTPURL("", nil, nil)
@@ -76,13 +168,13 @@ func TestConstructHTTPURLInvalidURL(t *testing.T) {
 	request := setup()
 	_, err := request.ConstructHTTPURL(":<badscheme>", nil, nil)
 	assert.NotNil(t, err)
-	assert.Equal(t, true, strings.HasPrefix(err.Error(), "There was an error parsing the service URL:"))
+	assert.Contains(t, err.Error(), "error parsing service URL:")
 }
 
 func TestAddQuery(t *testing.T) {
 	request := setup()
 	request.AddQuery("VERSION", "2018-22-09")
-	assert.Equal(t, 1, len(request.Query), "Didnt set the query param")
+	assert.Equal(t, 1, len(request.Query))
 }
 
 func TestAddQuerySlice(t *testing.T) {
