@@ -1,3 +1,10 @@
+## [4.3.1](https://github.com/IBM/go-sdk-core/compare/v4.3.0...v4.3.1) (2020-09-08)
+
+
+### Bug Fixes
+
+* expose AuthenticationError.Err field and add ctor ([3005687](https://github.com/IBM/go-sdk-core/commit/3005687a9087000c177dcada0e8ca14ccab25971))
+
 # [4.3.0](https://github.com/IBM/go-sdk-core/compare/v4.2.0...v4.3.0) (2020-08-19)
 
 
