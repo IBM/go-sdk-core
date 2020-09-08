@@ -49,6 +49,7 @@ const (
 
 	ERRORMSG_SERVICE_URL_MISSING = "The service URL is required."
 	ERRORMSG_SERVICE_URL_INVALID = "There was an error parsing the service URL: %s"
+	ERRORMSG_PATH_PARAM_INVALID  = "Path parameters cannot be empty."
 )
 
 // FormData stores information for form data.
@@ -80,7 +81,8 @@ func NewRequestBuilder(method string) *RequestBuilder {
 
 // ConstructHTTPURL creates a properly-encoded URL with path parameters.
 // This function returns an error if the serviceURL is "" or is an
-// invalid URL string (e.g. ":<badscheme>").
+// invalid URL string (e.g. ":<badscheme>"). It also returns an error if
+// the supplied path parameter is "".
 func (requestBuilder *RequestBuilder) ConstructHTTPURL(serviceURL string, pathSegments []string, pathParameters []string) (*RequestBuilder, error) {
 	if serviceURL == "" {
 		return requestBuilder, fmt.Errorf(ERRORMSG_SERVICE_URL_MISSING)
@@ -98,6 +100,11 @@ func (requestBuilder *RequestBuilder) ConstructHTTPURL(serviceURL string, pathSe
 		}
 
 		if pathParameters != nil && i < len(pathParameters) {
+
+			if pathParameters[i] == "" {
+				return requestBuilder, fmt.Errorf(ERRORMSG_PATH_PARAM_INVALID)
+			}
+			
 			URL.Path += "/" + pathParameters[i]
 		}
 	}
