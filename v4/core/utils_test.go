@@ -122,7 +122,7 @@ func TestValidateStruct(t *testing.T) {
 	}
 
 	type StringPtrs struct {
-		Field  *string `validate:"required"`
+		Field *string `validate:"required,ne="`
 	}
 
 	address := &Address{
@@ -182,6 +182,22 @@ func TestValidateStruct(t *testing.T) {
 	var addressPtr *Address = nil
 	err = ValidateStruct(addressPtr, "addressPtr")
 	assert.NotNil(t, err)
+
+	stringPtrStruct := &StringPtrs{
+		Field: StringPtr("XYZ"),
+	}
+	err = ValidateStruct(stringPtrStruct, "stringPtrStruct")
+	assert.Nil(t, err)
+
+	stringPtrStruct.Field = StringPtr("")
+	err = ValidateStruct(stringPtrStruct, "stringPtrStruct")
+	assert.NotNil(t, err)
+	t.Logf("[06] Expected error: %s\n", err.Error())
+
+	stringPtrStruct.Field = nil
+	err = ValidateStruct(stringPtrStruct, "stringPtrStruct")
+	assert.NotNil(t, err)
+	t.Logf("[07] Expected error: %s\n", err.Error())
 }
 
 func TestHasBadFirstOrLastChar(t *testing.T) {
