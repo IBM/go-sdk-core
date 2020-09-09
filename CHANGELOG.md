@@ -1,3 +1,10 @@
+# [4.4.0](https://github.com/IBM/go-sdk-core/compare/v4.3.1...v4.4.0) (2020-09-09)
+
+
+### Features
+
+* add new RequestBuilder.ResolveRequestURL ([5739af8](https://github.com/IBM/go-sdk-core/commit/5739af8ab0627d3a060a7d6a9636fdf25358e626)), closes [arf/planning-sdk-squad#2152](https://github.com/arf/planning-sdk-squad/issues/2152)
+
 ## [4.3.1](https://github.com/IBM/go-sdk-core/compare/v4.3.0...v4.3.1) (2020-09-08)
 
 
