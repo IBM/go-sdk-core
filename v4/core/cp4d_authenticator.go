@@ -335,7 +335,7 @@ func (this *cp4dTokenData) needsRefresh() bool {
 
 	// Advance refresh by one minute
 	if this.RefreshTime >= 0 && GetCurrentTime() > this.RefreshTime {
-		this.RefreshTime += 60
+		this.RefreshTime = GetCurrentTime() + 60
 		return true
 	}
 
