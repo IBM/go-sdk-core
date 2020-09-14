@@ -372,6 +372,110 @@ func TestCp4dBackgroundTokenRefreshFailure(t *testing.T) {
 	assert.False(t, ok)
 }
 
+func TestCp4dBackgroundTokenRefreshIdle(t *testing.T) {
+	firstCall := true
+	accessToken1 := "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
+	accessToken2 := "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		if firstCall {
+			fmt.Fprintf(w, `{
+				"username":"hello",
+				"role":"user",
+				"permissions":[  
+					"administrator",
+					"deployment_admin"
+				],
+				"sub":"hello",
+				"iss":"John",
+				"aud":"DSX",
+				"uid":"999",
+				"accessToken": %q,
+				"_messageCode_":"success",
+				"message":"success"
+			}`, accessToken1)
+			firstCall = false
+			username, password, ok := r.BasicAuth()
+			assert.Equal(t, true, ok)
+			assert.Equal(t, "john", username)
+			assert.Equal(t, "snow", password)
+		} else {
+			fmt.Fprintf(w, `{
+				"username": "admin",
+  				"role": "Admin",
+  				"permissions": [
+    				"administrator",
+    				"manage_catalog",
+    				"access_catalog",
+    				"manage_policies",
+    				"access_policies",
+    				"virtualize_transform",
+    				"can_provision",
+    				"deployment_admin"
+  				],
+  				"sub": "admin",
+  				"iss": "test",
+  				"aud": "DSX",
+  				"uid": "999",
+  				"accessToken": %q,
+  				"_messageCode_": "success",
+  				"message": "success"
+			}`, accessToken2)
+			username, password, ok := r.BasicAuth()
+			assert.Equal(t, true, ok)
+			assert.Equal(t, "john", username)
+			assert.Equal(t, "snow", password)
+		}
+	}))
+	defer server.Close()
+
+	authenticator, err := NewCloudPakForDataAuthenticator(server.URL, "john", "snow", false, nil)
+	assert.Nil(t, err)
+	assert.Nil(t, authenticator.tokenData)
+
+	// // Force the first fetch and verify we got the first access token.
+	token, err := authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, accessToken1,
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+
+	// Now simulate the client being idle for 10 minutes into the refresh time
+	authenticator.tokenData.Expiration = GetCurrentTime() + 3600
+	tenMinutesBeforeNow := GetCurrentTime() - 600
+	authenticator.tokenData.RefreshTime = tenMinutesBeforeNow
+	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
+	// getToken() again. The immediate response should be the token which was already stored, since it's not yet
+	// expired.
+	token, err = authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, accessToken1,
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+	// RefreshTime should have advanced by 1 minute from the current time
+	newRefreshTime := GetCurrentTime() + 60
+	assert.Equal(t, newRefreshTime, authenticator.tokenData.RefreshTime)
+
+	// In the next request, the RefreshTime should be unchanged and another thread
+	// shouldn't be spawned to request another token once more since the first thread already spawned
+	// a goroutine & refreshed the token.
+	token, err = authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, accessToken1,
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+	assert.Equal(t, newRefreshTime, authenticator.tokenData.RefreshTime)
+	// // Wait for the background thread to finish and verify both the RefreshTime & tokenData were updated
+	time.Sleep(5 * time.Second)
+	token, err = authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, accessToken2,
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+	assert.NotEqual(t, newRefreshTime, authenticator.tokenData.RefreshTime)
+
+}
+
 func TestCp4dDisableSSL(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

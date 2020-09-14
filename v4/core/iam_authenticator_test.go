@@ -293,6 +293,85 @@ func TestIamBackgroundTokenRefreshFailure(t *testing.T) {
 
 }
 
+func TestIamBackgroundTokenRefreshIdle(t *testing.T) {
+	firstCall := true
+	accessToken1 := "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
+	accessToken2 := "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// CurrentTime + 1 hour
+		expiration := GetCurrentTime() + 3600
+		w.WriteHeader(http.StatusOK)
+		if firstCall {
+			fmt.Fprintf(w, `{
+				"access_token": %q,
+				"token_type": "Bearer",
+				"expires_in": 3600,
+				"expiration": %d,
+				"refresh_token": "jy4gl91BQ"
+			}`, accessToken1, expiration)
+			firstCall = false
+			_, _, ok := r.BasicAuth()
+			assert.Equal(t, ok, false)
+		} else {
+			fmt.Fprintf(w, `{
+				"access_token": %q,
+				"token_type": "Bearer",
+				"expires_in": 3600,
+				"expiration": %d,
+				"refresh_token": "jy4gl91BQ"
+			}`, accessToken2, expiration)
+			_, _, ok := r.BasicAuth()
+			assert.Equal(t, ok, false)
+		}
+	}))
+	defer server.Close()
+
+	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	assert.Nil(t, err)
+	assert.Nil(t, authenticator.tokenData)
+
+	// Force the first fetch and verify we got the first access token.
+	token, err := authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, accessToken1,
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+
+	// Now simulate the client being idle for 10 minutes into the refresh time
+	tenMinutesBeforeNow := GetCurrentTime() - 600
+	authenticator.tokenData.RefreshTime = tenMinutesBeforeNow
+	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
+	// getToken() again. The immediate response should be the token which was already stored, since it's not yet
+	// expired.
+	token, err = authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, accessToken1,
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+	// RefreshTime should have advanced by 1 minute from the current time
+	newRefreshTime := GetCurrentTime() + 60
+	assert.Equal(t, newRefreshTime, authenticator.tokenData.RefreshTime)
+
+	// In the next request, the RefreshTime should be unchanged and another thread
+	// shouldn't be spawned to request another token once more since the first thread already spawned
+	// a goroutine & refreshed the token.
+	token, err = authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, accessToken1,
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+	assert.Equal(t, newRefreshTime, authenticator.tokenData.RefreshTime)
+	// Wait for the background thread to finish and verify both the RefreshTime & tokenData were updated
+	time.Sleep(5 * time.Second)
+	token, err = authenticator.getToken()
+	assert.Nil(t, err)
+	assert.Equal(t, accessToken2,
+		token)
+	assert.NotNil(t, authenticator.tokenData)
+	assert.NotEqual(t, newRefreshTime, authenticator.tokenData.RefreshTime)
+
+}
+
 func TestIamClientIdAndSecret(t *testing.T) {
 	expiration := GetCurrentTime() + 3600
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

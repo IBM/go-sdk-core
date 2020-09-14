@@ -35,9 +35,9 @@ func (e *AuthenticationError) Error() string {
 	return e.Err.Error()
 }
 
-func NewAuthenticationError(response *DetailedResponse, err error) (*AuthenticationError) {
+func NewAuthenticationError(response *DetailedResponse, err error) *AuthenticationError {
 	return &AuthenticationError{
 		Response: response,
-		Err: err,
+		Err:      err,
 	}
 }
