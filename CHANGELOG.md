@@ -1,3 +1,10 @@
+## [4.4.1](https://github.com/IBM/go-sdk-core/compare/v4.4.0...v4.4.1) (2020-09-14)
+
+
+### Bug Fixes
+
+* iam/cp4d token refresh logic ([#73](https://github.com/IBM/go-sdk-core/issues/73)) ([8d4685e](https://github.com/IBM/go-sdk-core/commit/8d4685e881c3f4806f971ab98f26bba64cb7b40f))
+
 # [4.4.0](https://github.com/IBM/go-sdk-core/compare/v4.3.1...v4.4.0) (2020-09-09)
 
 
