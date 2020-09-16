@@ -48,6 +48,9 @@ var testEnvironment = map[string]string{
 	"SERVICE3_AUTH_DISABLE_SSL":  "false",
 	"EQUAL_SERVICE_URL":          "https://my=host.com/my=service/api",
 	"EQUAL_SERVICE_APIKEY":       "===my=iam=apikey===",
+	"SERVICE6_AUTH_TYPE":         "iam",
+	"SERVICE6_APIKEY":            "my-api-key",
+	"SERVICE6_SCOPE":             "A B C D",
 }
 
 // Set the environment variables described in our map.
@@ -136,6 +139,14 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, props)
 
+	props, err = getServiceProperties("service6")
+	assert.Nil(t, err)
+	assert.NotNil(t, props)
+	assert.Equal(t, "IAM", props[PROPNAME_AUTH_TYPE])
+	assert.Equal(t, "my-api-key", props[PROPNAME_APIKEY])
+	assert.Equal(t, "https://iamhost/iam/api", props[PROPNAME_AUTH_URL])
+	assert.Equal(t, "scope1 scope2 scope3", props[PROPNAME_SCOPE])
+
 	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
 
@@ -183,6 +194,13 @@ func TestGetServicePropertiesFromEnvironment(t *testing.T) {
 	props, err = getServiceProperties("not_a_service")
 	assert.Nil(t, err)
 	assert.Nil(t, props)
+
+	props, err = getServiceProperties("service6")
+	assert.Nil(t, err)
+	assert.NotNil(t, props)
+	assert.Equal(t, "iam", props[PROPNAME_AUTH_TYPE])
+	assert.Equal(t, "my-api-key", props[PROPNAME_APIKEY])
+	assert.Equal(t, "A B C D", props[PROPNAME_SCOPE])
 
 	clearTestEnvironment()
 	assert.Equal(t, "", os.Getenv("SERVICE_1_URL"))

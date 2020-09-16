@@ -48,6 +48,15 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	assert.NotNil(t, authenticator)
 	assert.Equal(t, AUTHTYPE_CP4D, authenticator.AuthenticationType())
 
+	authenticator, err = GetAuthenticatorFromEnvironment("service6")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_IAM, authenticator.AuthenticationType())
+	iamAuthenticator, ok := authenticator.(*IamAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, iamAuthenticator)
+	assert.Equal(t, "scope1 scope2 scope3", iamAuthenticator.Scope)
+
 	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
 
