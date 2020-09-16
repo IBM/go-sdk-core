@@ -66,6 +66,11 @@ type IamAuthenticator struct {
 	// should be disabled; defaults to false [optional].
 	DisableSSLVerification bool
 
+	// [Optional] The "scope" to use when fetching the bearer token from the
+	// IAM token server.   This can be used to obtain an access token
+	// with a specific scope.
+	Scope string
+
 	// [Optional] A set of key/value pairs that will be sent as HTTP headers in requests
 	// made to the token server.
 	Headers map[string]string
@@ -104,7 +109,7 @@ func NewIamAuthenticator(apikey string, url string, clientId string, clientSecre
 
 // NewIamAuthenticatorFromMap constructs a new IamAuthenticator instance from a
 // map.
-func newIamAuthenticatorFromMap(properties map[string]string) (*IamAuthenticator, error) {
+func newIamAuthenticatorFromMap(properties map[string]string) (authenticator *IamAuthenticator, err error) {
 	if properties == nil {
 		return nil, fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
 	}
@@ -113,9 +118,14 @@ func newIamAuthenticatorFromMap(properties map[string]string) (*IamAuthenticator
 	if err != nil {
 		disableSSL = false
 	}
-	return NewIamAuthenticator(properties[PROPNAME_APIKEY], properties[PROPNAME_AUTH_URL],
+
+	authenticator, err = NewIamAuthenticator(properties[PROPNAME_APIKEY], properties[PROPNAME_AUTH_URL],
 		properties[PROPNAME_CLIENT_ID], properties[PROPNAME_CLIENT_SECRET],
 		disableSSL, nil)
+	if authenticator != nil {
+		authenticator.Scope = properties[PROPNAME_SCOPE]
+	}
+	return
 }
 
 // AuthenticationType returns the authentication type for this authenticator.
@@ -252,6 +262,11 @@ func (authenticator *IamAuthenticator) requestToken() (*iamTokenServerResponse, 
 		AddFormData("grant_type", "", "", REQUEST_TOKEN_GRANT_TYPE).
 		AddFormData("apikey", "", "", authenticator.ApiKey).
 		AddFormData("response_type", "", "", REQUEST_TOKEN_RESPONSE_TYPE)
+	
+	// Add any optional parameters to the request.
+	if authenticator.Scope != "" {
+		builder.AddFormData("scope", "", "", authenticator.Scope)
+	}
 
 	// Add user-defined headers to request.
 	for headerName, headerValue := range authenticator.Headers {
