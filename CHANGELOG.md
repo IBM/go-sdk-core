@@ -1,3 +1,10 @@
+# [4.5.0](https://github.com/IBM/go-sdk-core/compare/v4.4.1...v4.5.0) (2020-09-17)
+
+
+### Features
+
+* **IAM Authenticator:** add support for optional 'scope' property ([3aa18d5](https://github.com/IBM/go-sdk-core/commit/3aa18d5fa075e9df7687da0962ee70bf44bcdad5))
+
 ## [4.4.1](https://github.com/IBM/go-sdk-core/compare/v4.4.0...v4.4.1) (2020-09-14)
 
 
