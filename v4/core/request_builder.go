@@ -340,7 +340,7 @@ func (requestBuilder *RequestBuilder) SetBodyContent(contentType string, jsonCon
 		if err != nil {
 			return
 		}
-	} else {
+	} else if !IsNil(nonJSONContent) {
 		// Set the non-JSON body content based on the type of value passed in,
 		// which should be a "string", "*string" or an "io.Reader"
 		if str, ok := nonJSONContent.(string); ok {
@@ -355,6 +355,9 @@ func (requestBuilder *RequestBuilder) SetBodyContent(contentType string, jsonCon
 			builder = requestBuilder
 			err = fmt.Errorf("Invalid type for non-JSON body content: %s", reflect.TypeOf(nonJSONContent).String())
 		}
+	} else {
+		builder = requestBuilder
+		err = fmt.Errorf("No body content provided")
 	}
 	return
 }
