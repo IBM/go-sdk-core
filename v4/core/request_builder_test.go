@@ -301,6 +301,13 @@ func TestSetBodyContentError(t *testing.T) {
 	assert.Equal(t, err.Error(), "Invalid type for non-JSON body content: int")
 }
 
+func TestSetBodyContentNoContent(t *testing.T) {
+	request := setup()
+	_, err := request.SetBodyContent("", nil, nil, nil)
+	assert.Nil(t, request.Body)
+	assert.Equal(t, err.Error(), "No body content provided")
+}
+
 func TestBuildWithMultipartFormEmptyFileName(t *testing.T) {
 	builder := NewRequestBuilder("POST")
 	_, err := builder.ConstructHTTPURL("test.com", nil, nil)
