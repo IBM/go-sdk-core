@@ -1,3 +1,10 @@
+## [4.5.1](https://github.com/IBM/go-sdk-core/compare/v4.5.0...v4.5.1) (2020-09-25)
+
+
+### Bug Fixes
+
+* dont panic in SetBodyContent when nonJSONContent is nil ([#75](https://github.com/IBM/go-sdk-core/issues/75)) ([23dfbd4](https://github.com/IBM/go-sdk-core/commit/23dfbd4202069f325e62d948d0135d06fcbde0fc))
+
 # [4.5.0](https://github.com/IBM/go-sdk-core/compare/v4.4.1...v4.5.0) (2020-09-17)
 
 
