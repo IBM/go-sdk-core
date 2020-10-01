@@ -27,6 +27,16 @@ func setup() *RequestBuilder {
 	return NewRequestBuilder("GET")
 }
 
+func gzipDecompress(srcReader io.Reader) []byte {
+	gzipDecompressor, _ := NewGzipDecompressionReader(srcReader)
+	decompressedBuf := new(bytes.Buffer)
+	_, err := decompressedBuf.ReadFrom(gzipDecompressor)
+	if err != nil {
+		panic(err)
+	}
+	return decompressedBuf.Bytes()
+}
+
 func TestNewRequestBuilder(t *testing.T) {
 	request := setup()
 	assert.Equal(t, "GET", request.Method, "Got incorrect method types")
@@ -352,6 +362,155 @@ func TestBuildWithMultipartForm(t *testing.T) {
 	assert.NotNil(t, request)
 	assert.NotNil(t, request.Body)
 	defer testFile.Close()
+}
+
+func TestGzipSetBodyContentJSON(t *testing.T) {
+	testStructure := &TestStructure{
+		Name: "wonder woman",
+	}
+	body := make(map[string]interface{})
+	body["name"] = testStructure.Name
+	want := "{\"name\":\"wonder woman\"}\n"
+
+	builder := NewRequestBuilder("POST")
+	_, _ = builder.ConstructHTTPURL("test.com", nil, nil)
+	assert.False(t, builder.EnableGzipCompression)
+	builder.EnableGzipCompression = true
+
+	_, _ = builder.SetBodyContentJSON(body)
+	assert.NotNil(t, builder.Body)
+
+	request, err := builder.Build()
+	assert.Nil(t, err)
+
+	// Make sure the Content-Encoding header was set.
+	contentEncoding := request.Header.Get(CONTENT_ENCODING)
+	assert.NotEmpty(t, contentEncoding)
+	assert.Equal(t, "gzip", contentEncoding)
+
+	// Make sure the request body is the compressed JSON string.
+	uncompressedBody := gzipDecompress(request.Body)
+	assert.Equal(t, want, string(uncompressedBody))
+}
+
+func TestGzipSetBodyContentString(t *testing.T) {
+	want := "This is an example of a request body in the form of a string.  This will be gzip-compressed........................................"
+	builder := NewRequestBuilder("POST")
+	builder.EnableGzipCompression = true
+	_, _ = builder.ConstructHTTPURL("test.com", nil, nil)
+	_, _ = builder.SetBodyContentString(want)
+	assert.NotNil(t, builder.Body)
+
+	request, err := builder.Build()
+	assert.Nil(t, err)
+
+	// Make sure the Content-Encoding header was set.
+	contentEncoding := request.Header.Get(CONTENT_ENCODING)
+	assert.NotEmpty(t, contentEncoding)
+	assert.Equal(t, "gzip", contentEncoding)
+
+	// Make sure the request body is the compressed JSON string.
+	uncompressedBody := gzipDecompress(request.Body)
+	assert.Equal(t, want, string(uncompressedBody))
+}
+
+func TestGzipSetBodyContentStream(t *testing.T) {
+	var err error
+	var bodyStream io.Reader
+	bodyStream, err = os.Open("../resources/test_file.txt")
+	assert.Nil(t, err)
+
+	builder := NewRequestBuilder("POST")
+	builder.EnableGzipCompression = true
+	_, _ = builder.ConstructHTTPURL("test.com", nil, nil)
+	_, _ = builder.SetBodyContentStream(bodyStream)
+	assert.NotNil(t, builder.Body)
+
+	request, err := builder.Build()
+	assert.Nil(t, err)
+
+	// Make sure the Content-Encoding header was set.
+	contentEncoding := request.Header.Get(CONTENT_ENCODING)
+	assert.NotEmpty(t, contentEncoding)
+	assert.Equal(t, "gzip", contentEncoding)
+
+	var expectedStream io.ReadCloser
+	expectedStream, _ = os.Open("../resources/test_file.txt")
+	expectedBuf := new(bytes.Buffer)
+	_, err = expectedBuf.ReadFrom(expectedStream)
+	assert.Nil(t, err)
+	expectedStream.Close()
+
+	// Make sure the request body is the compressed JSON string.
+	uncompressedBody := gzipDecompress(request.Body)
+	assert.Equal(t, expectedBuf.Bytes(), uncompressedBody)
+}
+
+func TestGzipNoBodyContent(t *testing.T) {
+	builder := NewRequestBuilder("GET")
+	builder.EnableGzipCompression = true
+	_, _ = builder.ConstructHTTPURL("test.com", nil, nil)
+	assert.Nil(t, builder.Body)
+
+	request, err := builder.Build()
+	assert.Nil(t, err)
+	assert.Nil(t, request.Body)
+
+	// Make sure the Content-Encoding was NOT set.
+	contentEncoding := request.Header.Get(CONTENT_ENCODING)
+	assert.Empty(t, contentEncoding)
+}
+
+func TestGzipBuildWithMultipartForm(t *testing.T) {
+	var err error
+
+	// Create a builder with gzip enabled.
+	builder := NewRequestBuilder("POST")
+	builder.EnableGzipCompression = true
+	_, err = builder.ConstructHTTPURL("test.com", nil, nil)
+	assert.Nil(t, err)
+
+	// Create a JSON object and add it as a mime-part.
+	s := make([]string, 0)
+	for i := 0; i < 10000; i++ {
+		s = append(s, "This")
+		s = append(s, "is")
+		s = append(s, "a")
+		s = append(s, "test")
+		s = append(s, "of")
+		s = append(s, "the")
+		s = append(s, "emergency")
+		s = append(s, "broadcast")
+		s = append(s, "system")
+		s = append(s, "!")
+	}
+	jsonPart := make(map[string][]string)
+	jsonPart["string_slice"] = s
+	builder.AddFormData("json-part", "part1.json", "application/json", jsonPart)
+
+	// Add a string mime-part.
+	stringPart := "This is a string mime-part."
+	builder.AddFormData("string-part", "", "text/plain", stringPart)
+
+	request, err := builder.Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, request.Body)
+
+	// Make sure the Content-Encoding header was set.
+	contentEncoding := request.Header.Get(CONTENT_ENCODING)
+	assert.NotEmpty(t, contentEncoding)
+	assert.Equal(t, "gzip", contentEncoding)
+
+	// Validation for a request that contains form parts is a challenge because the
+	// content-disposition string associated with each mime-part is computed on the fly
+	// and not really accessible.
+	// So for this test, we'll check to make sure that within the entire gzip-decompressed
+	// request body, we can find the content associated with the two mime-parts.
+	actualBody := string(gzipDecompress(request.Body))
+
+	expectedJSONPart := toJSON(jsonPart)
+	assert.Contains(t, actualBody, expectedJSONPart)
+	assert.Contains(t, actualBody, stringPart)
 }
 
 func TestURLEncodedForm(t *testing.T) {

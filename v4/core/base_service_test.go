@@ -1183,6 +1183,21 @@ func TestSetServiceURL(t *testing.T) {
 	assert.Equal(t, "https://myserver.com/api/baseurl", service.GetServiceURL())
 }
 
+func TestSetEnableGzipCompression(t *testing.T) {
+	service, err := NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+		})
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+
+	assert.False(t, service.GetEnableGzipCompression())
+	assert.False(t, service.Options.EnableGzipCompression)
+
+	service.SetEnableGzipCompression(true)
+	assert.True(t, service.GetEnableGzipCompression())
+}
+
 func TestExtConfigFromCredentialFile(t *testing.T) {
 	pwd, _ := os.Getwd()
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
@@ -1198,6 +1213,31 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service1/api", service.Options.URL)
 	assert.NotNil(t, service.Client.Transport)
+	assert.True(t, service.GetEnableGzipCompression())
+
+	service, _ = NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+			URL:           "bad url",
+		})
+	err = service.ConfigureService("service2")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.Equal(t, "https://service2/api", service.Options.URL)
+	assert.Nil(t, service.Client.Transport)
+	assert.False(t, service.GetEnableGzipCompression())
+
+	service, _ = NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+			URL:           "bad url",
+		})
+	err = service.ConfigureService("service3")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.Equal(t, "https://service3/api", service.Options.URL)
+	assert.Nil(t, service.Client.Transport)
+	assert.False(t, service.GetEnableGzipCompression())
 
 	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
@@ -1231,6 +1271,7 @@ func TestExtConfigFromEnvironment(t *testing.T) {
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service3/api", service.Options.URL)
 	assert.Nil(t, service.Client.Transport)
+	assert.False(t, service.GetEnableGzipCompression())
 
 	clearTestEnvironment()
 }
@@ -1272,6 +1313,7 @@ func TestConfigureServiceFromCredFile(t *testing.T) {
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service5/api", service.Options.URL)
 	assert.NotNil(t, service.Client.Transport)
+	assert.False(t, service.GetEnableGzipCompression())
 
 	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
