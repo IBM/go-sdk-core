@@ -28,6 +28,7 @@ const (
 	// Service client properties.
 	PROPNAME_SVC_URL         = "URL"
 	PROPNAME_SVC_DISABLE_SSL = "DISABLE_SSL"
+	PROPNAME_SVC_ENABLE_GZIP = "ENABLE_GZIP"
 
 	// Authenticator properties.
 	PROPNAME_AUTH_TYPE        = "AUTH_TYPE"

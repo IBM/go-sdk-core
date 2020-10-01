@@ -44,6 +44,7 @@ const (
 	Accept                  = "Accept"
 	APPLICATION_JSON        = "application/json"
 	CONTENT_DISPOSITION     = "Content-Disposition"
+	CONTENT_ENCODING        = "Content-Encoding"
 	CONTENT_TYPE            = "Content-Type"
 	FORM_URL_ENCODED_HEADER = "application/x-www-form-urlencoded"
 
@@ -67,6 +68,14 @@ type RequestBuilder struct {
 	Body   io.Reader
 	Query  map[string][]string
 	Form   map[string][]FormData
+
+	// EnableGzipCompression indicates whether or not request bodies
+	// should be gzip-compressed.
+	// This field has no effect on response bodies.
+	// If enabled, the Body field will be gzip-compressed and
+	// the "Content-Encoding" header will be added to the request with the
+	// value "gzip".
+	EnableGzipCompression bool
 }
 
 // NewRequestBuilder initiates a new request.
@@ -303,6 +312,18 @@ func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
 				return nil, err
 			}
 		}
+	}
+
+	// If we have a request body and gzip is enabled, then wrap the body in a Gzip compression reader
+	// and add the "Content-Encoding: gzip" request header.
+	if !IsNil(requestBuilder.Body) && requestBuilder.EnableGzipCompression &&
+		!SliceContains(requestBuilder.Header[CONTENT_ENCODING], "gzip") {
+		newBody, err := NewGzipCompressionReader(requestBuilder.Body)
+		if err != nil {
+			return nil, err
+		}
+		requestBuilder.Body = newBody
+		requestBuilder.Header.Add(CONTENT_ENCODING, "gzip")
 	}
 
 	// Create the request

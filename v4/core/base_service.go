@@ -43,6 +43,14 @@ type ServiceOptions struct {
 	// service instance to authenticate outbound requests, typically by adding the
 	// HTTP "Authorization" header.
 	Authenticator Authenticator
+
+	// EnableGzipCompression indicates whether or not request bodies
+	// should be gzip-compressed.
+	// This field has no effect on response bodies.
+	// If enabled, the Body field will be gzip-compressed and
+	// the "Content-Encoding" header will be added to the request with the
+	// value "gzip".
+	EnableGzipCompression bool
 }
 
 // BaseService implements the common functionality shared by generated services
@@ -126,6 +134,15 @@ func (service *BaseService) ConfigureService(serviceName string) error {
 				service.DisableSSLVerification()
 			}
 		}
+
+		// ENABLE_GZIP
+		if enableGzip, ok := serviceProps[PROPNAME_SVC_ENABLE_GZIP]; ok && enableGzip != "" {
+			// Convert the config string to bool.
+			boolValue, err := strconv.ParseBool(enableGzip)
+			if err == nil {
+				service.SetEnableGzipCompression(boolValue)
+			}
+		}
 	}
 	return nil
 }
@@ -168,6 +185,16 @@ func (service *BaseService) DisableSSLVerification() {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	service.Client.Transport = tr
+}
+
+// SetEnableGzipCompression sets the service's EnableGzipCompression field
+func (service *BaseService) SetEnableGzipCompression(enableGzip bool) {
+	service.Options.EnableGzipCompression = enableGzip
+}
+
+// GetEnableGzipCompression returns the service's EnableGzipCompression field
+func (service *BaseService) GetEnableGzipCompression() bool {
+	return service.Options.EnableGzipCompression
 }
 
 // buildUserAgent builds the user agent string.

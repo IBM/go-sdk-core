@@ -463,3 +463,15 @@ func TestConvertSliceBadInput(t *testing.T) {
 	assert.Nil(t, convertedSlice)
 
 }
+
+func TestSliceContains(t *testing.T) {
+	theSlice := []string{"foo", "bar"}
+	assert.True(t, SliceContains(theSlice, "foo"))
+	assert.True(t, SliceContains(theSlice, "bar"))
+	assert.False(t, SliceContains(theSlice, "gzip"))
+
+	emptySlice := make([]string, 0)
+	assert.False(t, SliceContains(emptySlice, "foo"))
+
+	assert.False(t, SliceContains(nil, "foo"))
+}
