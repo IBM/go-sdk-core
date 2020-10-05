@@ -1,3 +1,10 @@
+# [4.6.0](https://github.com/IBM/go-sdk-core/compare/v4.5.1...v4.6.0) (2020-10-05)
+
+
+### Features
+
+* add support for gzip compression of request bodies ([397cbaa](https://github.com/IBM/go-sdk-core/commit/397cbaad5429b8810840fa82f8a1b187bd405c42)), closes [arf/planning-sdk-squad#2185](https://github.com/arf/planning-sdk-squad/issues/2185)
+
 ## [4.5.1](https://github.com/IBM/go-sdk-core/compare/v4.5.0...v4.5.1) (2020-09-25)
 
 
