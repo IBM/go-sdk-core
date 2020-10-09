@@ -27,6 +27,7 @@ import (
 var (
 	AccessToken1 string = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
 	AccessToken2 string = "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
+	RefreshToken string = "Xj7Gle500MachEOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
 )
 
 func TestIamConfigErrors(t *testing.T) {
@@ -98,8 +99,8 @@ func TestIamGetTokenSuccess(t *testing.T) {
 				"token_type": "Bearer",
 				"expires_in": 3600,
 				"expiration": %d,
-				"refresh_token": "jy4gl91BQ"
-			}`, AccessToken1, expiration)
+				"refresh_token": "%s"
+			}`, AccessToken1, expiration, RefreshToken)
 			firstCall = false
 			_, _, ok := r.BasicAuth()
 			assert.False(t, ok)
@@ -109,8 +110,8 @@ func TestIamGetTokenSuccess(t *testing.T) {
 				"token_type": "Bearer",
 				"expires_in": 3600,
 				"expiration": %d,
-				"refresh_token": "jy4gl91BQ"
-			}`, AccessToken2, expiration)
+				"refresh_token": "%s"
+			}`, AccessToken2, expiration, RefreshToken)
 			username, password, ok := r.BasicAuth()
 			assert.True(t, ok)
 			assert.Equal(t, "mookie", username)
@@ -137,6 +138,12 @@ func TestIamGetTokenSuccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator.tokenData)
 	assert.Equal(t, AccessToken2, authenticator.tokenData.AccessToken)
+
+	// Test the RequestToken() method to make sure we can get a RefreshToken.
+	tokenResponse, err := authenticator.RequestToken()
+	assert.Nil(t, err)
+	assert.NotNil(t, tokenResponse)
+	assert.Equal(t, RefreshToken, tokenResponse.RefreshToken)
 }
 
 func TestIamGetTokenSuccessWithScope(t *testing.T) {
@@ -470,7 +477,7 @@ func TestIamRefreshTimeCalculation(t *testing.T) {
 	const expected int64 = expireTime - 720 // 720 is 20% of 3600
 
 	// Simulate a token server response.
-	tokenResponse := &iamTokenServerResponse{
+	tokenResponse := &IamTokenServerResponse{
 		ExpiresIn:  timeToLive,
 		Expiration: expireTime,
 	}
