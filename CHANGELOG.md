@@ -1,3 +1,10 @@
+## [4.6.1](https://github.com/IBM/go-sdk-core/compare/v4.6.0...v4.6.1) (2020-10-12)
+
+
+### Bug Fixes
+
+* expose IamAuthenticator.requestToken as a public method ([c7f4cfd](https://github.com/IBM/go-sdk-core/commit/c7f4cfdbba3d94647aa9a823982f075c13112ad6))
+
 # [4.6.0](https://github.com/IBM/go-sdk-core/compare/v4.5.1...v4.6.0) (2020-10-05)
 
 
