@@ -1,6 +1,6 @@
-module github.com/IBM/go-sdk-core/v4
+module github.com/IBM/go-sdk-core/v5
 
-go 1.12
+go 1.13
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible

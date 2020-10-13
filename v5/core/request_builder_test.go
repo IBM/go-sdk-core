@@ -16,9 +16,14 @@ package core
 
 import (
 	"bytes"
+	"context"
+	"fmt"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	assert "github.com/stretchr/testify/assert"
 )
@@ -592,4 +597,79 @@ func TestBuild(t *testing.T) {
 	assert.NotNil(t, request)
 	assert.Equal(t, wantURL, request.URL.String())
 	assert.Equal(t, "Application/json", request.Header["Content-Type"][0])
+}
+
+func TestRequestWithContext(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, `{"name": "wonder woman"}`)
+	}))
+	defer server.Close()
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancelFunc()
+
+	builder := NewRequestBuilder("GET")
+	builder.RequestContext = &ctx
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	req, _ := builder.Build()
+
+	authenticator, _ := NewNoAuthAuthenticator()
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+
+	var foo *Foo
+	detailedResponse, err := service.Request(req, &foo)
+	assert.Nil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, http.StatusOK, detailedResponse.StatusCode)
+	assert.Equal(t, "application/json", detailedResponse.Headers.Get("Content-Type"))
+
+	result, ok := detailedResponse.Result.(*Foo)
+	assert.Equal(t, true, ok)
+	assert.NotNil(t, result)
+	assert.NotNil(t, foo)
+	assert.Equal(t, "wonder woman", *(result.Name))
+}
+
+func TestRequestWithContextTimeout(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		time.Sleep(3 * time.Second)
+		fmt.Fprint(w, `{"name": "wonder woman"}`)
+	}))
+	defer server.Close()
+
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancelFunc()
+
+	builder := NewRequestBuilder("GET")
+	builder.RequestContext = &ctx
+	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	assert.Nil(t, err)
+	req, _ := builder.Build()
+
+	authenticator, _ := NewNoAuthAuthenticator()
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+
+	var foo *Foo
+	detailedResponse, err := service.Request(req, &foo)
+	assert.NotNil(t, err)
+	t.Logf("Expected error: %s\n", err.Error())
+	assert.Contains(t, err.Error(), "context deadline exceeded")
+	assert.Nil(t, detailedResponse)
 }

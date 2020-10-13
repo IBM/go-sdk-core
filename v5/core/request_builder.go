@@ -16,6 +16,7 @@ package core
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -76,6 +77,13 @@ type RequestBuilder struct {
 	// the "Content-Encoding" header will be added to the request with the
 	// value "gzip".
 	EnableGzipCompression bool
+
+	// RequestContext can be used by users of RequestBuilder to provide an
+	// optional context.Context instance to be associated with the http.Request
+	// instance that will be built by the Build() method.
+	// If specified, then http.NewRequestWithContext() is used to create the
+	// http.Request instance.  If nil, then http.NewRequest() is used instead.
+	RequestContext *context.Context
 }
 
 // NewRequestBuilder initiates a new request.
@@ -275,7 +283,7 @@ func (requestBuilder *RequestBuilder) SetBodyContentForMultipart(contentType str
 }
 
 // Build builds an HTTP Request object from this RequestBuilder instance.
-func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
+func (requestBuilder *RequestBuilder) Build() (req *http.Request, err error) {
 	// Create multipart form data
 	if len(requestBuilder.Form) > 0 {
 		// handle both application/x-www-form-urlencoded or multipart/form-data
@@ -287,29 +295,31 @@ func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
 					data.Add(fieldName, v.contents.(string))
 				}
 			}
-			_, err := requestBuilder.SetBodyContentString(data.Encode())
+			_, err = requestBuilder.SetBodyContentString(data.Encode())
 			if err != nil {
-				return nil, err
+				return
 			}
 		} else {
 			formWriter := requestBuilder.createMultipartWriter()
 			for fieldName, l := range requestBuilder.Form {
 				for _, v := range l {
-					dataPartWriter, err := createFormFile(formWriter, fieldName, v.fileName, v.contentType)
+					var dataPartWriter io.Writer
+					dataPartWriter, err = createFormFile(formWriter, fieldName, v.fileName, v.contentType)
 					if err != nil {
-						return nil, err
+						return
 					}
-					if err = requestBuilder.SetBodyContentForMultipart(v.contentType,
-						v.contents, dataPartWriter); err != nil {
-						return nil, err
+
+					err = requestBuilder.SetBodyContentForMultipart(v.contentType, v.contents, dataPartWriter)
+					if err != nil {
+						return
 					}
 				}
 			}
 
 			requestBuilder.AddHeader("Content-Type", formWriter.FormDataContentType())
-			err := formWriter.Close()
+			err = formWriter.Close()
 			if err != nil {
-				return nil, err
+				return
 			}
 		}
 	}
@@ -318,18 +328,23 @@ func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
 	// and add the "Content-Encoding: gzip" request header.
 	if !IsNil(requestBuilder.Body) && requestBuilder.EnableGzipCompression &&
 		!SliceContains(requestBuilder.Header[CONTENT_ENCODING], "gzip") {
-		newBody, err := NewGzipCompressionReader(requestBuilder.Body)
+		var newBody io.Reader
+		newBody, err = NewGzipCompressionReader(requestBuilder.Body)
 		if err != nil {
-			return nil, err
+			return
 		}
 		requestBuilder.Body = newBody
 		requestBuilder.Header.Add(CONTENT_ENCODING, "gzip")
 	}
 
 	// Create the request
-	req, err := http.NewRequest(requestBuilder.Method, requestBuilder.URL.String(), requestBuilder.Body)
+	if requestBuilder.RequestContext != nil {
+		req, err = http.NewRequestWithContext(*requestBuilder.RequestContext, requestBuilder.Method, requestBuilder.URL.String(), requestBuilder.Body)
+	} else {
+		req, err = http.NewRequest(requestBuilder.Method, requestBuilder.URL.String(), requestBuilder.Body)
+	}
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	// Headers
@@ -345,7 +360,7 @@ func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
 	// Encode query
 	req.URL.RawQuery = query.Encode()
 
-	return req, nil
+	return
 }
 
 // SetBodyContent sets the body content from one of three different sources.
