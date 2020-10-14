@@ -16,6 +16,7 @@ package core
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -76,6 +77,10 @@ type RequestBuilder struct {
 	// the "Content-Encoding" header will be added to the request with the
 	// value "gzip".
 	EnableGzipCompression bool
+
+	// RequestContext is an optional Context instance to be associated with the
+	// http.Request that is constructed by the Build() method.
+	ctx context.Context
 }
 
 // NewRequestBuilder initiates a new request.
@@ -86,6 +91,13 @@ func NewRequestBuilder(method string) *RequestBuilder {
 		Query:  make(map[string][]string),
 		Form:   make(map[string][]FormData),
 	}
+}
+
+// WithContext sets "ctx" as the Context to be associated with
+// the http.Request instance that will be constructed by the Build() method.
+func (requestBuilder *RequestBuilder) WithContext(ctx context.Context) *RequestBuilder {
+	requestBuilder.ctx = ctx
+	return requestBuilder
 }
 
 // ConstructHTTPURL creates a properly-encoded URL with path parameters.
@@ -275,7 +287,7 @@ func (requestBuilder *RequestBuilder) SetBodyContentForMultipart(contentType str
 }
 
 // Build builds an HTTP Request object from this RequestBuilder instance.
-func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
+func (requestBuilder *RequestBuilder) Build() (req *http.Request, err error) {
 	// Create multipart form data
 	if len(requestBuilder.Form) > 0 {
 		// handle both application/x-www-form-urlencoded or multipart/form-data
@@ -287,29 +299,30 @@ func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
 					data.Add(fieldName, v.contents.(string))
 				}
 			}
-			_, err := requestBuilder.SetBodyContentString(data.Encode())
+			_, err = requestBuilder.SetBodyContentString(data.Encode())
 			if err != nil {
-				return nil, err
+				return
 			}
 		} else {
 			formWriter := requestBuilder.createMultipartWriter()
 			for fieldName, l := range requestBuilder.Form {
 				for _, v := range l {
-					dataPartWriter, err := createFormFile(formWriter, fieldName, v.fileName, v.contentType)
+					var dataPartWriter io.Writer
+					dataPartWriter, err = createFormFile(formWriter, fieldName, v.fileName, v.contentType)
 					if err != nil {
-						return nil, err
+						return
 					}
 					if err = requestBuilder.SetBodyContentForMultipart(v.contentType,
 						v.contents, dataPartWriter); err != nil {
-						return nil, err
+						return
 					}
 				}
 			}
 
 			requestBuilder.AddHeader("Content-Type", formWriter.FormDataContentType())
-			err := formWriter.Close()
+			err = formWriter.Close()
 			if err != nil {
-				return nil, err
+				return
 			}
 		}
 	}
@@ -327,9 +340,9 @@ func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
 	}
 
 	// Create the request
-	req, err := http.NewRequest(requestBuilder.Method, requestBuilder.URL.String(), requestBuilder.Body)
+	req, err = http.NewRequest(requestBuilder.Method, requestBuilder.URL.String(), requestBuilder.Body)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	// Headers
@@ -342,10 +355,16 @@ func (requestBuilder *RequestBuilder) Build() (*http.Request, error) {
 			query.Add(k, v)
 		}
 	}
+
 	// Encode query
 	req.URL.RawQuery = query.Encode()
 
-	return req, nil
+	// Finally, if a Context should be associated with the new Request instance, then set it.
+	if !IsNil(requestBuilder.ctx) {
+		req = req.WithContext(requestBuilder.ctx)
+	}
+
+	return
 }
 
 // SetBodyContent sets the body content from one of three different sources.
