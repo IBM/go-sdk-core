@@ -32,9 +32,9 @@ Before opening a new issue, please search for similar issues. It's possible that
 
 ## Tests
 
-Run all test suites:
+To build, test and lint-check the project:
 ```bash
-go test ./...
+make all
 ```
 
 Get code coverage for each test suite:
