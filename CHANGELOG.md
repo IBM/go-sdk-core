@@ -1,3 +1,10 @@
+# [4.7.0](https://github.com/IBM/go-sdk-core/compare/v4.6.1...v4.7.0) (2020-10-15)
+
+
+### Features
+
+* support use of Context with RequestBuilder ([d8e3f71](https://github.com/IBM/go-sdk-core/commit/d8e3f71f4296364478bc613e163e3c7d73c379da)), closes [arf/planning-sdk-squad#2230](https://github.com/arf/planning-sdk-squad/issues/2230) [#77](https://github.com/IBM/go-sdk-core/issues/77)
+
 ## [4.6.1](https://github.com/IBM/go-sdk-core/compare/v4.6.0...v4.6.1) (2020-10-12)
 
 
