@@ -16,20 +16,27 @@ package core
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	cleanhttp "github.com/hashicorp/go-cleanhttp"
+	retryablehttp "github.com/hashicorp/go-retryablehttp"
 )
 
 const (
-	header_name_USER_AGENT = "User-Agent"
-	sdk_name               = "ibm-go-sdk-core"
+	headerNameUserAgent = "User-Agent"
+	sdkName             = "ibm-go-sdk-core"
 )
 
 // ServiceOptions is a struct of configuration values for a service.
@@ -90,9 +97,7 @@ func NewBaseService(options *ServiceOptions) (*BaseService, error) {
 	service := BaseService{
 		Options: options,
 
-		Client: &http.Client{
-			Timeout: time.Second * 30,
-		},
+		Client: DefaultHTTPClient(),
 	}
 
 	// Set a default value for the User-Agent http header.
@@ -180,11 +185,31 @@ func (service *BaseService) SetHTTPClient(client *http.Client) {
 }
 
 // DisableSSLVerification skips SSL verification.
+// This function sets a new http.Client instance on the service
+// and configures it to bypass verification of server certificates
+// and host names, making the client susceptible to "man-in-the-middle"
+// attacks.  This should be used only for testing.
 func (service *BaseService) DisableSSLVerification() {
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	client := DefaultHTTPClient()
+	tr, ok := client.Transport.(*http.Transport)
+	if tr != nil && ok {
+		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
-	service.Client.Transport = tr
+
+	service.SetHTTPClient(client)
+}
+
+// IsSSLDisabled returns true if and only if the service's http.Client instance
+// is configured to skip verification of server SSL certificates.
+func (service *BaseService) IsSSLDisabled() bool {
+	if service.Client != nil {
+		if tr, ok := service.Client.Transport.(*http.Transport); tr != nil && ok {
+			if tr.TLSClientConfig != nil {
+				return tr.TLSClientConfig.InsecureSkipVerify
+			}
+		}
+	}
+	return false
 }
 
 // SetEnableGzipCompression sets the service's EnableGzipCompression field
@@ -199,7 +224,7 @@ func (service *BaseService) GetEnableGzipCompression() bool {
 
 // buildUserAgent builds the user agent string.
 func (service *BaseService) buildUserAgent() string {
-	return fmt.Sprintf("%s-%s %s", sdk_name, __VERSION__, SystemInfo())
+	return fmt.Sprintf("%s-%s %s", sdkName, __VERSION__, SystemInfo())
 }
 
 // SetUserAgent sets the user agent value.
@@ -235,9 +260,9 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	}
 
 	// Add the default User-Agent header if not already present.
-	userAgent := req.Header.Get(header_name_USER_AGENT)
+	userAgent := req.Header.Get(headerNameUserAgent)
 	if userAgent == "" {
-		req.Header.Add(header_name_USER_AGENT, service.UserAgent)
+		req.Header.Add(headerNameUserAgent, service.UserAgent)
 	}
 
 	// Add authentication to the outbound request.
@@ -256,8 +281,25 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		return
 	}
 
-	// Invoke the request.
-	httpResponse, err := service.Client.Do(req)
+	var httpResponse *http.Response
+
+	// Try to get the retryable Client hidden inside service.Client
+	retryableClient := getRetryableHTTPClient(service.Client)
+	if retryableClient != nil {
+		retryableRequest, retryableErr := retryablehttp.FromRequest(req)
+		if retryableErr != nil {
+			err = fmt.Errorf(ERRORMSG_CREATE_RETRYABLE_REQ, retryableErr.Error())
+			return
+		}
+
+		// Invoke the retryable request.
+		httpResponse, err = retryableClient.Do(retryableRequest)
+	} else {
+		// Invoke the normal (non-retryable) request.
+		httpResponse, err = service.Client.Do(req)
+	}
+
+	// Check for errors during the invocation.
 	if err != nil {
 		if strings.Contains(err.Error(), SSL_CERTIFICATION_ERROR) {
 			err = fmt.Errorf(ERRORMSG_SSL_VERIFICATION_FAILED + "\n" + err.Error())
@@ -450,4 +492,158 @@ func getErrorMessage(responseMap map[string]interface{}, statusCode int) string 
 	// If we couldn't find an error message above, just return the generic text
 	// for the status code.
 	return http.StatusText(statusCode)
+}
+
+// EnableRetries will construct a "retryable" HTTP Client with the specified
+// configuration, and then set it on the service instance.
+// If maxRetries and/or maxRetryInterval are specified as 0, then default values
+// are used instead.
+func (service *BaseService) EnableRetries(maxRetries int, maxRetryInterval time.Duration) {
+	client := NewRetryableHTTPClient()
+	if maxRetries > 0 {
+		client.RetryMax = maxRetries
+	}
+	if maxRetryInterval > 0 {
+		client.RetryWaitMax = maxRetryInterval
+	}
+
+	service.SetHTTPClient(client.StandardClient())
+}
+
+// DisableRetries will disable automatic retries by constructing a new
+// default (non-retryable) HTTP Client instance and setting it on the service.
+func (service *BaseService) DisableRetries() {
+	service.SetHTTPClient(DefaultHTTPClient())
+}
+
+// DefaultHTTPClient returns a non-retryable http client with default configuration.
+func DefaultHTTPClient() *http.Client {
+	return cleanhttp.DefaultPooledClient()
+}
+
+// httpLogger is a shim layer used to allow the Go core's logger to be used with the retryablehttp interfaces.
+type httpLogger struct {
+}
+
+func (l *httpLogger) Printf(format string, inserts ...interface{}) {
+	GetLogger().Log(LevelDebug, format, inserts...)
+}
+
+// NewRetryableHTTPClient returns a new instance of go-retryablehttp.Client
+// with a default configuration that supports Go SDK usage.
+func NewRetryableHTTPClient() *retryablehttp.Client {
+	client := retryablehttp.NewClient()
+	client.Logger = &httpLogger{}
+	client.CheckRetry = IBMCloudSDKRetryPolicy
+	client.Backoff = IBMCloudSDKBackoffPolicy
+	client.ErrorHandler = retryablehttp.PassthroughErrorHandler
+	return client
+}
+
+// getRetryableHTTPClient returns the "retryable" Client hidden inside the specified http.Client instance
+// or nil if "client" is not hiding a retryable Client instance.
+func getRetryableHTTPClient(client *http.Client) *retryablehttp.Client {
+	if client != nil {
+		if client.Transport != nil {
+			// A retryable client will have its Transport field set to an
+			// instance of retryablehttp.RoundTripper.
+			if rt, ok := client.Transport.(*retryablehttp.RoundTripper); ok {
+				return rt.Client
+			}
+		}
+	}
+	return nil
+}
+
+var (
+	// A regular expression to match the error returned by net/http when the
+	// configured number of redirects is exhausted. This error isn't typed
+	// specifically so we resort to matching on the error string.
+	redirectsErrorRe = regexp.MustCompile(`stopped after \d+ redirects\z`)
+
+	// A regular expression to match the error returned by net/http when the
+	// scheme specified in the URL is invalid. This error isn't typed
+	// specifically so we resort to matching on the error string.
+	schemeErrorRe = regexp.MustCompile(`unsupported protocol scheme`)
+)
+
+// IBMCloudSDKRetryPolicy provides a default implementation of the CheckRetry interface
+// associated with a retryablehttp.Client.
+// This function will return true if the specified request/response should be retried.
+func IBMCloudSDKRetryPolicy(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	// This logic was adapted from go-relyablehttp.ErrorPropagatedRetryPolicy().
+
+	// Do not retry on a Context-related error (Canceled or DeadlineExceeded).
+	if ctx.Err() != nil {
+		return false, ctx.Err()
+	}
+
+	// Next, check for a few non-retryable errors.
+	if err != nil {
+		if v, ok := err.(*url.Error); ok {
+			// Don't retry if the error was due to too many redirects.
+			if redirectsErrorRe.MatchString(v.Error()) {
+				return false, v
+			}
+
+			// Don't retry if the error was due to an invalid protocol scheme.
+			if schemeErrorRe.MatchString(v.Error()) {
+				return false, v
+			}
+
+			// Don't retry if the error was due to TLS cert verification failure.
+			if _, ok := v.Err.(x509.UnknownAuthorityError); ok {
+				return false, v
+			}
+		}
+
+		// The error is likely recoverable so retry.
+		return true, nil
+	}
+
+	// Now check the status code.
+
+	// A 429 should be retryable.
+	if resp.StatusCode == 429 {
+		return true, nil
+	}
+
+	// Check the response code. We retry on 500-range responses to allow
+	// the server time to recover, as 500's are typically not permanent
+	// errors and may relate to outages on the server side. This will catch
+	// invalid response codes as well, like 0 and 999.
+	if resp.StatusCode == 0 || (resp.StatusCode >= 500 && resp.StatusCode != 501) {
+		return true, fmt.Errorf(ERRORMSG_UNEXPECTED_STATUS_CODE, resp.StatusCode, resp.Status)
+	}
+
+	return false, nil
+}
+
+// IBMCloudSDKBackoffPolicy provides a default implementation of the Backoff interface
+// associated with a retryablehttp.Client.
+// This function will return the wait time to be associated with the next retry attempt.
+func IBMCloudSDKBackoffPolicy(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration {
+	// Check for a Retry-After header.
+	if resp != nil {
+		if s, ok := resp.Header["Retry-After"]; ok {
+			// First, try to parse the value as an integer (number of seconds to wait)
+			if sleep, err := strconv.ParseInt(s[0], 10, 64); err == nil {
+				return time.Second * time.Duration(sleep)
+			}
+
+			// Otherwise, try to parse the value as an HTTP Time value.
+			if retryTime, err := http.ParseTime(s[0]); err == nil {
+				sleep := time.Until(retryTime)
+				if sleep > max {
+					sleep = max
+				}
+				return sleep
+			}
+
+		}
+	}
+
+	// If no header-based wait time can be determined, then ask DefaultBackoff()
+	// to compute an exponential backoff.
+	return retryablehttp.DefaultBackoff(min, max, attemptNum, resp)
 }

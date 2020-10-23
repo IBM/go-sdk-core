@@ -1,3 +1,7 @@
+// +build all fast
+
+package core
+
 /**
  * (C) Copyright IBM Corp. 2020.
  *
@@ -14,15 +18,14 @@
  * limitations under the License.
  */
 
-package core
-
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // This simulates a generated model with its unmarshal function.

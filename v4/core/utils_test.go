@@ -1,3 +1,5 @@
+// +build all fast
+
 package core
 
 // (C) Copyright IBM Corp. 2019.

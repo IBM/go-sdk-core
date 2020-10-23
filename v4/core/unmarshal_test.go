@@ -1,3 +1,7 @@
+// +build all fast
+
+package core
+
 /**
  * (C) Copyright IBM Corp. 2019.
  *
@@ -13,16 +17,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package core
 
 import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCopyMap(t *testing.T) {

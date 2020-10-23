@@ -1,3 +1,5 @@
+// +build all fast auth
+
 package core
 
 // (C) Copyright IBM Corp. 2019.

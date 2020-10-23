@@ -1,3 +1,5 @@
+// +build all fast basesvc
+
 package core
 
 // (C) Copyright IBM Corp. 2020.
@@ -16,20 +18,10 @@ package core
 
 import (
 	"bytes"
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func toJSON(obj interface{}) string {
-	buf := new(bytes.Buffer)
-	err := json.NewEncoder(buf).Encode(obj)
-	if err != nil {
-		panic(err)
-	}
-	return buf.String()
-}
 
 func testRoundTripBytes(t *testing.T, src []byte) {
 	// Compress the input string and store in a buffer.

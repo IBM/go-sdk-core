@@ -8,10 +8,10 @@ build:
 	cd ${VDIR} && go build ./...
 
 test:
-	cd ${VDIR} && go test ./...
+	cd ${VDIR} && go test -tags=all ./...
 
 lint:
-	cd ${VDIR} && golangci-lint run
+	cd ${VDIR} && golangci-lint run --build-tags=all
 
 tidy:
 	cd ${VDIR} && go mod tidy

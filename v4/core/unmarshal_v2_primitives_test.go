@@ -1,3 +1,7 @@
+// +build all fast
+
+package core
+
 /**
  * (C) Copyright IBM Corp. 2020.
  *
@@ -14,16 +18,15 @@
  * limitations under the License.
  */
 
-package core
-
 import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/go-openapi/strfmt"
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
+
+	"github.com/go-openapi/strfmt"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUnmarshalPrimitiveString(t *testing.T) {
