@@ -1,3 +1,5 @@
+// +build all fast basesvc
+
 package core
 
 // (C) Copyright IBM Corp. 2019.

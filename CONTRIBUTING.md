@@ -43,17 +43,31 @@ If you want to contribute to the repository, here's a quick guide:
   6. Test your changes:
      ```sh
      make test
-     ```  
-  
-  7. Check your code for lint issues
+     ```
+     The above command will run all the unit tests with the command `go test -tags=all`.
+     Each unit test file contains one or more build tags as a way to classify the
+     tests into various groups (example: `// +build all fast auth`).
+     Currently, these tags include: all, slow, fast, auth, basesvc, log and retries.
+     Others might be added in the future.
+     To run a specific class of tests (example 'retries'), use a command like this:
+     ```
+     cd v4/core
+     go test -tags=retries
+     ```
+     
+  7. Check your code for lint issues:
      ```sh
      make lint
-     ```  
+     ```
   
-  8. Commit your changes:
+  8. Alternatively, to build, test and lint check in one step:
+     ```sh
+     make all
+     ```
+  9. Commit your changes:
   * Commit messages should follow the Angular commit message guidelines as mentioned above.
   
-  9. Push your commit(s) to your fork and submit a pull request to the **master** branch.
+  10. Push your commit(s) to your fork and submit a pull request to the **master** branch.
 
 # Developer's Certificate of Origin 1.1
 

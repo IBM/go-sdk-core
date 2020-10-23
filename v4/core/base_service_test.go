@@ -1,6 +1,8 @@
+// +build all fast basesvc
+
 package core
 
-// (C) Copyright IBM Corp. 2019.
+// (C) Copyright IBM Corp. 2019, 2020.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,12 +32,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type Foo struct {
-	Name *string `json:"name,omitempty"`
-}
-
 // Test a normal JSON-based response.
-func TestGoodResponseJSON(t *testing.T) {
+func TestRequestGoodResponseJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -76,7 +74,7 @@ func TestGoodResponseJSON(t *testing.T) {
 }
 
 // Test a JSON-based response that should be returned as a stream (io.ReadCloser).
-func TestGoodResponseJSONStream(t *testing.T) {
+func TestRequestGoodResponseJSONStream(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -126,7 +124,7 @@ func TestGoodResponseJSONStream(t *testing.T) {
 }
 
 // Verify that extra fields in result are silently ignored.
-func TestGoodResponseJSONExtraFields(t *testing.T) {
+func TestRequestGoodResponseJSONExtraFields(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -154,7 +152,7 @@ func TestGoodResponseJSONExtraFields(t *testing.T) {
 }
 
 // Test a binary response.
-func TestGoodResponseStream(t *testing.T) {
+func TestRequestGoodResponseStream(t *testing.T) {
 	expectedResponse := []byte("This is an octet stream response.")
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/octet-stream")
@@ -194,7 +192,7 @@ func TestGoodResponseStream(t *testing.T) {
 }
 
 // Test a text response.
-func TestGoodResponseText(t *testing.T) {
+func TestRequestGoodResponseText(t *testing.T) {
 	expectedResponse := "This is a text response."
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "text/plain")
@@ -230,7 +228,7 @@ func TestGoodResponseText(t *testing.T) {
 }
 
 // Test a string response.
-func TestGoodResponseString(t *testing.T) {
+func TestRequestGoodResponseString(t *testing.T) {
 	expectedBytes := []byte("This is a string response.")
 	expectedResponse := string(expectedBytes)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -273,7 +271,7 @@ func TestGoodResponseString(t *testing.T) {
 }
 
 // Test a non-JSON response with no Content-Type set.
-func TestGoodResponseNonJSONNoContentType(t *testing.T) {
+func TestRequestGoodResponseNonJSONNoContentType(t *testing.T) {
 	expectedResponse := []byte("This is a non-json response.")
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "")
@@ -313,7 +311,7 @@ func TestGoodResponseNonJSONNoContentType(t *testing.T) {
 }
 
 // Test a JSON response that causes a deserialization error.
-func TestGoodResponseJSONDeserFailure(t *testing.T) {
+func TestRequestGoodResponseJSONDeserFailure(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		fmt.Fprint(w, `{"name": {"unknown_object_id": "abc123"}}`)
@@ -344,7 +342,7 @@ func TestGoodResponseJSONDeserFailure(t *testing.T) {
 }
 
 // Test a good response with no response body.
-func TestGoodResponseNoBody(t *testing.T) {
+func TestRequestGoodResponseNoBody(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 	}))
@@ -417,7 +415,7 @@ var jsonErrorResponse string = `{
 var nonJsonErrorResponse string = `This is a non-JSON error response body.`
 
 // Test an error response with a JSON response body.
-func TestErrorResponseJSON(t *testing.T) {
+func TestRequestErrorResponseJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -452,7 +450,7 @@ func TestErrorResponseJSON(t *testing.T) {
 }
 
 // Test an error response with an invalid JSON response body.
-func TestErrorResponseJSONDeserError(t *testing.T) {
+func TestRequestErrorResponseJSONDeserError(t *testing.T) {
 	var expectedResponse = []byte(`"{"this is a malformed": "json object".......`)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
@@ -485,7 +483,7 @@ func TestErrorResponseJSONDeserError(t *testing.T) {
 }
 
 // Test error response with a non-JSON response body.
-func TestErrorResponseNotJSON(t *testing.T) {
+func TestRequestErrorResponseNotJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "text/plain")
 		w.WriteHeader(http.StatusBadRequest)
@@ -519,7 +517,7 @@ func TestErrorResponseNotJSON(t *testing.T) {
 }
 
 // Test an error response with no response body.
-func TestErrorResponseNoBody(t *testing.T) {
+func TestRequestErrorResponseNoBody(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
@@ -636,12 +634,12 @@ func TestDisableSSLVerification(t *testing.T) {
 		Authenticator: &NoAuthAuthenticator{},
 	}
 	service, _ := NewBaseService(options)
-	assert.Nil(t, service.Client.Transport)
+	assert.False(t, service.IsSSLDisabled())
 	service.DisableSSLVerification()
-	assert.NotNil(t, service.Client.Transport)
+	assert.True(t, service.IsSSLDisabled())
 }
 
-func TestBasicAuth1(t *testing.T) {
+func TestRequestBasicAuth1(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
@@ -675,7 +673,7 @@ func TestBasicAuth1(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestBasicAuth2(t *testing.T) {
+func TestRequestBasicAuth2(t *testing.T) {
 	firstTime := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -739,7 +737,7 @@ func TestBasicAuthConfigError(t *testing.T) {
 	assert.Nil(t, service)
 }
 
-func TestNoAuth1(t *testing.T) {
+func TestRequestNoAuth1(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		assert.Equal(t, "", r.Header.Get("Authorization"))
@@ -768,7 +766,7 @@ func TestNoAuth1(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestNoAuth2(t *testing.T) {
+func TestRequestNoAuth2(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		assert.Equal(t, "", r.Header.Get("Authorization"))
@@ -804,7 +802,7 @@ func TestNoAuth2(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestIAMAuth(t *testing.T) {
+func TestRequestIAMAuth(t *testing.T) {
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -861,7 +859,7 @@ func TestIAMAuth(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestIAMFailure(t *testing.T) {
+func TestRequestIAMFailure(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		_, _ = w.Write([]byte("Sorry you are forbidden"))
@@ -897,7 +895,7 @@ func TestIAMFailure(t *testing.T) {
 	assert.Contains(t, err.Error(), "Sorry you are forbidden")
 }
 
-func TestIAMFailureRetryAfter(t *testing.T) {
+func TestRequestIAMFailureRetryAfter(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Retry-After", "20")
 		w.WriteHeader(http.StatusTooManyRequests)
@@ -936,7 +934,7 @@ func TestIAMFailureRetryAfter(t *testing.T) {
 	assert.Contains(t, err.Error(), "Sorry rate limit has been exceeded")
 }
 
-func TestIAMWithIdSecret(t *testing.T) {
+func TestRequestIAMWithIdSecret(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		body, _ := ioutil.ReadAll(r.Body)
@@ -1007,7 +1005,7 @@ func TestIAMErrorClientSecretOnly(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestIAMNoApiKey(t *testing.T) {
+func TestRequestIAMNoApiKey(t *testing.T) {
 	_, err := NewBaseService(
 		&ServiceOptions{
 			URL: "don't care",
@@ -1020,7 +1018,7 @@ func TestIAMNoApiKey(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestCP4DAuth(t *testing.T) {
+func TestRequestCP4DAuth(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if strings.Contains(r.URL.String(), "preauth") {
@@ -1069,7 +1067,7 @@ func TestCP4DAuth(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestCP4DFail(t *testing.T) {
+func TestRequestCP4DFail(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		_, _ = w.Write([]byte("Sorry you are forbidden"))
@@ -1106,7 +1104,7 @@ func TestCP4DFail(t *testing.T) {
 	assert.Contains(t, err.Error(), "Sorry you are forbidden")
 }
 
-func TestCp4dFailureRetryAfter(t *testing.T) {
+func TestRequestCp4dFailureRetryAfter(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Retry-After", "20")
 		w.WriteHeader(http.StatusTooManyRequests)
@@ -1212,7 +1210,7 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service1/api", service.Options.URL)
-	assert.NotNil(t, service.Client.Transport)
+	assert.True(t, service.IsSSLDisabled())
 	assert.True(t, service.GetEnableGzipCompression())
 
 	service, _ = NewBaseService(
@@ -1224,7 +1222,7 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service2/api", service.Options.URL)
-	assert.Nil(t, service.Client.Transport)
+	assert.False(t, service.IsSSLDisabled())
 	assert.False(t, service.GetEnableGzipCompression())
 
 	service, _ = NewBaseService(
@@ -1236,7 +1234,7 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service3/api", service.Options.URL)
-	assert.Nil(t, service.Client.Transport)
+	assert.False(t, service.IsSSLDisabled())
 	assert.False(t, service.GetEnableGzipCompression())
 
 	os.Unsetenv("IBM_CREDENTIALS_FILE")
@@ -1270,7 +1268,7 @@ func TestExtConfigFromEnvironment(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service3/api", service.Options.URL)
-	assert.Nil(t, service.Client.Transport)
+	assert.False(t, service.IsSSLDisabled())
 	assert.False(t, service.GetEnableGzipCompression())
 
 	clearTestEnvironment()
@@ -1288,7 +1286,7 @@ func TestExtConfigFromVCAP(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service2/api", service.Options.URL)
-	assert.Nil(t, service.Client.Transport)
+	assert.False(t, service.IsSSLDisabled())
 
 	clearTestVCAP()
 }
@@ -1302,7 +1300,7 @@ func TestConfigureServiceFromCredFile(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "bad url", service.Options.URL)
-	assert.Nil(t, service.Client.Transport)
+	assert.False(t, service.IsSSLDisabled())
 
 	pwd, _ := os.Getwd()
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
@@ -1312,7 +1310,7 @@ func TestConfigureServiceFromCredFile(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service5/api", service.Options.URL)
-	assert.NotNil(t, service.Client.Transport)
+	assert.True(t, service.IsSSLDisabled())
 	assert.False(t, service.GetEnableGzipCompression())
 
 	os.Unsetenv("IBM_CREDENTIALS_FILE")
@@ -1333,7 +1331,7 @@ func TestConfigureServiceFromVCAP(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service3/api", service.Options.URL)
-	assert.Nil(t, service.Client.Transport)
+	assert.False(t, service.IsSSLDisabled())
 
 	clearTestVCAP()
 }
@@ -1347,14 +1345,14 @@ func TestConfigureServiceFromEnv(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "bad url", service.Options.URL)
-	assert.Nil(t, service.Client.Transport)
+	assert.False(t, service.IsSSLDisabled())
 
 	setTestEnvironment()
 	err = service.ConfigureService("service_1")
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service1/api", service.Options.URL)
-	assert.NotNil(t, service.Client.Transport)
+	assert.True(t, service.IsSSLDisabled())
 
 	clearTestEnvironment()
 }
