@@ -1,3 +1,10 @@
+# [4.8.0](https://github.com/IBM/go-sdk-core/compare/v4.7.1...v4.8.0) (2020-10-27)
+
+
+### Features
+
+* introduce support for automatic retries ([39bc64c](https://github.com/IBM/go-sdk-core/commit/39bc64c933fce5961382099367e0de875657e223)), closes [arf/planning-sdk-squad#2229](https://github.com/arf/planning-sdk-squad/issues/2229)
+
 ## [4.7.1](https://github.com/IBM/go-sdk-core/compare/v4.7.0...v4.7.1) (2020-10-26)
 
 
