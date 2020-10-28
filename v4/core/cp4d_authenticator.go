@@ -246,6 +246,7 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (*cp4dTokenSer
 		// If the user told us to disable SSL verification, then do it now.
 		if authenticator.DisableSSLVerification {
 			transport := &http.Transport{
+				/* #nosec G402 */
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			}
 			authenticator.Client.Transport = transport
