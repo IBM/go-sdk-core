@@ -29,6 +29,7 @@ import (
 const (
 	DEFAULT_IAM_URL             = "https://iam.cloud.ibm.com/identity/token"
 	DEFAULT_CONTENT_TYPE        = "application/x-www-form-urlencoded"
+	/* #nosec G101 */
 	REQUEST_TOKEN_GRANT_TYPE    = "urn:ibm:params:oauth:grant-type:apikey"
 	REQUEST_TOKEN_RESPONSE_TYPE = "cloud_iam"
 )
@@ -293,6 +294,7 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 		// If the user told us to disable SSL verification, then do it now.
 		if authenticator.DisableSSLVerification {
 			transport := &http.Transport{
+				/* #nosec G402 */
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			}
 			authenticator.Client.Transport = transport
