@@ -28,6 +28,7 @@ import (
 	"path"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -1212,6 +1213,7 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 	assert.Equal(t, "https://service1/api", service.Options.URL)
 	assert.True(t, service.IsSSLDisabled())
 	assert.True(t, service.GetEnableGzipCompression())
+	assert.Nil(t, getRetryableHTTPClient(service.Client))
 
 	service, _ = NewBaseService(
 		&ServiceOptions{
@@ -1225,6 +1227,13 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 	assert.False(t, service.IsSSLDisabled())
 	assert.False(t, service.GetEnableGzipCompression())
 
+	// Verify retryable client enabled with default config.
+	actualClient := getRetryableHTTPClient(service.Client)
+	assert.NotNil(t, actualClient)
+	expectedClient := NewRetryableHTTPClient()
+	assert.Equal(t, expectedClient.RetryMax, actualClient.RetryMax)
+	assert.Equal(t, expectedClient.RetryWaitMax, actualClient.RetryWaitMax)
+
 	service, _ = NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
@@ -1236,6 +1245,25 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 	assert.Equal(t, "https://service3/api", service.Options.URL)
 	assert.False(t, service.IsSSLDisabled())
 	assert.False(t, service.GetEnableGzipCompression())
+	assert.Nil(t, getRetryableHTTPClient(service.Client))
+
+	service, _ = NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+			URL:           "bad url",
+		})
+	err = service.ConfigureService("service4")
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.Equal(t, "https://service4/api", service.Options.URL)
+	assert.False(t, service.IsSSLDisabled())
+	assert.False(t, service.GetEnableGzipCompression())
+
+	// Verify retryable client with specified config
+	actualClient = getRetryableHTTPClient(service.Client)
+	assert.NotNil(t, actualClient)
+	assert.Equal(t, int(5), actualClient.RetryMax)
+	assert.Equal(t, time.Duration(10)*time.Second, actualClient.RetryWaitMax)
 
 	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }

@@ -148,6 +148,35 @@ func (service *BaseService) ConfigureService(serviceName string) error {
 				service.SetEnableGzipCompression(boolValue)
 			}
 		}
+
+		// ENABLE_RETRIES
+		// If "ENABLE_RETRIES" is set to true, then we'll also try to retrieve "MAX_RETRIES" and
+		// "RETRY_INTERVAL".  If those are not specified, we'll use 0 to trigger a default value for each.
+		if enableRetries, ok := serviceProps[PROPNAME_SVC_ENABLE_RETRIES]; ok && enableRetries != "" {
+			boolValue, err := strconv.ParseBool(enableRetries)
+			if boolValue && err == nil {
+				var maxRetries int = 0
+				var retryInterval time.Duration = 0
+
+				var s string
+				var ok bool
+				if s, ok = serviceProps[PROPNAME_SVC_MAX_RETRIES]; ok && s != "" {
+					n, err := strconv.ParseInt(s, 10, 32)
+					if err == nil {
+						maxRetries = int(n)
+					}
+				}
+
+				if s, ok = serviceProps[PROPNAME_SVC_RETRY_INTERVAL]; ok && s != "" {
+					n, err := strconv.ParseInt(s, 10, 32)
+					if err == nil {
+						retryInterval = time.Duration(n) * time.Second
+					}
+				}
+
+				service.EnableRetries(maxRetries, retryInterval)
+			}
+		}
 	}
 	return nil
 }
