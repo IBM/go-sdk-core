@@ -1,3 +1,10 @@
+## [4.8.1](https://github.com/IBM/go-sdk-core/compare/v4.8.0...v4.8.1) (2020-10-30)
+
+
+### Bug Fixes
+
+* support enable-retries via external configuration ([2f88b9f](https://github.com/IBM/go-sdk-core/commit/2f88b9f5962c7acb20ef6335522a5a0c3fec90ce))
+
 # [4.8.0](https://github.com/IBM/go-sdk-core/compare/v4.7.1...v4.8.0) (2020-10-27)
 
 
