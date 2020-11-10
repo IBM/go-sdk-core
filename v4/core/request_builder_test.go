@@ -133,39 +133,39 @@ func TestResolveRequestURLErrors(t *testing.T) {
 }
 
 func TestConstructHTTPURL(t *testing.T) {
-	endPoint := "https://gateway.watsonplatform.net/assistant/api"
+	endPoint := "https://api.us-south.assistant.watson.cloud.ibm.com"
 	pathSegments := []string{"v1/workspaces", "message"}
 	pathParameters := []string{"xxxxx"}
 	request := setup()
-	want := "https://gateway.watsonplatform.net/assistant/api/v1/workspaces/xxxxx/message"
+	want := "https://api.us-south.assistant.watson.cloud.ibm.com/v1/workspaces/xxxxx/message"
 	_, err := request.ConstructHTTPURL(endPoint, pathSegments, pathParameters)
 	assert.Nil(t, err)
 	assert.Equal(t, want, request.URL.String(), "Invalid construction of url")
 }
 
 func TestConstructHTTPURLWithNoPathParam(t *testing.T) {
-	endPoint := "https://gateway.watsonplatform.net/assistant/api"
+	endPoint := "https://api.us-south.assistant.watson.cloud.ibm.com"
 	pathSegments := []string{"v1/workspaces"}
 	request := setup()
-	want := "https://gateway.watsonplatform.net/assistant/api/v1/workspaces"
+	want := "https://api.us-south.assistant.watson.cloud.ibm.com/v1/workspaces"
 	_, err := request.ConstructHTTPURL(endPoint, pathSegments, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, want, request.URL.String(), "Invalid construction of url")
 }
 
 func TestConstructHTTPURLWithEmptyPathSegments(t *testing.T) {
-	endPoint := "https://gateway.watsonplatform.net/assistant/api"
+	endPoint := "https://api.us-south.assistant.watson.cloud.ibm.com"
 	pathSegments := []string{"v1/workspaces", "", "segment", ""}
 	pathParameters := []string{"param1", "param2", "param3", "param4"}
 	request := setup()
-	want := "https://gateway.watsonplatform.net/assistant/api/v1/workspaces/param1/param2/segment/param3/param4"
+	want := "https://api.us-south.assistant.watson.cloud.ibm.com/v1/workspaces/param1/param2/segment/param3/param4"
 	_, err := request.ConstructHTTPURL(endPoint, pathSegments, pathParameters)
 	assert.Nil(t, err)
 	assert.Equal(t, want, request.URL.String(), "Invalid construction of url")
 }
 
 func TestConstructHTTPURLWithEmptyPathParam(t *testing.T) {
-	endPoint := "https://gateway.watsonplatform.net/assistant/api"
+	endPoint := "https://api.us-south.assistant.watson.cloud.ibm.com"
 	pathSegments := []string{"v1/workspaces", "segment"}
 	pathParameters := []string{""}
 	request := setup()
@@ -575,10 +575,10 @@ func TestBuildWithMultipartFormWithRepeatedKeys(t *testing.T) {
 }
 
 func TestBuild(t *testing.T) {
-	endPoint := "https://gateway.watsonplatform.net/assistant/api"
+	endPoint := "https://api.us-south.assistant.watson.cloud.ibm.com"
 	pathSegments := []string{"v1/workspaces", "message"}
 	pathParameters := []string{"xxxxx"}
-	wantURL := "https://gateway.watsonplatform.net/assistant/api/xxxxx/v1/workspaces?Version=2018-22-09"
+	wantURL := "https://api.us-south.assistant.watson.cloud.ibm.com/xxxxx/v1/workspaces?Version=2018-22-09"
 
 	testStructure := &TestStructure{
 		Name: "wonder woman",

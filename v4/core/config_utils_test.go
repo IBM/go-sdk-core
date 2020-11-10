@@ -260,7 +260,7 @@ func TestLoadFromVCAPServicesWithInvalidJSON(t *testing.T) {
 	vcapServicesFail := `{
 		"watson": [
 			"credentials": {
-				"url": "https://gateway.watsonplatform.net/compare-comply/api",
+				"url": "https://api.us-south.compare-comply.watson.cloud.ibm.com",
 				"username": "bogus username",
 				"password": "bogus password",
 				"apikey": "bogus apikey"
