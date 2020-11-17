@@ -1,3 +1,10 @@
+## [4.8.2](https://github.com/IBM/go-sdk-core/compare/v4.8.1...v4.8.2) (2020-11-17)
+
+
+### Bug Fixes
+
+* improve serialization of DateTime values ([410fdae](https://github.com/IBM/go-sdk-core/commit/410fdaeafef209b8c0ab3c954b1c886fedcf1bca)), closes [arf/planning-sdk-squad#2313](https://github.com/arf/planning-sdk-squad/issues/2313)
+
 ## [4.8.1](https://github.com/IBM/go-sdk-core/compare/v4.8.0...v4.8.1) (2020-10-30)
 
 
