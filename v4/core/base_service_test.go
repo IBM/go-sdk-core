@@ -33,6 +33,33 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestClone(t *testing.T) {
+	var service *BaseService = nil
+	var err error
+
+	// Verify nil.Clone() == nil
+	assert.Nil(t, service.Clone())
+
+	// Verify a non-nil service is cloned correctly.
+	options := &ServiceOptions{
+		URL:           "https://myservice.ibm.com/api/v1",
+		Authenticator: &NoAuthAuthenticator{},
+	}
+	service, err = NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, "https://myservice.ibm.com/api/v1", service.Options.URL)
+
+	clone := service.Clone()
+	assert.NotNil(t, clone)
+	assert.Equal(t, service.Client, clone.Client)
+	assert.Equal(t, service.UserAgent, clone.UserAgent)
+	assert.Equal(t, service.DefaultHeaders, clone.DefaultHeaders)
+	assert.Equal(t, service.Options.URL, clone.Options.URL)
+	assert.Equal(t, service.Options.Authenticator, clone.Options.Authenticator)
+	assert.Equal(t, service.Options.EnableGzipCompression, clone.Options.EnableGzipCompression)
+}
+
 // Test a normal JSON-based response.
 func TestRequestGoodResponseJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -59,6 +86,9 @@ func TestRequestGoodResponseJSON(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
+
+	// Use a cloned service to verify it works ok.
+	service = service.Clone()
 
 	var foo *Foo
 	detailedResponse, err := service.Request(req, &foo)
@@ -100,6 +130,9 @@ func TestRequestGoodResponseJSONStream(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
+
+	// Use a cloned service to verify it works ok.
+	service = service.Clone()
 
 	detailedResponse, err := service.Request(req, new(io.ReadCloser))
 	assert.Nil(t, err)
@@ -143,6 +176,9 @@ func TestRequestGoodResponseJSONExtraFields(t *testing.T) {
 		Authenticator: &NoAuthAuthenticator{},
 	}
 	service, _ := NewBaseService(options)
+
+	// Use a cloned service to verify it works ok.
+	service = service.Clone()
 
 	var foo *Foo
 	detailedResponse, _ := service.Request(req, &foo)
