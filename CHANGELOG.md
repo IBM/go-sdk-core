@@ -1,3 +1,10 @@
+# [4.9.0](https://github.com/IBM/go-sdk-core/compare/v4.8.2...v4.9.0) (2020-12-03)
+
+
+### Features
+
+* **BaseService:** add Clone() method to clone a BaseService instance ([45b40ee](https://github.com/IBM/go-sdk-core/commit/45b40eeeebfbbab858e079d61d6b2219d45ef75b))
+
 ## [4.8.2](https://github.com/IBM/go-sdk-core/compare/v4.8.1...v4.8.2) (2020-11-17)
 
 
