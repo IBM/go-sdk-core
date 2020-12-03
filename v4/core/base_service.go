@@ -106,6 +106,24 @@ func NewBaseService(options *ServiceOptions) (*BaseService, error) {
 	return &service, nil
 }
 
+// Clone will return a copy of "service" suitable for use by a
+// generated service instance to process requests.
+func (service *BaseService) Clone() *BaseService {
+	if IsNil(service) {
+		return nil
+	}
+
+	// First, copy the service options struct.
+	serviceOptions := *service.Options
+
+	// Next, make a copy the service struct, then use the copy of the service options.
+	// Note, we'll re-use the "Client" instance from the original BaseService instance.
+	clone := *service
+	clone.Options = &serviceOptions
+
+	return &clone
+}
+
 // ConfigureService updates the service with external configuration values.
 func (service *BaseService) ConfigureService(serviceName string) error {
 	// Try to load service properties from external config.
