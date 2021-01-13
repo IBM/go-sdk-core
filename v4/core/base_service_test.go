@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2019, 2020.
+// (C) Copyright IBM Corp. 2019, 2021.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ func TestRequestGoodResponseJSON(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("POST")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	req, _ := builder.Build()
 
@@ -114,7 +114,7 @@ func TestRequestGoodResponseJSONStream(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("POST")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	req, _ := builder.Build()
 
@@ -167,7 +167,7 @@ func TestRequestGoodResponseJSONExtraFields(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	req, _ := builder.Build()
 
@@ -198,7 +198,7 @@ func TestRequestGoodResponseStream(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	req, _ := builder.Build()
 
@@ -238,7 +238,7 @@ func TestRequestGoodResponseText(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	req, _ := builder.Build()
 
@@ -275,7 +275,7 @@ func TestRequestGoodResponseString(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	req, _ := builder.Build()
 
@@ -317,7 +317,7 @@ func TestRequestGoodResponseNonJSONNoContentType(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	req, _ := builder.Build()
 
@@ -356,7 +356,7 @@ func TestRequestGoodResponseJSONDeserFailure(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	req, _ := builder.Build()
 
@@ -386,7 +386,7 @@ func TestRequestGoodResponseNoBody(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	req, _ := builder.Build()
 
@@ -449,7 +449,7 @@ var jsonErrorResponse string = `{
 }`
 
 // Example of a non-JSON error response body.
-var nonJsonErrorResponse string = `This is a non-JSON error response body.`
+var nonJSONErrorResponse string = `This is a non-JSON error response body.`
 
 // Test an error response with a JSON response body.
 func TestRequestErrorResponseJSON(t *testing.T) {
@@ -461,7 +461,7 @@ func TestRequestErrorResponseJSON(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
@@ -497,7 +497,7 @@ func TestRequestErrorResponseJSONDeserError(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
@@ -524,12 +524,12 @@ func TestRequestErrorResponseNotJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "text/plain")
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, nonJsonErrorResponse)
+		fmt.Fprint(w, nonJSONErrorResponse)
 	}))
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
@@ -549,7 +549,7 @@ func TestRequestErrorResponseNotJSON(t *testing.T) {
 	assert.Nil(t, response.Result)
 	assert.NotNil(t, response.RawResult)
 	s := string(response.RawResult)
-	assert.Equal(t, nonJsonErrorResponse, s)
+	assert.Equal(t, nonJSONErrorResponse, s)
 	assert.Equal(t, http.StatusText(http.StatusBadRequest), err.Error())
 }
 
@@ -561,7 +561,7 @@ func TestRequestErrorResponseNoBody(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
@@ -608,7 +608,7 @@ func TestRequestForDefaultUserAgent(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
@@ -634,7 +634,7 @@ func TestRequestForProvidedUserAgent(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddHeader("Content-Type", "Application/json").
 		AddQuery("Version", "2018-22-09")
@@ -700,7 +700,7 @@ func TestRequestBasicAuth1(t *testing.T) {
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
@@ -729,7 +729,7 @@ func TestRequestBasicAuth2(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
@@ -782,7 +782,7 @@ func TestRequestNoAuth1(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
@@ -811,7 +811,7 @@ func TestRequestNoAuth2(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
@@ -863,7 +863,7 @@ func TestRequestIAMAuth(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
@@ -904,7 +904,7 @@ func TestRequestIAMFailure(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
@@ -941,7 +941,7 @@ func TestRequestIAMFailureRetryAfter(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
@@ -994,7 +994,7 @@ func TestRequestIAMWithIdSecret(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
@@ -1055,33 +1055,25 @@ func TestRequestIAMNoApiKey(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+const (
+	// #nosec
+	cp4dString = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3R1c2VyIiwicm9sZSI6IlVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhY2Nlc3NfY2F0YWxvZyIsImNhbl9wcm92aXNpb24iLCJzaWduX2luX29ubHkiXSwiZ3JvdXBzIjpbMTAwMDBdLCJzdWIiOiJ0ZXN0dXNlciIsImlzcyI6IktOT1hTU08iLCJhdWQiOiJEU1giLCJ1aWQiOiIxMDAwMzMxMDAzIiwiYXV0aGVudGljYXRvciI6ImRlZmF1bHQiLCJpYXQiOjE2MTA0ODg2NzAsImV4cCI6MTYxMDUzMTgzNH0.K5Mqsv3E9MMXotuhUWbAcTUe41thzSaiFOolnvNxIVPwApSJr_VappL8GTR6BgwPz5gB4MX9w8mVsh0vX8g5naRHWryKNxloHiWiOzCpI982EACkb7Lvdpo5vq_wOANM4OW5Q7cyWXMrqQMz1wF-4-1EyYHBbAKWWGmSQZ6iW7wgMxoeP027vGTD96IVFhgOrvX1hEBDMZ0S9gfKU0bthUMEDKoWONcFuWlHQChhh7agjP2RS4d3Rcjx2oHtx_zuH5bEXxn9g4Dj2v9Bkn6aOFQivSGFUlaus_6opZ6x5aCPi6SXnO_xOY_f2XKU-DUg-yN5BeX7fXu35JQTGFcgwQ"
+)
+
 func TestRequestCP4DAuth(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		if strings.Contains(r.URL.String(), "preauth") {
-			fmt.Fprint(w, `{
-			"username":"hello",
-			"role":"user",
-			"permissions":[
-				"administrator",
-				"deployment_admin"
-			],
-			"sub":"hello",
-			"iss":"John",
-			"aud":"DSX",
-			"uid":"999",
-			"accessToken":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI",
-			"_messageCode_":"success",
-			"message":"success"
-		}`)
+		if strings.HasSuffix(r.URL.String(), "/v1/authorize") {
+			fmt.Fprintf(w, `{"token":"%s","_messageCode_":"200","message":"success"}`, cp4dString)
 		} else {
-			assert.Equal(t, "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI", r.Header.Get("Authorization"))
+			expectedAuthHeader := fmt.Sprintf("Bearer %s", cp4dString)
+			assert.Equal(t, expectedAuthHeader, r.Header.Get("Authorization"))
 		}
 	}))
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
@@ -1112,7 +1104,7 @@ func TestRequestCP4DFail(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
@@ -1150,7 +1142,7 @@ func TestRequestCp4dFailureRetryAfter(t *testing.T) {
 	defer server.Close()
 
 	builder := NewRequestBuilder("GET")
-	_, err := builder.ConstructHTTPURL(server.URL, nil, nil)
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
 	assert.Nil(t, err)
 	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
