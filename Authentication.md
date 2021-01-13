@@ -35,7 +35,7 @@ each outbound request in the `Authorization` header in the form:
 ### Programming example
 ```go
 import {
-    "github.com/IBM/go-sdk-core/core"
+    "github.com/IBM/go-sdk-core/v4/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -65,7 +65,7 @@ export EXAMPLE_SERVICE_PASSWORD=mypassword
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/core"
+    "github.com/IBM/go-sdk-core/v4/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -94,7 +94,7 @@ each outbound request in the `Authorization` header in the form:
 ### Programming example
 ```go
 import {
-    "github.com/IBM/go-sdk-core/core"
+    "github.com/IBM/go-sdk-core/v4/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -127,7 +127,7 @@ export EXAMPLE_SERVICE_BEARER_TOKEN=<the bearer token value>
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/core"
+    "github.com/IBM/go-sdk-core/v4/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -181,7 +181,7 @@ by the user, a suitable default Client will be constructed.
 ### Programming example
 ```go
 import {
-    "github.com/IBM/go-sdk-core/core"
+    "github.com/IBM/go-sdk-core/v4/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -209,7 +209,7 @@ export EXAMPLE_SERVICE_APIKEY=myapikey
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/core"
+    "github.com/IBM/go-sdk-core/v4/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -228,7 +228,8 @@ service := exampleservicev1.NewExampleServiceV1(options)
 ```
 
 ##  Cloud Pak for Data
-The `CloudPakForDataAuthenticator` will accept user-supplied username and password values, and will 
+The `CloudPakForDataAuthenticator` will accept a user-supplied username value, along with either a
+password or apikey, and will 
 perform the necessary interactions with the Cloud Pak for Data token service to obtain a suitable
 bearer token.  The authenticator will also obtain a new bearer token when the current token expires.
 The bearer token is then added to each outbound request in the `Authorization` header in the
@@ -238,8 +239,12 @@ form:
 ```
 ### Properties
 - Username: (required) the username used to obtain a bearer token.
-- Password: (required) the password used to obtain a bearer token.
-- URL: (required) The URL representing the Cloud Pak for Data token service endpoint.
+- Password: (required if APIKey is not specified) the user's password used to obtain a bearer token.
+Exactly one of Password or APIKey should be specified.
+- APIKey: (required if Password is not specified) the user's apikey used to obtain a bearer token.
+Exactly one of Password or APIKey should be specified.
+- URL: (required) The URL representing the Cloud Pak for Data token service endpoint's base URL string.
+This value should not include the `/v1/authorize` path portion.
 - DisableSSLVerification: (optional) A flag that indicates whether verificaton of the server's SSL 
 certificate should be disabled or not. The default value is `false`.
 - Headers: (optional) A set of key/value pairs that will be sent as HTTP headers in requests
@@ -249,20 +254,27 @@ by the user, a suitable default Client will be constructed.
 ### Programming example
 ```go
 import {
-    "github.com/IBM/go-sdk-core/core"
+    "github.com/IBM/go-sdk-core/v4/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Create the authenticator.
-authenticator := &core.CloudPakForDataAuthenticator{
+// Create the authenticator using username/password.
+authenticator1 := &core.CloudPakForDataAuthenticator{
     Username: "myuser",
     Password: "mypassword",
     URL: "https://mycp4dhost.com/",
 }
 
-// Create the service options struct.
+// Alternatively, create the authenticator using username/apikey.
+authenticator2 := &core.CloudPakForDataAuthenticator{
+    Username: "myuser",
+    APIKey: "myapikey",
+    URL: "https://mycp4dhost.com/",
+}
+
+// Create the service options struct using one of the authenticators above.
 options := &exampleservicev1.ExampleServiceV1Options{
-    Authenticator: authenticator,
+    Authenticator: authenticator1,
 }
 
 // Construct the service instance.
@@ -273,20 +285,27 @@ service := exampleservicev1.NewExampleServiceV1(options)
 ### Configuration example
 External configuration:
 ```
-export EXAMPLE_SERVICE_AUTH_TYPE=cp4d
-export EXAMPLE_SERVICE_USERNAME=myuser
-export EXAMPLE_SERVICE_PASSWORD=mypassword
-export EXAMPLE_SERVICE_URL=https://mycp4dhost.com/
+# Configure "example_service1" with username/password.
+export EXAMPLE_SERVICE1_AUTH_TYPE=cp4d
+export EXAMPLE_SERVICE1_USERNAME=myuser
+export EXAMPLE_SERVICE1_PASSWORD=mypassword
+export EXAMPLE_SERVICE1_URL=https://mycp4dhost.com/
+
+# Configure "example_service2" with username/apikey.
+export EXAMPLE_SERVICE2_AUTH_TYPE=cp4d
+export EXAMPLE_SERVICE2_USERNAME=myuser
+export EXAMPLE_SERVICE2_APIKEY=myapikey
+export EXAMPLE_SERVICE2_URL=https://mycp4dhost.com/
 ```
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/core"
+    "github.com/IBM/go-sdk-core/v4/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Construct the authenticator from external configuration information for service "example_service".
-authenticator := &core.GetAuthenticatorFromEnvironment("example_service")
+// Construct the authenticator from external configuration information for service "example_service1".
+authenticator := &core.GetAuthenticatorFromEnvironment("example_service1")
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
@@ -305,7 +324,7 @@ None
 ### Programming example
 ```go
 import {
-    "github.com/IBM/go-sdk-core/core"
+    "github.com/IBM/go-sdk-core/v4/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -330,7 +349,7 @@ export EXAMPLE_SERVICE_AUTH_TYPE=noauth
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/core"
+    "github.com/IBM/go-sdk-core/v4/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
