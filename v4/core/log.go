@@ -50,27 +50,48 @@ type SDKLoggerImpl struct {
 	// will be displayed.
 	logLevel LogLevel
 
-	// The underlying log.Logger instance that will be used to log each message.
-	goLogger *log.Logger
+	// The underlying log.Logger instance that will be used to log messages to Stdout
+	goLoggerStdout *log.Logger
 
-	loggerInit sync.Once
+	// The underlying log.Logger instance that will be used to log messages to Stederr
+	goLoggerStderr *log.Logger
+
+	loggerInitStdout sync.Once
+	loggerInitStderr sync.Once
 }
 
-// logImpl returns the underlying log.Logger instance to be used to do the actual logging.
-func (l *SDKLoggerImpl) logImpl() *log.Logger {
-	l.loggerInit.Do(func() {
-		if l.goLogger == nil {
-			l.goLogger = log.New(os.Stdout, "", log.LstdFlags)
+// logStdoutImpl returns the underlying log.Logger instance to be used to do the actual logging to Stdout
+func (l *SDKLoggerImpl) logStdoutImpl() *log.Logger {
+	l.loggerInitStdout.Do(func() {
+		if l.goLoggerStdout == nil {
+			l.goLoggerStdout = log.New(os.Stdout, "", log.LstdFlags)
 		}
 	})
 
-	return l.goLogger
+	return l.goLoggerStdout
+}
+
+// logStderrImpl returns the underlying log.Logger instance to be used to do the actual logging to Stderr
+func (l *SDKLoggerImpl) logStderrImpl() *log.Logger {
+	l.loggerInitStderr.Do(func() {
+		if l.goLoggerStderr == nil {
+			l.goLoggerStderr = log.New(os.Stderr, "", log.LstdFlags)
+		}
+	})
+
+	return l.goLoggerStderr
 }
 
 // Log will log the specified message if "level" is currently enabled.
 func (l *SDKLoggerImpl) Log(level LogLevel, format string, inserts ...interface{}) {
-	if level <= l.logLevel {
-		l.logImpl().Printf(format, inserts...)
+	if level > l.logLevel {
+		return
+	}
+
+	if level == LevelError {
+		l.logStderrImpl().Printf(format, inserts...)
+	} else {
+		l.logStdoutImpl().Printf(format, inserts...)
 	}
 }
 
@@ -100,7 +121,9 @@ func (l *SDKLoggerImpl) Debug(format string, inserts ...interface{}) {
 func NewLogger(level LogLevel, stdLogger *log.Logger) *SDKLoggerImpl {
 	return &SDKLoggerImpl{
 		logLevel: level,
-		goLogger: stdLogger,
+		// if a user provides their own logger, use it everywhere
+		goLoggerStdout: stdLogger,
+		goLoggerStderr: stdLogger,
 	}
 }
 

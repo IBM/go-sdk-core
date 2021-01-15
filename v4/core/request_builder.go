@@ -22,6 +22,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/http/httputil"
 	"net/textproto"
 	"net/url"
 	"os"
@@ -362,6 +363,12 @@ func (requestBuilder *RequestBuilder) Build() (req *http.Request, err error) {
 	// Finally, if a Context should be associated with the new Request instance, then set it.
 	if !IsNil(requestBuilder.ctx) {
 		req = req.WithContext(requestBuilder.ctx)
+	}
+
+	// Provide a way for the user to print out the request, for debugging purposes
+	dumpedRequest, dumpErr := httputil.DumpRequestOut(req, req.Body != nil)
+	if dumpErr == nil {
+		GetLogger().Debug("Request:\n" + string(dumpedRequest))
 	}
 
 	return
