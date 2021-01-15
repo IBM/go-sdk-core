@@ -1,3 +1,10 @@
+# [4.10.0](https://github.com/IBM/go-sdk-core/compare/v4.9.0...v4.10.0) (2021-01-15)
+
+
+### Features
+
+* support username/apikey use-case in CloudPakForDataAuthenticator ([4e72735](https://github.com/IBM/go-sdk-core/commit/4e72735ec034d9993a22b462e2d116c984ac6cfb)), closes [arf/planning-sdk-squad#2344](https://github.com/arf/planning-sdk-squad/issues/2344)
+
 # [4.9.0](https://github.com/IBM/go-sdk-core/compare/v4.8.2...v4.9.0) (2020-12-03)
 
 
