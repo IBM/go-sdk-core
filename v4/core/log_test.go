@@ -123,3 +123,27 @@ func TestLogDebug(t *testing.T) {
 	l.Debug("debug msg")
 	assert.Equal(t, "[Debug] debug msg\n", buf.String())
 }
+
+func TestSetLoggingLevel(t *testing.T) {
+	buf, l := stringLogger(LevelError)
+
+	SetLogger(l)
+
+	l.Debug("debug msg")
+	assert.Empty(t, buf.String())
+	buf.Reset()
+
+	GetLogger().Debug("debug msg")
+	assert.Empty(t, buf.String())
+	buf.Reset()
+
+	SetLoggingLevel(LevelDebug)
+
+	l.Debug("debug msg")
+	assert.Equal(t, "[Debug] debug msg\n", buf.String())
+	buf.Reset()
+
+	GetLogger().Debug("debug msg")
+	assert.Equal(t, "[Debug] debug msg\n", buf.String())
+	buf.Reset()
+}

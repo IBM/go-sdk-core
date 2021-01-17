@@ -36,6 +36,8 @@ const (
 // Users of the library can supply their own implementation by calling SetLogger().
 type Logger interface {
 	Log(level LogLevel, format string, inserts ...interface{})
+	// TODO: add in next major release
+	//SetLogLevel(level LogLevel)
 	Error(format string, inserts ...interface{})
 	Warn(format string, inserts ...interface{})
 	Info(format string, inserts ...interface{})
@@ -94,6 +96,11 @@ func (l *SDKLoggerImpl) Debug(format string, inserts ...interface{}) {
 	l.Log(LevelDebug, "[Debug] "+format, inserts...)
 }
 
+// Sets the loglevel of the target logger to "level"
+func (l *SDKLoggerImpl) SetLogLevel(level LogLevel) {
+	l.logLevel = level
+}
+
 // NewLogger constructs an SDKLoggerImpl instance with the specified logging level
 // enabled and the specified log.Logger instance as the underlying logger to use.
 // If "stdLogger" is nil, then a default log.Logger instance will be used.
@@ -119,5 +126,9 @@ func GetLogger() Logger {
 
 // SetLoggingLevel will enable the specified logging level in the Go core library.
 func SetLoggingLevel(level LogLevel) {
-	SetLogger(NewLogger(level, nil))
+	if l, ok := sdkLogger.(*SDKLoggerImpl); ok {
+		l.SetLogLevel(level)
+	} else {
+		SetLogger(NewLogger(level, nil))
+	}
 }
