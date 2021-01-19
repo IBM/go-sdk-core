@@ -744,7 +744,7 @@ func TestCp4dGetTokenServerError(t *testing.T) {
 // CP4DTEST2_AUTH_DISABLE_SSL=true
 //
 // Then uncomment the function below, then run these commands:
-// cd v4/core
+// cd v<major-version>/core
 // go test -v -tags=auth -run=TestCp4dListTokenServer
 //
 
