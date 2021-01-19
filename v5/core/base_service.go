@@ -1,6 +1,6 @@
 package core
 
-// (C) Copyright IBM Corp. 2019, 2020.
+// (C) Copyright IBM Corp. 2019, 2021.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"reflect"
 	"regexp"
@@ -329,6 +330,16 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		return
 	}
 
+	// If debug is enabled, then dump the request.
+	if GetLogger().IsLogLevelEnabled(LevelDebug) {
+		buf, dumpErr := httputil.DumpRequestOut(req, req.Body != nil)
+		if dumpErr == nil {
+			GetLogger().Debug(fmt.Sprintf("Request:\n%s\n", string(buf)))
+		} else {
+			GetLogger().Debug(fmt.Sprintf("error while attempting to log outbound request: %s", dumpErr.Error()))
+		}
+	}
+
 	var httpResponse *http.Response
 
 	// Try to get the retryable Client hidden inside service.Client
@@ -353,6 +364,16 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			err = fmt.Errorf(ERRORMSG_SSL_VERIFICATION_FAILED + "\n" + err.Error())
 		}
 		return
+	}
+
+	// If debug is enabled, then dump the response.
+	if GetLogger().IsLogLevelEnabled(LevelDebug) {
+		buf, dumpErr := httputil.DumpResponse(httpResponse, httpResponse.Body != nil)
+		if err == nil {
+			GetLogger().Debug(fmt.Sprintf("Response:\n%s\n", string(buf)))
+		} else {
+			GetLogger().Debug(fmt.Sprintf("error while attempting to log inbound response: %s", dumpErr.Error()))
+		}
 	}
 
 	// Start to populate the DetailedResponse.

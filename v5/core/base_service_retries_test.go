@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2020.
+// (C) Copyright IBM Corp. 2020, 2021.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,7 +61,8 @@ var _ = Describe(`Retry scenarios`, func() {
 	var server *httptest.Server
 
 	BeforeEach(func() {
-		SetLogger(NewLogger(LevelDebug, log.New(GinkgoWriter, "", log.LstdFlags)))
+		goLogger := log.New(GinkgoWriter, "", log.LstdFlags)
+		SetLogger(NewLogger(LevelDebug, goLogger, goLogger))
 	})
 
 	Describe(`Error scenarios`, func() {
