@@ -1,3 +1,43 @@
+# [5.0.0](https://github.com/IBM/go-sdk-core/compare/v4.10.0...v5.0.0) (2021-01-20)
+
+
+### Features
+
+* add debug logging of requests/responses ([37e6597](https://github.com/IBM/go-sdk-core/commit/37e65976c10d9371794646030fb7905ba3a495f4))
+
+
+### BREAKING CHANGES
+
+* several methods added to Logger interface
+
+Several methods were added to the Go core's Logger interface:
+SetLogLevel(), GetLogLevel(), and IsLogLevelEnabled().
+These additional methods will need to be added to any
+user implementations of the Logger interface.
+* additional parameter added to NewLogger() signature
+
+The NewLogger() function has a new parameter "errorLogger".
+Any calls to NewLogger() will need to be modified to include the
+new parameter.
+* deprecated unmarshal-related methods have been removed
+
+Several deprecated unmarshal-related methods were removed from the Go core:
+- UnmarshalString, UnmarshalStringSlice, UnmarshalStringMap, UnmarshalStringMapSlice
+- UnmarshalByteArray, UnmarshalByteArraySlice, UnmarshalByteArrayMap, UnmarshalByteArrayMapSlice
+- UnmarshalBool, UnmarshalBoolSlice, UnmarshalBoolMap, UnmarshalBoolMapSlice
+- UnmarshalInt64, UnmarshalInt64Slice, UnmarshalInt64Map, UnmarshalInt64MapSlice
+- UnmarshalFloat32, UnmarshalFloat32Slice, UnmarshalFloat32Map, UnmarshalFloat32MapSlice
+- UnmarshalFloat64, UnmarshalFloat64Slice, UnmarshalFloat64Map, UnmarshalFloat64MapSlice
+- UnmarshalUUID, UnmarshalUUIDSlice, UnmarshalUUIDMap, UnmarshalUUIDMapSlice
+- UnmarshalDate, UnmarshalDateSlice, UnmarshalDateMap, UnmarshalDateMapSlice
+- UnmarshalDateTime, UnmarshalDateTimeSlice, UnmarshalDateTimeMap, UnmarshalDateTimeMapSlice
+- UnmarshalObject, UnmarshalObjectSlice
+- UnmarshalAny, UnmarshalAnySlice, UnmarshalAnyMap, UnmarshalAnyMapSlice
+These methods are no longer used by code emitted by the Go generator.  If you
+have old generated Go code that still uses these methods, then you should continue
+using version 4 of the Go core, or regenerate your SDK code using a new version of the
+SDK generator.
+
 # [4.10.0](https://github.com/IBM/go-sdk-core/compare/v4.9.0...v4.10.0) (2021-01-15)
 
 
