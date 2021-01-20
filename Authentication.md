@@ -35,7 +35,7 @@ each outbound request in the `Authorization` header in the form:
 ### Programming example
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v4/core"
+    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -65,7 +65,7 @@ export EXAMPLE_SERVICE_PASSWORD=mypassword
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v4/core"
+    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -94,7 +94,7 @@ each outbound request in the `Authorization` header in the form:
 ### Programming example
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v4/core"
+    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -127,7 +127,7 @@ export EXAMPLE_SERVICE_BEARER_TOKEN=<the bearer token value>
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v4/core"
+    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -181,7 +181,7 @@ by the user, a suitable default Client will be constructed.
 ### Programming example
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v4/core"
+    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -209,7 +209,7 @@ export EXAMPLE_SERVICE_APIKEY=myapikey
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v4/core"
+    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -254,7 +254,7 @@ by the user, a suitable default Client will be constructed.
 ### Programming example
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v4/core"
+    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -300,7 +300,7 @@ export EXAMPLE_SERVICE2_URL=https://mycp4dhost.com/
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v4/core"
+    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -324,7 +324,7 @@ None
 ### Programming example
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v4/core"
+    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
@@ -349,7 +349,7 @@ export EXAMPLE_SERVICE_AUTH_TYPE=noauth
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v4/core"
+    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
