@@ -2,10 +2,12 @@
 
 VDIR=v5
 
-all: build test lint tidy
+COV_OPTS=-coverprofile=coverage.txt -covermode=atomic
 
-build:
-	cd ${VDIR} && go build ./...
+all: testcov lint tidy
+
+testcov:
+	cd ${VDIR} && go test -tags=all ${COV_OPTS} ./...
 
 test:
 	cd ${VDIR} && go test -tags=all ./...
