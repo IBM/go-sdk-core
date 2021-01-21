@@ -11,7 +11,7 @@ node_modules/
 vendor/
 
 * coverage
-core/coverage.out
+coverage.txt
 
 # ignore detect secrets files
 .pre-commit-config.yaml

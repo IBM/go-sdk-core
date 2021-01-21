@@ -20,9 +20,13 @@ before_install:
 
 install:
   - curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.31.0
+  - curl -s https://codecov.io/bash > $HOME/codecov-bash.sh && chmod +x $HOME/codecov-bash.sh
 
 script:
   - make all
+
+after_success:
+  - build/publishCodeCoverage.sh
 
 before_deploy:
   - pip install --user bump2version
