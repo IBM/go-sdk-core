@@ -10,7 +10,7 @@ node_modules/
 # ignore vendor/
 vendor/
 
-* coverage
+# coverage
 coverage.txt
 
 # ignore detect secrets files
