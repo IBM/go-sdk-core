@@ -1,3 +1,11 @@
+## [5.0.1](https://github.com/IBM/go-sdk-core/compare/v5.0.0...v5.0.1) (2021-02-10)
+
+
+### Bug Fixes
+
+* **build:** main migration ([#93](https://github.com/IBM/go-sdk-core/issues/93)) ([903dbae](https://github.com/IBM/go-sdk-core/commit/903dbae6d596782ca78cfee56d022a65dce6ba41))
+* **build:** main migration release ([#94](https://github.com/IBM/go-sdk-core/issues/94)) ([1ec22e0](https://github.com/IBM/go-sdk-core/commit/1ec22e034356f1bec55a7158133813ac460dbfba))
+
 # [5.0.0](https://github.com/IBM/go-sdk-core/compare/v4.10.0...v5.0.0) (2021-01-20)
 
 
