@@ -67,7 +67,7 @@ If you want to contribute to the repository, here's a quick guide:
   9. Commit your changes:
   * Commit messages should follow the Angular commit message guidelines as mentioned above.
   
-  10. Push your commit(s) to your fork and submit a pull request to the **master** branch.
+  10. Push your commit(s) to your fork and submit a pull request to the **main** branch.
 
 # Developer's Certificate of Origin 1.1
 
