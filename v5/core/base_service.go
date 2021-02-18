@@ -483,9 +483,18 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 
 				// And set the string in the Result field.
 				detailedResponse.Result = &responseString
-			} else {
-				// Last resort is to just set the detailedResponse.Result field to be the response body ([]byte).
+			} else if reflect.TypeOf(result).String() == "*[]uint8" { // byte is an alias for uint8
+				rResult := reflect.ValueOf(result).Elem()
+				rResult.Set(reflect.ValueOf(responseBody))
+
+				// And set the byte slice in the Result field.
 				detailedResponse.Result = responseBody
+			} else {
+				// At this point, we don't know how to set the result field, so we have to return an error
+				// But make sure we save the bytes we read in the DetailedResponse for debugging purposes
+				detailedResponse.Result = responseBody
+				err = fmt.Errorf(ERRORMSG_UNEXPECTED_RESPONSE)
+				return
 			}
 		}
 	}

@@ -344,8 +344,7 @@ var _ = Describe(`Retry scenarios`, func() {
 				service, builder := clientInit("HEAD", server.URL, 5, 10)
 				req, _ := builder.Build()
 
-				var foo *Foo
-				resp, err := service.Request(req, &foo)
+				resp, err := service.Request(req, nil)
 				Expect(err).To(BeNil())
 				assertResponse(resp, http.StatusOK, "")
 				Expect(resp.GetHeaders().Get("Server-Name")).To(Equal("My Server"))
@@ -356,8 +355,7 @@ var _ = Describe(`Retry scenarios`, func() {
 				service, builder := clientInit("OPTIONS", server.URL, 5, 10)
 				req, _ := builder.Build()
 
-				var foo *Foo
-				resp, err := service.Request(req, &foo)
+				resp, err := service.Request(req, nil)
 				Expect(err).To(BeNil())
 				assertResponse(resp, http.StatusOK, "")
 				Expect(resp.GetHeaders().Get("Server-Name")).To(Equal("My Server"))

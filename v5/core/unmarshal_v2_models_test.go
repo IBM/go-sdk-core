@@ -173,6 +173,11 @@ func TestUnmarshalModelInstance(t *testing.T) {
 	assert.NotNil(t, myModel)
 	assert.Equal(t, "string1", *(myModel.Foo))
 	assert.Equal(t, int64(44), *(myModel.Bar))
+
+	// Unmarshal with "zero" input should return an error
+	var zeroRawMap map[string]json.RawMessage
+	err = UnmarshalModel(zeroRawMap, "", &myModel, UnmarshalMyModel)
+	assert.NotNil(t, err)
 }
 
 func TestUnmarshalModelSliceNil(t *testing.T) {
@@ -221,6 +226,11 @@ func TestUnmarshalModelSlice(t *testing.T) {
 	assert.Equal(t, int64(44), *(mySlice[0].Bar))
 	assert.Equal(t, "string2", *(mySlice[1].Foo))
 	assert.Equal(t, int64(74), *(mySlice[1].Bar))
+
+	// Unmarshal with "zero" input should return an error
+	var zeroSlice []json.RawMessage
+	err = UnmarshalModel(zeroSlice, "", &mySlice, UnmarshalMyModel)
+	assert.NotNil(t, err)
 }
 
 func TestUnmarshalModelMapNil(t *testing.T) {
