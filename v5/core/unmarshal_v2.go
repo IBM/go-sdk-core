@@ -30,6 +30,7 @@ const (
 	errorIncorrectInputType      = "expected 'rawInput' to be a %s but was %s"
 	errorUnsupportedMapEntryType = "unsupported map entry type: %s"
 	errorUnsupportedResultType   = "unsupported 'result' type: %s"
+	errorUnmarshallInputIsNil    = "input to unmarshall is nil"
 )
 
 //
@@ -158,6 +159,12 @@ type ModelUnmarshaller func(rawInput map[string]json.RawMessage, result interfac
 //                    |                          | contains an instance of map[string][]Foo
 // -------------------+--------------------------+------------------------------------------------------------------
 func UnmarshalModel(rawInput interface{}, propertyName string, result interface{}, unmarshaller ModelUnmarshaller) (err error) {
+
+	// Make sure some input is provided. Otherwise return an error
+	if IsNil(rawInput) {
+		err = fmt.Errorf(errorUnmarshallInputIsNil)
+		return
+	}
 
 	// Reflect on 'result' to determine the type of unmarshal operation being requested.
 	rResultType := reflect.TypeOf(result).Elem()

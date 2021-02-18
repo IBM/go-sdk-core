@@ -252,7 +252,7 @@ func TestRequestGoodResponseText(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
-	detailedResponse, err := service.Request(req, new(string))
+	detailedResponse, err := service.Request(req, new([]byte))
 	assert.Nil(t, err)
 	assert.NotNil(t, detailedResponse)
 	assert.Equal(t, "text/plain", detailedResponse.GetHeaders().Get("Content-Type"))
@@ -345,6 +345,74 @@ func TestRequestGoodResponseNonJSONNoContentType(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, actualResponse)
 	assert.Equal(t, expectedResponse, actualResponse)
+}
+
+// Test a JSON response with no Content-Type set.
+func TestRequestGoodResponseByteSliceNoContentType(t *testing.T) {
+	expectedResponse := []byte("This is a non-json response.")
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "")
+		_, _ = w.Write(expectedResponse)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
+	assert.Nil(t, err)
+	req, _ := builder.Build()
+
+	authenticator := &NoAuthAuthenticator{}
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
+	var rawResponse []byte
+	detailedResponse, err := service.Request(req, &rawResponse)
+	assert.NotNil(t, detailedResponse)
+	assert.NotNil(t, rawResponse)
+	assert.Nil(t, err)
+	assert.Equal(t, "", detailedResponse.GetHeaders().Get("Content-Type"))
+	assert.Equal(t, http.StatusOK, detailedResponse.GetStatusCode())
+	assert.NotNil(t, detailedResponse.Result)
+	assert.Equal(t, expectedResponse, rawResponse)
+}
+
+// Test unexpected response content.
+func TestRequestUnexpectedResponse(t *testing.T) {
+	expectedResponse := []byte("This is an unexpected response.")
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "")
+		_, _ = w.Write(expectedResponse)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
+	assert.Nil(t, err)
+	req, _ := builder.Build()
+
+	authenticator := &NoAuthAuthenticator{}
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
+	var rawResponse map[string]json.RawMessage
+	detailedResponse, err := service.Request(req, &rawResponse)
+	assert.NotNil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.NotNil(t, detailedResponse.Result)
+	assert.Equal(t, "", detailedResponse.GetHeaders().Get("Content-Type"))
+	assert.Equal(t, http.StatusOK, detailedResponse.GetStatusCode())
 }
 
 // Test a JSON response that causes a deserialization error.
@@ -705,8 +773,7 @@ func TestRequestBasicAuth1(t *testing.T) {
 	builder.AddQuery("Version", "2018-22-09")
 	req, _ := builder.Build()
 
-	var foo *Foo
-	_, err = service.Request(req, &foo)
+	_, err = service.Request(req, nil)
 	assert.Nil(t, err)
 }
 
@@ -747,8 +814,7 @@ func TestRequestBasicAuth2(t *testing.T) {
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
 
-	var foo *Foo
-	_, err = service.Request(req, &foo)
+	_, err = service.Request(req, nil)
 	assert.Nil(t, err)
 
 	service.Options.Authenticator = &BasicAuthenticator{
@@ -756,7 +822,7 @@ func TestRequestBasicAuth2(t *testing.T) {
 		Password: "betts",
 	}
 
-	_, err = service.Request(req, &foo)
+	_, err = service.Request(req, nil)
 	assert.Nil(t, err)
 }
 
@@ -798,8 +864,7 @@ func TestRequestNoAuth1(t *testing.T) {
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
 
-	var foo *Foo
-	_, err = service.Request(req, &foo)
+	_, err = service.Request(req, nil)
 	assert.Nil(t, err)
 }
 
@@ -834,8 +899,7 @@ func TestRequestNoAuth2(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
 
-	var foo *Foo
-	_, err = service.Request(req, &foo)
+	_, err = service.Request(req, nil)
 	assert.Nil(t, err)
 }
 
@@ -881,15 +945,14 @@ func TestRequestIAMAuth(t *testing.T) {
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_IAM, service.Options.Authenticator.AuthenticationType())
 
-	var foo *Foo
-	_, err = service.Request(req, &foo)
+	_, err = service.Request(req, nil)
 	if err != nil {
 		fmt.Println("Error: ", err)
 	}
 	assert.Nil(t, err)
 
 	// Subsequent request should not request new access token
-	_, err = service.Request(req, &foo)
+	_, err = service.Request(req, nil)
 	if err != nil {
 		fmt.Println("Error: ", err)
 	}
@@ -1013,8 +1076,7 @@ func TestRequestIAMWithIdSecret(t *testing.T) {
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
 
-	var foo *Foo
-	_, err = service.Request(req, &foo)
+	_, err = service.Request(req, nil)
 	assert.Nil(t, err)
 }
 
@@ -1091,8 +1153,7 @@ func TestRequestCP4DAuth(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 
-	var foo *Foo
-	_, err = service.Request(req, &foo)
+	_, err = service.Request(req, nil)
 	assert.Nil(t, err)
 }
 
