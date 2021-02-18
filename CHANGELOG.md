@@ -1,3 +1,10 @@
+## [5.0.2](https://github.com/IBM/go-sdk-core/compare/v5.0.1...v5.0.2) (2021-02-18)
+
+
+### Bug Fixes
+
+* ensure result value is set if err is nil ([c80dc2f](https://github.com/IBM/go-sdk-core/commit/c80dc2f43afd62a38716eb3adff7ac1cd958ee0e))
+
 ## [5.0.1](https://github.com/IBM/go-sdk-core/compare/v5.0.0...v5.0.1) (2021-02-10)
 
 
