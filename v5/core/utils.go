@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"reflect"
 	"regexp"
@@ -260,4 +261,28 @@ func SliceContains(slice []string, contains string) bool {
 		}
 	}
 	return false
+}
+
+// return a pointer to the value of query parameter `param` from url,
+// or nil when not found
+func GetQueryParam(urlStr *string, param string) (*string, error) {
+	if urlStr == nil || *urlStr == "" {
+		return nil, nil
+	}
+
+	u, err := url.Parse(*urlStr)
+	if err != nil {
+		return nil, err
+	}
+
+	q, err := url.ParseQuery(u.RawQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	v := q.Get(param)
+	if v == "" {
+		return nil, nil
+	}
+	return &v, nil
 }
