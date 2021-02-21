@@ -480,3 +480,55 @@ func TestSliceContains(t *testing.T) {
 
 	assert.False(t, SliceContains(nil, "foo"))
 }
+
+func TestGetQueryParam(t *testing.T) {
+	nextURL := "/api/v1/offerings?start=foo&limit=10"
+	next, err := GetQueryParam(&nextURL, "start")
+	assert.Nil(t, err)
+	assert.Equal(t, "foo", *next)
+
+	fqNextURL := "https://acme.com/api/v1/offerings?start=bar&limit=10"
+	next, err = GetQueryParam(&fqNextURL, "start")
+	assert.Nil(t, err)
+	assert.Equal(t, "bar", *next)
+
+	// No query parameter
+	next, err = GetQueryParam(&nextURL, "token")
+	assert.Nil(t, err)
+	assert.Nil(t, next)
+
+	// nil URL
+	next, err = GetQueryParam(nil, "start")
+	assert.Nil(t, err)
+	assert.Nil(t, next)
+
+	// empty URL
+	var emptyURL string
+	next, err = GetQueryParam(&emptyURL, "start")
+	assert.Nil(t, err)
+	assert.Nil(t, next)
+
+	// Not a URL (parse fails)
+	badURL := "https://foo.bar:baz/api/v1/offerings?start=foo"
+	next, err = GetQueryParam(&badURL, "start")
+	assert.NotNil(t, err)
+	assert.Nil(t, next)
+
+	// No query string
+	noQueryStringURL := "/api/v1/offerings"
+	next, err = GetQueryParam(&noQueryStringURL, "start")
+	assert.Nil(t, err)
+	assert.Nil(t, next)
+
+	// Bad query string
+	badQueryURL := "/api/v1/offerings?start%XXfoo"
+	next, err = GetQueryParam(&badQueryURL, "start")
+	assert.NotNil(t, err)
+	assert.Nil(t, next)
+
+	// Duplicate param
+	dupParamURL := "/api/v1/offerings?start=foo&start=bar&limit=10"
+	next, err = GetQueryParam(&dupParamURL, "start")
+	assert.Nil(t, err)
+	assert.Equal(t, "foo", *next)
+}
