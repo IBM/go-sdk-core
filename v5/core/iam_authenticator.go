@@ -21,14 +21,16 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
 
 // IamAuthenticator-related constants.
 const (
-	DEFAULT_IAM_URL             = "https://iam.cloud.ibm.com/identity/token"
-	DEFAULT_CONTENT_TYPE        = "application/x-www-form-urlencoded"
+	DEFAULT_IAM_URL      = "https://iam.cloud.ibm.com"
+	OPERATION_PATH       = "/identity/token"
+	DEFAULT_CONTENT_TYPE = "application/x-www-form-urlencoded"
 	/* #nosec G101 */
 	REQUEST_TOKEN_GRANT_TYPE    = "urn:ibm:params:oauth:grant-type:apikey"
 	REQUEST_TOKEN_RESPONSE_TYPE = "cloud_iam"
@@ -244,16 +246,19 @@ func (authenticator *IamAuthenticator) getTokenData() error {
 	return nil
 }
 
-// RequestToken: fetches a new access token from the token server.
+// RequestToken fetches a new access token from the token server.
 func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, error) {
 	// Use the default IAM URL if one was not specified by the user.
 	url := authenticator.URL
 	if url == "" {
 		url = DEFAULT_IAM_URL
+	} else {
+		// Canonicalize the URL by removing the operation path if it was specified by the user.
+		url = strings.TrimSuffix(url, OPERATION_PATH)
 	}
 
 	builder := NewRequestBuilder(POST)
-	_, err := builder.ConstructHTTPURL(url, nil, nil)
+	_, err := builder.ResolveRequestURL(url, OPERATION_PATH, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -316,7 +321,13 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 			Headers:    resp.Header,
 			RawResult:  buff.Bytes(),
 		}
-		return nil, NewAuthenticationError(detailedResponse, fmt.Errorf(buff.String()))
+
+		iamErrorMsg := string(detailedResponse.RawResult)
+		if iamErrorMsg == "" {
+			iamErrorMsg =
+				fmt.Sprintf("unexpected status code %d received from IAM token server %s", detailedResponse.StatusCode, builder.URL)
+		}
+		return nil, NewAuthenticationError(detailedResponse, fmt.Errorf(iamErrorMsg))
 	}
 
 	tokenResponse := &IamTokenServerResponse{}
