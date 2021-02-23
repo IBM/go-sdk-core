@@ -728,3 +728,69 @@ func TestNewIamAuthenticatorFromMap(t *testing.T) {
 	assert.Equal(t, "betts", authenticator.ClientSecret)
 	assert.Equal(t, "scope1 scope2", authenticator.Scope)
 }
+
+//
+// In order to test with a live IAM server, create file "iamtest.env" in the project root.
+// It should look like this:
+//
+// IAMTEST1_AUTH_URL=<url>   e.g. https://iam.test.cloud.ibm.com
+// IAMTEST1_AUTH_TYPE=iam
+// IAMTEST1_APIKEY=<apikey>
+//
+// Then uncomment the function below, then add "os" and "strings" to the import list,
+// then run these commands:
+// cd v<major-version>/core
+// go test -v -tags=auth -run=TestIamLiveTokenServer
+//
+//
+// func TestIamLiveTokenServer(t *testing.T) {
+// 	var request *http.Request
+// 	var err error
+// 	var authHeader string
+// 	var tokenServerResponse *IamTokenServerResponse
+
+// 	// Get an iam authenticator from the environment.
+// 	os.Setenv("IBM_CREDENTIALS_FILE", "../../iamtest.env")
+
+// 	auth, err := GetAuthenticatorFromEnvironment("iamtest1")
+// 	assert.Nil(t, err)
+// 	assert.NotNil(t, auth)
+
+// 	iamAuth, ok := auth.(*IamAuthenticator)
+// 	assert.Equal(t, true, ok)
+
+// 	tokenServerResponse, err = iamAuth.RequestToken()
+// 	if err != nil {
+// 		authError := err.(*AuthenticationError)
+// 		iamError := authError.Err
+// 		iamResponse := authError.Response
+// 		t.Logf("Unexpected authentication error: %s\n", iamError.Error())
+// 		t.Logf("Authentication response: %v+\n", iamResponse)
+
+// 	}
+// 	assert.Nil(t, err)
+// 	assert.NotNil(t, tokenServerResponse)
+
+// 	accessToken := tokenServerResponse.AccessToken
+// 	assert.NotNil(t, accessToken)
+// 	t.Logf("Access token: %s\n", accessToken)
+
+// 	refreshToken := tokenServerResponse.RefreshToken
+// 	assert.NotNil(t, refreshToken)
+// 	t.Logf("Refresh token: %s\n", refreshToken)
+
+// 	// Create a new Request object.
+// 	builder, err := NewRequestBuilder("GET").ResolveRequestURL("https://localhost/placeholder/url", "", nil)
+// 	assert.Nil(t, err)
+// 	assert.NotNil(t, builder)
+
+// 	request, _ = builder.Build()
+// 	assert.NotNil(t, request)
+// 	err = auth.Authenticate(request)
+// 	assert.Nil(t, err)
+
+// 	authHeader = request.Header.Get("Authorization")
+// 	assert.NotEmpty(t, authHeader)
+// 	assert.True(t, strings.HasPrefix(authHeader, "Bearer "))
+// 	t.Logf("Authorization: %s\n", authHeader)
+// }
