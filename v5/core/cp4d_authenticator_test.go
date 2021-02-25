@@ -745,7 +745,7 @@ func TestCp4dGetTokenServerError(t *testing.T) {
 //
 // Then uncomment the function below, then run these commands:
 // cd v<major-version>/core
-// go test -v -tags=auth -run=TestCp4dListTokenServer
+// go test -v -tags=auth -run=TestCp4dLiveTokenServer
 //
 
 // func TestCp4dLiveTokenServer(t *testing.T) {
