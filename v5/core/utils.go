@@ -27,6 +27,7 @@ import (
 	"time"
 
 	validator "gopkg.in/go-playground/validator.v9"
+	"github.com/go-openapi/strfmt"
 )
 
 // Validate is a shared validator instance used to perform validation of structs.
@@ -109,6 +110,11 @@ func Float64Ptr(literal float64) *float64 {
 	return &literal
 }
 
+// UUIDPtr returns a pointer to strfmt.UUID literal.
+func UUIDPtr(literal strfmt.UUID) *strfmt.UUID {
+	return &literal
+}
+
 // IsJSONMimeType Returns true iff the specified mimeType value represents a
 // "JSON" mimetype.
 func IsJSONMimeType(mimeType string) bool {
@@ -180,6 +186,27 @@ func PrettyPrint(result interface{}, resultName string) {
 // GetCurrentTime returns the current Unix time.
 func GetCurrentTime() int64 {
 	return time.Now().Unix()
+}
+
+// ParseDate parses the specified RFC3339 full-date string (YYYY-MM-DD) and returns a strfmt.Date instance.
+func ParseDate(dateString string) (fmtDate strfmt.Date, err error) {
+	formattedTime, err := time.Parse(strfmt.RFC3339FullDate, dateString)
+	var formattedDate strfmt.Date
+	if err != nil {
+		return formattedDate, err
+	}
+	formattedDate = strfmt.Date(formattedTime)
+	return formattedDate, nil
+}
+
+// ParseDateTime parses the specified date-time string and returns a strfmt.DateTime instance.
+func ParseDateTime(dateString string) (fmtDTime strfmt.DateTime, err error) {
+	var formattedDateTime strfmt.DateTime
+	formattedDateTime, err = strfmt.ParseDateTime(dateString)
+	if err != nil {
+		return formattedDateTime, err
+	}
+	return formattedDateTime, nil
 }
 
 // ConvertSlice Marshals 'slice' to a json string, performs

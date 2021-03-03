@@ -225,6 +225,9 @@ func TestPointers(t *testing.T) {
 
 	var float64Var = float64(23)
 	assert.Equal(t, &float64Var, Float64Ptr(float64Var))
+
+	var uuidVar = strfmt.UUID("12345678-1234-1234-1234-123456123456")
+	assert.Equal(t, &uuidVar, UUIDPtr(uuidVar))
 }
 
 func TestConvertSliceFloat64(t *testing.T) {
@@ -316,6 +319,27 @@ func TestConvertSliceByteArray(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Empty(t, convertedSlice)
+}
+
+func TestDateTimeUtil(t *testing.T) {
+	dateVar := strfmt.Date(time.Now())
+	fmtDate, err := ParseDate(dateVar.String())
+	assert.Nil(t, err)
+	assert.Equal(t, dateVar.String(), fmtDate.String())
+
+	fmtDate, err = ParseDate("not a date")
+	assert.Equal(t, strfmt.Date{}, fmtDate)
+	assert.NotNil(t, err)
+
+	dateTimeVar := strfmt.DateTime(time.Now())
+	var fmtDTime strfmt.DateTime
+	fmtDTime, err = ParseDateTime(dateTimeVar.String())
+	assert.Nil(t, err)
+	assert.Equal(t, dateTimeVar.String(), fmtDTime.String())
+
+	fmtDTime, err = ParseDateTime("not a datetime")
+	assert.Equal(t, strfmt.DateTime{}, fmtDTime)
+	assert.NotNil(t, err)
 }
 
 func TestConvertSliceDate(t *testing.T) {
