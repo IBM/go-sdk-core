@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-openapi/strfmt"
 	validator "gopkg.in/go-playground/validator.v9"
 )
 
@@ -106,6 +107,11 @@ func Float32Ptr(literal float32) *float32 {
 
 // Float64Ptr returns a pointer to float64 literal.
 func Float64Ptr(literal float64) *float64 {
+	return &literal
+}
+
+// UUIDPtr returns a pointer to strfmt.UUID literal.
+func UUIDPtr(literal strfmt.UUID) *strfmt.UUID {
 	return &literal
 }
 

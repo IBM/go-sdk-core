@@ -71,3 +71,17 @@ func init() {
 func NormalizeDateTimeUTC(t time.Time) time.Time {
 	return t.UTC()
 }
+
+// ParseDate parses the specified RFC3339 full-date string (YYYY-MM-DD) and returns a strfmt.Date instance.
+func ParseDate(dateString string) (fmtDate strfmt.Date, err error) {
+	formattedTime, err := time.Parse(strfmt.RFC3339FullDate, dateString)
+	if err == nil {
+		fmtDate = strfmt.Date(formattedTime)
+	}
+	return
+}
+
+// ParseDateTime parses the specified date-time string and returns a strfmt.DateTime instance.
+func ParseDateTime(dateString string) (strfmt.DateTime, error) {
+	return strfmt.ParseDateTime(dateString)
+}
