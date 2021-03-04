@@ -321,27 +321,6 @@ func TestConvertSliceByteArray(t *testing.T) {
 	assert.Empty(t, convertedSlice)
 }
 
-func TestDateTimeUtil(t *testing.T) {
-	dateVar := strfmt.Date(time.Now())
-	fmtDate, err := ParseDate(dateVar.String())
-	assert.Nil(t, err)
-	assert.Equal(t, dateVar.String(), fmtDate.String())
-
-	fmtDate, err = ParseDate("not a date")
-	assert.Equal(t, strfmt.Date{}, fmtDate)
-	assert.NotNil(t, err)
-
-	dateTimeVar := strfmt.DateTime(time.Now())
-	var fmtDTime strfmt.DateTime
-	fmtDTime, err = ParseDateTime(dateTimeVar.String())
-	assert.Nil(t, err)
-	assert.Equal(t, dateTimeVar.String(), fmtDTime.String())
-
-	fmtDTime, err = ParseDateTime("not a datetime")
-	assert.Equal(t, strfmt.DateTime{}, fmtDTime)
-	assert.NotNil(t, err)
-}
-
 func TestConvertSliceDate(t *testing.T) {
 	date1 := strfmt.Date(time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC))
 	date2 := strfmt.Date(time.Date(2020, time.November, 10, 23, 0, 0, 0, time.UTC))
