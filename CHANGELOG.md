@@ -1,3 +1,10 @@
+# [5.1.0](https://github.com/IBM/go-sdk-core/compare/v5.0.3...v5.1.0) (2021-03-04)
+
+
+### Features
+
+* add UUID, date, and datetime helpers for terraform usage ([#96](https://github.com/IBM/go-sdk-core/issues/96)) ([e651369](https://github.com/IBM/go-sdk-core/commit/e6513692bd8188e3fd628bb46eb7bbddfae94428))
+
 ## [5.0.3](https://github.com/IBM/go-sdk-core/compare/v5.0.2...v5.0.3) (2021-02-25)
 
 
