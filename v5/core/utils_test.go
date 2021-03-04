@@ -225,6 +225,9 @@ func TestPointers(t *testing.T) {
 
 	var float64Var = float64(23)
 	assert.Equal(t, &float64Var, Float64Ptr(float64Var))
+
+	var uuidVar = strfmt.UUID("12345678-1234-1234-1234-123456123456")
+	assert.Equal(t, &uuidVar, UUIDPtr(uuidVar))
 }
 
 func TestConvertSliceFloat64(t *testing.T) {
