@@ -1,3 +1,10 @@
+# [5.2.0](https://github.com/IBM/go-sdk-core/compare/v5.1.0...v5.2.0) (2021-03-11)
+
+
+### Features
+
+* add GetQueryParam method to support pagination ([e6528df](https://github.com/IBM/go-sdk-core/commit/e6528df40260e9b391dd345f77f116dfcb9f1cee))
+
 # [5.1.0](https://github.com/IBM/go-sdk-core/compare/v5.0.3...v5.1.0) (2021-03-04)
 
 
