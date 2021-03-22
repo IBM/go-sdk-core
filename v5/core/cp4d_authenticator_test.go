@@ -192,10 +192,10 @@ func TestCp4dGetTokenSuccessPW(t *testing.T) {
 	assert.Equal(t, cp4dUsernamePwd1, accessToken)
 
 	// Force an expiration and verify we get back the second access token.
-	authenticator.tokenData = nil
+	authenticator.setTokenData(nil)
 	accessToken, err = authenticator.getToken()
 	assert.Nil(t, err)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 	assert.Equal(t, cp4dUsernamePwd2, accessToken)
 }
 
@@ -226,10 +226,10 @@ func TestCp4dGetTokenSuccessAPIKey(t *testing.T) {
 	assert.Equal(t, cp4dUsernameApikey1, accessToken)
 
 	// Force an expiration and verify we get back the second access token.
-	authenticator.tokenData = nil
+	authenticator.setTokenData(nil)
 	accessToken, err = authenticator.getToken()
 	assert.Nil(t, err)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 	assert.Equal(t, cp4dUsernameApikey2, accessToken)
 }
 
@@ -252,22 +252,22 @@ func TestCp4dGetCachedTokenSuccessPW(t *testing.T) {
 
 	authenticator, err := NewCloudPakForDataAuthenticatorUsingPassword(server.URL, "john", "snow", false, nil)
 	assert.Nil(t, err)
-	assert.Nil(t, authenticator.tokenData)
+	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernamePwd1, token)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 
 	// To mock the cache, set the expiration on the existing token to be somewhere in the valid timeframe
-	authenticator.tokenData.Expiration = GetCurrentTime() + 9999
+	authenticator.getTokenData().Expiration = GetCurrentTime() + 9999
 
 	// Subsequent fetch should still return first access token.
 	token, err = authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernamePwd1, token)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 }
 
 func TestCp4dGetCachedTokenAPIKey(t *testing.T) {
@@ -289,22 +289,22 @@ func TestCp4dGetCachedTokenAPIKey(t *testing.T) {
 
 	authenticator, err := NewCloudPakForDataAuthenticatorUsingAPIKey(server.URL, "john", "King of the North", false, nil)
 	assert.Nil(t, err)
-	assert.Nil(t, authenticator.tokenData)
+	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 
 	// To mock the cache, set the expiration on the existing token to be somewhere in the valid timeframe
-	authenticator.tokenData.Expiration = GetCurrentTime() + 9999
+	authenticator.getTokenData().Expiration = GetCurrentTime() + 9999
 
 	// Subsequent fetch should still return first access token.
 	token, err = authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 }
 
 func TestCp4dGetTokenAuthFailure(t *testing.T) {
@@ -381,17 +381,17 @@ func TestCp4dBackgroundTokenRefreshSuccess(t *testing.T) {
 
 	authenticator, err := NewCloudPakForDataAuthenticatorUsingAPIKey(server.URL, "john", "King of the North", false, nil)
 	assert.Nil(t, err)
-	assert.Nil(t, authenticator.tokenData)
+	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 
 	// Now put the test in the "refresh window" where the token is not expired but still needs to be refreshed.
-	authenticator.tokenData.Expiration = GetCurrentTime() + 3600
-	authenticator.tokenData.RefreshTime = GetCurrentTime() - 720
+	authenticator.getTokenData().Expiration = GetCurrentTime() + 3600
+	authenticator.getTokenData().RefreshTime = GetCurrentTime() - 720
 
 	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
 	// getToken() again. The immediate response should be the token which was already stored, since it's not yet
@@ -399,14 +399,14 @@ func TestCp4dBackgroundTokenRefreshSuccess(t *testing.T) {
 	token, err = authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 
 	// Wait for the background thread to finish.
 	time.Sleep(5 * time.Second)
 	token, err = authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey2, token)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 }
 
 func TestCp4dBackgroundTokenRefreshAuthFailure(t *testing.T) {
@@ -430,17 +430,17 @@ func TestCp4dBackgroundTokenRefreshAuthFailure(t *testing.T) {
 
 	authenticator, err := NewCloudPakForDataAuthenticatorUsingPassword(server.URL, "john", "snow", false, nil)
 	assert.Nil(t, err)
-	assert.Nil(t, authenticator.tokenData)
+	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernamePwd1, token)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 
 	// Now put the test in the "refresh window" where the token is not expired but still needs to be refreshed.
-	authenticator.tokenData.Expiration = GetCurrentTime() + 3600
-	authenticator.tokenData.RefreshTime = GetCurrentTime() - 720
+	authenticator.getTokenData().Expiration = GetCurrentTime() + 3600
+	authenticator.getTokenData().RefreshTime = GetCurrentTime() - 720
 
 	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
 	// getToken() again. The immediate response should be the token which was already stored, since it's not yet
@@ -448,7 +448,7 @@ func TestCp4dBackgroundTokenRefreshAuthFailure(t *testing.T) {
 	token, err = authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernamePwd1, token)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 
 	// Wait for the background thread to finish
 	time.Sleep(5 * time.Second)
@@ -480,29 +480,29 @@ func TestCp4dBackgroundTokenRefreshIdle(t *testing.T) {
 
 	authenticator, err := NewCloudPakForDataAuthenticatorUsingAPIKey(server.URL, "john", "King of the North", false, nil)
 	assert.Nil(t, err)
-	assert.Nil(t, authenticator.tokenData)
+	assert.Nil(t, authenticator.getTokenData())
 
 	// // Force the first fetch and verify we got the first access token.
 	token, err := authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 
 	// Now simulate the client being idle for 10 minutes into the refresh time.
-	authenticator.tokenData.Expiration = GetCurrentTime() + 3600
+	authenticator.getTokenData().Expiration = GetCurrentTime() + 3600
 	tenMinutesBeforeNow := GetCurrentTime() - 600
-	authenticator.tokenData.RefreshTime = tenMinutesBeforeNow
+	authenticator.getTokenData().RefreshTime = tenMinutesBeforeNow
 
 	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
 	// getToken() again. The immediate response should be the token which was already stored, since it's not yet expired.
 	token, err = authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 
 	// RefreshTime should have advanced by 1 minute from the current time.
 	newRefreshTime := GetCurrentTime() + 60
-	assert.Equal(t, newRefreshTime, authenticator.tokenData.RefreshTime)
+	assert.Equal(t, newRefreshTime, authenticator.getTokenData().RefreshTime)
 
 	// In the next request, the RefreshTime should be unchanged and another thread
 	// shouldn't be spawned to request another token once more since the first thread already spawned
@@ -510,16 +510,16 @@ func TestCp4dBackgroundTokenRefreshIdle(t *testing.T) {
 	token, err = authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
-	assert.NotNil(t, authenticator.tokenData)
-	assert.Equal(t, newRefreshTime, authenticator.tokenData.RefreshTime)
+	assert.NotNil(t, authenticator.getTokenData())
+	assert.Equal(t, newRefreshTime, authenticator.getTokenData().RefreshTime)
 
 	// Wait for the background thread to finish and verify both the RefreshTime & tokenData were updated
 	time.Sleep(5 * time.Second)
 	token, err = authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey2, token)
-	assert.NotNil(t, authenticator.tokenData)
-	assert.NotEqual(t, newRefreshTime, authenticator.tokenData.RefreshTime)
+	assert.NotNil(t, authenticator.getTokenData())
+	assert.NotEqual(t, newRefreshTime, authenticator.getTokenData().RefreshTime)
 }
 
 func TestCp4dDisableSSL(t *testing.T) {
@@ -658,16 +658,16 @@ func TestCp4dGetTokenTimeoutError(t *testing.T) {
 
 	authenticator, err := NewCloudPakForDataAuthenticatorUsingAPIKey(server.URL, "john", "King of the North", false, nil)
 	assert.Nil(t, err)
-	assert.Nil(t, authenticator.tokenData)
+	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 
 	// Force expiration and verify that we got a timeout error
-	authenticator.tokenData.Expiration = GetCurrentTime() - 3600
+	authenticator.getTokenData().Expiration = GetCurrentTime() - 3600
 
 	// Set the client timeout to something very low
 	authenticator.Client.Timeout = time.Second * 2
@@ -699,16 +699,16 @@ func TestCp4dGetTokenServerError(t *testing.T) {
 
 	authenticator, err := NewCloudPakForDataAuthenticatorUsingPassword(server.URL, "john", "snow", false, nil)
 	assert.Nil(t, err)
-	assert.Nil(t, authenticator.tokenData)
+	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.getToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernamePwd1, token)
-	assert.NotNil(t, authenticator.tokenData)
+	assert.NotNil(t, authenticator.getTokenData())
 
 	// Force expiration and verify that we got a server error.
-	authenticator.tokenData.Expiration = GetCurrentTime() - 3600
+	authenticator.getTokenData().Expiration = GetCurrentTime() - 3600
 	token, err = authenticator.getToken()
 	assert.NotNil(t, err)
 
