@@ -84,6 +84,9 @@ type IamAuthenticator struct {
 
 	// The cached token and expiration time.
 	tokenData *iamTokenData
+
+	// Mutex to make the tokenData field thread safe.
+	tokenDataMutex sync.Mutex
 }
 
 var iamRequestTokenMutex sync.Mutex
@@ -152,6 +155,22 @@ func (authenticator *IamAuthenticator) Authenticate(request *http.Request) error
 	return nil
 }
 
+// getTokenData returns the tokeData field from the authenticator.
+func (authenticator *IamAuthenticator) getTokenData() *iamTokenData {
+	authenticator.tokenDataMutex.Lock()
+	defer authenticator.tokenDataMutex.Unlock()
+
+	return authenticator.tokenData
+}
+
+// setTokenData sets the given iamTokenData to the tokenData field of the authenticator.
+func (authenticator *IamAuthenticator) setTokenData(tokenData *iamTokenData) {
+	authenticator.tokenDataMutex.Lock()
+	defer authenticator.tokenDataMutex.Unlock()
+
+	authenticator.tokenData = tokenData
+}
+
 // Validate the authenticator's configuration.
 //
 // Ensures the ApiKey is valid, and the ClientId and ClientSecret pair are
@@ -186,17 +205,17 @@ func (this IamAuthenticator) Validate() error {
 // Whenever a new token is needed (when a token doesn't yet exist, needs to be refreshed,
 // or the existing token has expired), a new access token is fetched from the token server.
 func (authenticator *IamAuthenticator) getToken() (string, error) {
-	if authenticator.tokenData == nil || !authenticator.tokenData.isTokenValid() {
+	if authenticator.getTokenData() == nil || !authenticator.getTokenData().isTokenValid() {
 		// synchronously request the token
 		err := authenticator.synchronizedRequestToken()
 		if err != nil {
 			return "", err
 		}
-	} else if authenticator.tokenData.needsRefresh() {
+	} else if authenticator.getTokenData().needsRefresh() {
 		// If refresh needed, kick off a go routine in the background to get a new token
 		ch := make(chan error)
 		go func() {
-			ch <- authenticator.getTokenData()
+			ch <- authenticator.invokeRequestTokenData()
 		}()
 		select {
 		case err := <-ch:
@@ -208,11 +227,11 @@ func (authenticator *IamAuthenticator) getToken() (string, error) {
 	}
 
 	// return an error if the access token is not valid or was not fetched
-	if authenticator.tokenData == nil || authenticator.tokenData.AccessToken == "" {
+	if authenticator.getTokenData() == nil || authenticator.getTokenData().AccessToken == "" {
 		return "", fmt.Errorf("Error while trying to get access token")
 	}
 
-	return authenticator.tokenData.AccessToken, nil
+	return authenticator.getTokenData().AccessToken, nil
 }
 
 // synchronizedRequestToken: synchronously checks if the current token in cache
@@ -222,25 +241,26 @@ func (authenticator *IamAuthenticator) synchronizedRequestToken() error {
 	iamRequestTokenMutex.Lock()
 	defer iamRequestTokenMutex.Unlock()
 	// if cached token is still valid, then just continue to use it
-	if authenticator.tokenData != nil && authenticator.tokenData.isTokenValid() {
+	if authenticator.getTokenData() != nil && authenticator.getTokenData().isTokenValid() {
 		return nil
 	}
 
-	return authenticator.getTokenData()
+	return authenticator.invokeRequestTokenData()
 }
 
-// getTokenData: requests a new token from the access server and
+// invokeRequestTokenData: requests a new token from the access server and
 // unmarshals the token information to the tokenData cache. Returns
 // an error if the token was unable to be fetched, otherwise returns nil
-func (authenticator *IamAuthenticator) getTokenData() error {
+func (authenticator *IamAuthenticator) invokeRequestTokenData() error {
 	tokenResponse, err := authenticator.RequestToken()
 	if err != nil {
 		return err
 	}
 
-	authenticator.tokenData, err = newIamTokenData(tokenResponse)
-	if err != nil {
+	if tokenData, err := newIamTokenData(tokenResponse); err != nil {
 		return err
+	} else {
+		authenticator.setTokenData(tokenData)
 	}
 
 	return nil
