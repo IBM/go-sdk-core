@@ -135,7 +135,7 @@ func newIamAuthenticatorFromMap(properties map[string]string) (authenticator *Ia
 }
 
 // AuthenticationType returns the authentication type for this authenticator.
-func (IamAuthenticator) AuthenticationType() string {
+func (*IamAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_IAM
 }
 
@@ -175,7 +175,7 @@ func (authenticator *IamAuthenticator) setTokenData(tokenData *iamTokenData) {
 //
 // Ensures the ApiKey is valid, and the ClientId and ClientSecret pair are
 // mutually inclusive.
-func (this IamAuthenticator) Validate() error {
+func (this *IamAuthenticator) Validate() error {
 	if this.ApiKey == "" {
 		return fmt.Errorf(ERRORMSG_PROP_MISSING, "ApiKey")
 	}

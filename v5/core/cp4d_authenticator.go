@@ -129,7 +129,7 @@ func newCloudPakForDataAuthenticatorFromMap(properties map[string]string) (*Clou
 }
 
 // AuthenticationType returns the authentication type for this authenticator.
-func (CloudPakForDataAuthenticator) AuthenticationType() string {
+func (*CloudPakForDataAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_CP4D
 }
 
@@ -137,7 +137,7 @@ func (CloudPakForDataAuthenticator) AuthenticationType() string {
 //
 // Ensures the username, password, and url are not Nil. Additionally, ensures
 // they do not contain invalid characters.
-func (authenticator CloudPakForDataAuthenticator) Validate() error {
+func (authenticator *CloudPakForDataAuthenticator) Validate() error {
 
 	if authenticator.Username == "" {
 		return fmt.Errorf(ERRORMSG_PROP_MISSING, "Username")
