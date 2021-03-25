@@ -24,11 +24,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
+
+var requestCountMutex sync.Mutex
 
 // assertResponse is a convenience function for checking various parts of a response
 func assertResponse(r *DetailedResponse, expectedStatusCode int, expectedContentType string) {
@@ -74,7 +77,10 @@ var _ = Describe(`Retry scenarios`, func() {
 					defer GinkgoRecover()
 					time.Sleep(1 * time.Second)
 
+					requestCountMutex.Lock()
 					requestCount++
+					requestCountMutex.Unlock()
+
 					w.Header().Set("Retry-After", "1")
 					w.WriteHeader(http.StatusTooManyRequests)
 				}))
@@ -95,7 +101,9 @@ var _ = Describe(`Retry scenarios`, func() {
 				fmt.Fprintf(GinkgoWriter, "Expected error: %s\n", err.Error())
 				Expect(err.Error()).To(ContainSubstring("context deadline exceeded"))
 				Expect(resp).To(BeNil())
+				requestCountMutex.Lock()
 				Expect(requestCount).To(Equal(0))
+				requestCountMutex.Unlock()
 			})
 			It(`Timeout on while doing retries`, func() {
 				service, builder := clientInit("GET", server.URL, 2, 0)
