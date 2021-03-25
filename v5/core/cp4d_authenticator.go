@@ -173,7 +173,7 @@ func (authenticator *CloudPakForDataAuthenticator) Authenticate(request *http.Re
 	return nil
 }
 
-// getTokenData returns the tokeData field from the authenticator.
+// getTokenData returns the tokenData field from the authenticator.
 func (authenticator *CloudPakForDataAuthenticator) getTokenData() *cp4dTokenData {
 	authenticator.tokenDataMutex.Lock()
 	defer authenticator.tokenDataMutex.Unlock()

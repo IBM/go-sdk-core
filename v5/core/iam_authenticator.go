@@ -155,7 +155,7 @@ func (authenticator *IamAuthenticator) Authenticate(request *http.Request) error
 	return nil
 }
 
-// getTokenData returns the tokeData field from the authenticator.
+// getTokenData returns the tokenData field from the authenticator.
 func (authenticator *IamAuthenticator) getTokenData() *iamTokenData {
 	authenticator.tokenDataMutex.Lock()
 	defer authenticator.tokenDataMutex.Unlock()
