@@ -1497,9 +1497,7 @@ func TestAuthNotConfigured(t *testing.T) {
 }
 
 func TestAuthInterfaceNilValue(t *testing.T) {
-	// Verify a non-nil service is cloned correctly.
-	authenticator := &NoAuthAuthenticator{}
-	authenticator = nil
+	var authenticator *NoAuthAuthenticator = nil
 
 	options := &ServiceOptions{
 		Authenticator: authenticator,
