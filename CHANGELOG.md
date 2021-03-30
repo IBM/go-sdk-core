@@ -1,3 +1,10 @@
+# [5.3.0](https://github.com/IBM/go-sdk-core/compare/v5.2.1...v5.3.0) (2021-03-30)
+
+
+### Features
+
+* add support for unmarshalling two-dimensional slices of model instances ([#103](https://github.com/IBM/go-sdk-core/issues/103)) ([1438a2c](https://github.com/IBM/go-sdk-core/commit/1438a2c964a2d101dfaee1ca321801b4c06c9ccd))
+
 ## [5.2.1](https://github.com/IBM/go-sdk-core/compare/v5.2.0...v5.2.1) (2021-03-30)
 
 
