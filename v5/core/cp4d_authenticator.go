@@ -60,6 +60,9 @@ type CloudPakForDataAuthenticator struct {
 
 	// The cached token and expiration time.
 	tokenData *cp4dTokenData
+
+	// Mutex to make the tokenData field thread safe.
+	tokenDataMutex sync.Mutex
 }
 
 var cp4dRequestTokenMutex sync.Mutex
@@ -126,7 +129,7 @@ func newCloudPakForDataAuthenticatorFromMap(properties map[string]string) (*Clou
 }
 
 // AuthenticationType returns the authentication type for this authenticator.
-func (CloudPakForDataAuthenticator) AuthenticationType() string {
+func (*CloudPakForDataAuthenticator) AuthenticationType() string {
 	return AUTHTYPE_CP4D
 }
 
@@ -134,7 +137,7 @@ func (CloudPakForDataAuthenticator) AuthenticationType() string {
 //
 // Ensures the username, password, and url are not Nil. Additionally, ensures
 // they do not contain invalid characters.
-func (authenticator CloudPakForDataAuthenticator) Validate() error {
+func (authenticator *CloudPakForDataAuthenticator) Validate() error {
 
 	if authenticator.Username == "" {
 		return fmt.Errorf(ERRORMSG_PROP_MISSING, "Username")
@@ -170,21 +173,37 @@ func (authenticator *CloudPakForDataAuthenticator) Authenticate(request *http.Re
 	return nil
 }
 
+// getTokenData returns the tokenData field from the authenticator.
+func (authenticator *CloudPakForDataAuthenticator) getTokenData() *cp4dTokenData {
+	authenticator.tokenDataMutex.Lock()
+	defer authenticator.tokenDataMutex.Unlock()
+
+	return authenticator.tokenData
+}
+
+// setTokenData sets the given cp4dTokenData to the tokenData field of the authenticator.
+func (authenticator *CloudPakForDataAuthenticator) setTokenData(tokenData *cp4dTokenData) {
+	authenticator.tokenDataMutex.Lock()
+	defer authenticator.tokenDataMutex.Unlock()
+
+	authenticator.tokenData = tokenData
+}
+
 // getToken: returns an access token to be used in an Authorization header.
 // Whenever a new token is needed (when a token doesn't yet exist, needs to be refreshed,
 // or the existing token has expired), a new access token is fetched from the token server.
 func (authenticator *CloudPakForDataAuthenticator) getToken() (string, error) {
-	if authenticator.tokenData == nil || !authenticator.tokenData.isTokenValid() {
+	if authenticator.getTokenData() == nil || !authenticator.getTokenData().isTokenValid() {
 		// synchronously request the token
 		err := authenticator.synchronizedRequestToken()
 		if err != nil {
 			return "", err
 		}
-	} else if authenticator.tokenData.needsRefresh() {
+	} else if authenticator.getTokenData().needsRefresh() {
 		// If refresh needed, kick off a go routine in the background to get a new token
 		ch := make(chan error)
 		go func() {
-			ch <- authenticator.getTokenData()
+			ch <- authenticator.invokeRequestTokenData()
 		}()
 		select {
 		case err := <-ch:
@@ -196,11 +215,11 @@ func (authenticator *CloudPakForDataAuthenticator) getToken() (string, error) {
 	}
 
 	// return an error if the access token is not valid or was not fetched
-	if authenticator.tokenData == nil || authenticator.tokenData.AccessToken == "" {
+	if authenticator.getTokenData() == nil || authenticator.getTokenData().AccessToken == "" {
 		return "", fmt.Errorf("Error while trying to get access token")
 	}
 
-	return authenticator.tokenData.AccessToken, nil
+	return authenticator.getTokenData().AccessToken, nil
 }
 
 // synchronizedRequestToken: synchronously checks if the current token in cache
@@ -210,27 +229,28 @@ func (authenticator *CloudPakForDataAuthenticator) synchronizedRequestToken() er
 	cp4dRequestTokenMutex.Lock()
 	defer cp4dRequestTokenMutex.Unlock()
 	// if cached token is still valid, then just continue to use it
-	if authenticator.tokenData != nil && authenticator.tokenData.isTokenValid() {
+	if authenticator.getTokenData() != nil && authenticator.getTokenData().isTokenValid() {
 		return nil
 	}
 
-	return authenticator.getTokenData()
+	return authenticator.invokeRequestTokenData()
 }
 
-// getTokenData: requests a new token from the token server and
+// invokeRequestTokenData: requests a new token from the token server and
 // unmarshals the token information to the tokenData cache. Returns
 // an error if the token was unable to be fetched, otherwise returns nil
-func (authenticator *CloudPakForDataAuthenticator) getTokenData() error {
+func (authenticator *CloudPakForDataAuthenticator) invokeRequestTokenData() error {
 	tokenResponse, err := authenticator.requestToken()
 	if err != nil {
-		authenticator.tokenData = nil
+		authenticator.setTokenData(nil)
 		return err
 	}
 
-	authenticator.tokenData, err = newCp4dTokenData(tokenResponse)
-	if err != nil {
-		authenticator.tokenData = nil
+	if tokenData, err := newCp4dTokenData(tokenResponse); err != nil {
+		authenticator.setTokenData(nil)
 		return err
+	} else {
+		authenticator.setTokenData(tokenData)
 	}
 
 	return nil

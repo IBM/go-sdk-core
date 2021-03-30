@@ -87,7 +87,7 @@ func NewBaseService(options *ServiceOptions) (*BaseService, error) {
 		return nil, fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
 	}
 
-	if options.Authenticator == nil {
+	if IsNil(options.Authenticator) {
 		return nil, fmt.Errorf(ERRORMSG_NO_AUTHENTICATOR)
 	}
 
@@ -315,7 +315,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	}
 
 	// Add authentication to the outbound request.
-	if service.Options.Authenticator == nil {
+	if IsNil(service.Options.Authenticator) {
 		err = fmt.Errorf(ERRORMSG_NO_AUTHENTICATOR)
 		return
 	}

@@ -1496,6 +1496,19 @@ func TestAuthNotConfigured(t *testing.T) {
 	assert.Nil(t, service)
 }
 
+func TestAuthInterfaceNilValue(t *testing.T) {
+	var authenticator *NoAuthAuthenticator = nil
+
+	options := &ServiceOptions{
+		Authenticator: authenticator,
+	}
+
+	service, err := NewBaseService(options)
+	assert.Nil(t, service)
+	assert.NotNil(t, err)
+	assert.Equal(t, ERRORMSG_NO_AUTHENTICATOR, err.Error())
+}
+
 func testGetErrorMessage(t *testing.T, statusCode int, jsonString string, expectedErrorMsg string) {
 	body := []byte(jsonString)
 	responseMap, err := decodeAsMap(body)
