@@ -1,3 +1,11 @@
+## [5.2.1](https://github.com/IBM/go-sdk-core/compare/v5.2.0...v5.2.1) (2021-03-30)
+
+
+### Bug Fixes
+
+* avoid data race warnings ([#102](https://github.com/IBM/go-sdk-core/issues/102)) ([9e0fcc3](https://github.com/IBM/go-sdk-core/commit/9e0fcc35175f99d4fec5a12a4ccd9b8bcb7e9737))
+* update go-openapi/strfmt dependency ([#104](https://github.com/IBM/go-sdk-core/issues/104)) ([018a475](https://github.com/IBM/go-sdk-core/commit/018a47562400d58525359d6f7c93d2cb26a0f313))
+
 # [5.2.0](https://github.com/IBM/go-sdk-core/compare/v5.1.0...v5.2.0) (2021-03-11)
 
 
