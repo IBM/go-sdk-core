@@ -54,6 +54,7 @@ const (
 //   - *<primitive-type>
 //   - **<primitive-type>
 //   - *[]<primitive-type>
+//   - *[][]<primitive-type>
 //   - *map[string]<primitive-type>
 //   - *map[string][]<primitive-type>
 //   - *[]map[string]<primitive-type>
@@ -61,7 +62,7 @@ const (
 //
 // Where <primitive-type> could be any of the following:
 //   - string, bool, []byte, int64, float32, float64, strfmt.Date, strfmt.DateTime,
-//     strfmt.UUID, interface{}, or map[string]interface{}.
+//     strfmt.UUID, interface{} (any), or map[string]interface{} (any object).
 //
 // Example:
 // type MyStruct struct {

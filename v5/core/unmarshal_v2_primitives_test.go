@@ -33,6 +33,7 @@ func TestUnmarshalPrimitiveString(t *testing.T) {
 	type MyModel struct {
 		Prop              *string
 		PropSlice         []string
+		PropSliceSlice    [][]string
 		PropMap           map[string]string
 		PropSliceMap      map[string][]string
 		PropMapSlice      []map[string]string
@@ -42,6 +43,7 @@ func TestUnmarshalPrimitiveString(t *testing.T) {
 	jsonTemplate := `{
 		"prop": "%s1",
 		"prop_slice": ["%s1", "%s2"],
+		"prop_slice_slice": [["%s1"], ["%s2", "%s3"], ["%s4"]],
 		"prop_map": { "key1": "%s1", "key2": "%s2" },
 		"prop_slice_map": { "key1": ["%s1", "%s2"], "key2": ["%s3", "%s4"] },
 		"prop_map_slice": [{"key1": "%s1"}, {"key2": "%s2"}],
@@ -51,7 +53,8 @@ func TestUnmarshalPrimitiveString(t *testing.T) {
 		"not_a_slice": false,
 		"bad_slice_type": [38, 26],
 		"null_prop": null,
-		"slice_with_null": [ null, "%s1", null ]
+		"slice_with_null": [ null, "%s1", null ],
+		"slice_slice_with_null": [ null, [null], ["%s1"], ["%s1", null] ]
 	}`
 
 	s1 := "value1"
@@ -88,6 +91,20 @@ func TestUnmarshalPrimitiveString(t *testing.T) {
 	assert.NotNil(t, model.PropSlice)
 	assert.Equal(t, s1, model.PropSlice[0])
 	assert.Equal(t, s2, model.PropSlice[1])
+
+	err = UnmarshalPrimitive(rawMap, "prop_slice_slice", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+
+	assert.Equal(t, 3, len(model.PropSliceSlice))
+	assert.Equal(t, 1, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+
+	assert.Equal(t, s1, model.PropSliceSlice[0][0])
+	assert.Equal(t, s2, model.PropSliceSlice[1][0])
+	assert.Equal(t, s3, model.PropSliceSlice[1][1])
+	assert.Equal(t, s4, model.PropSliceSlice[2][0])
 
 	err = UnmarshalPrimitive(rawMap, "prop_map", &model.PropMap)
 	assert.Nil(t, err)
@@ -151,6 +168,22 @@ func TestUnmarshalPrimitiveString(t *testing.T) {
 	assert.Equal(t, s1, model.PropSlice[1])
 	assert.Equal(t, zeroValue, model.PropSlice[2])
 
+	model.PropSliceSlice = nil
+	err = UnmarshalPrimitive(rawMap, "slice_slice_with_null", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+	assert.Equal(t, 4, len(model.PropSliceSlice))
+	assert.Equal(t, 0, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[3]))
+
+	assert.Nil(t, model.PropSliceSlice[0])
+	assert.Equal(t, zeroValue, model.PropSliceSlice[1][0])
+	assert.Equal(t, s1, model.PropSliceSlice[2][0])
+	assert.Equal(t, s1, model.PropSliceSlice[3][0])
+	assert.Equal(t, zeroValue, model.PropSliceSlice[3][1])
+
 	// Negative tests
 	err = UnmarshalPrimitive(rawMap, "bad_type", &model.Prop)
 	assert.NotNil(t, err)
@@ -177,6 +210,7 @@ func TestUnmarshalPrimitiveBool(t *testing.T) {
 	type MyModel struct {
 		Prop              *bool
 		PropSlice         []bool
+		PropSliceSlice    [][]bool
 		PropMap           map[string]bool
 		PropSliceMap      map[string][]bool
 		PropMapSlice      []map[string]bool
@@ -186,6 +220,7 @@ func TestUnmarshalPrimitiveBool(t *testing.T) {
 	jsonTemplate := `{
 		"prop": %b1,
 		"prop_slice": [%b1, %b2],
+		"prop_slice_slice": [[%b1], [%b2, %b1], [%b2]],
 		"prop_map": { "key1": %b1, "key2": %b2 },
 		"prop_slice_map": { "key1": [%b2, %b1], "key2": [%b1, %b2] },
 		"prop_map_slice": [{"key1": %b1}, {"key2": %b2}],
@@ -195,7 +230,8 @@ func TestUnmarshalPrimitiveBool(t *testing.T) {
 		"not_a_slice": 38,
 		"bad_slice_type": [38, 26],
 		"null_prop": null,
-		"slice_with_null": [ null, %b1, null ]
+		"slice_with_null": [ null, %b1, null ],
+		"slice_slice_with_null": [ null, [null], [%b1], [%b1, null] ]
 	}`
 
 	b1 := true
@@ -228,6 +264,20 @@ func TestUnmarshalPrimitiveBool(t *testing.T) {
 	assert.NotNil(t, model.PropSlice)
 	assert.Equal(t, b1, model.PropSlice[0])
 	assert.Equal(t, b2, model.PropSlice[1])
+
+	err = UnmarshalPrimitive(rawMap, "prop_slice_slice", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+
+	assert.Equal(t, 3, len(model.PropSliceSlice))
+	assert.Equal(t, 1, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+
+	assert.Equal(t, b1, model.PropSliceSlice[0][0])
+	assert.Equal(t, b2, model.PropSliceSlice[1][0])
+	assert.Equal(t, b1, model.PropSliceSlice[1][1])
+	assert.Equal(t, b2, model.PropSliceSlice[2][0])
 
 	err = UnmarshalPrimitive(rawMap, "prop_map", &model.PropMap)
 	assert.Nil(t, err)
@@ -291,6 +341,22 @@ func TestUnmarshalPrimitiveBool(t *testing.T) {
 	assert.Equal(t, b1, model.PropSlice[1])
 	assert.Equal(t, zeroValue, model.PropSlice[2])
 
+	model.PropSliceSlice = nil
+	err = UnmarshalPrimitive(rawMap, "slice_slice_with_null", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+	assert.Equal(t, 4, len(model.PropSliceSlice))
+	assert.Equal(t, 0, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[3]))
+
+	assert.Nil(t, model.PropSliceSlice[0])
+	assert.Equal(t, zeroValue, model.PropSliceSlice[1][0])
+	assert.Equal(t, b1, model.PropSliceSlice[2][0])
+	assert.Equal(t, b1, model.PropSliceSlice[3][0])
+	assert.Equal(t, zeroValue, model.PropSliceSlice[3][1])
+
 	// Negative tests
 	err = UnmarshalPrimitive(rawMap, "bad_type", &model.Prop)
 	assert.NotNil(t, err)
@@ -312,6 +378,7 @@ func TestUnmarshalPrimitiveByteArray(t *testing.T) {
 	type MyModel struct {
 		Prop              *[]byte
 		PropSlice         [][]byte
+		PropSliceSlice    [][][]byte
 		PropMap           map[string][]byte
 		PropSliceMap      map[string][][]byte
 		PropMapSlice      []map[string][]byte
@@ -329,6 +396,7 @@ func TestUnmarshalPrimitiveByteArray(t *testing.T) {
 	jsonStringTemplate := `{
 		"prop": "%s1",
 		"prop_slice": ["%s1", "%s2"],
+		"prop_slice_slice": [["%s1"], ["%s2", "%s1"], ["%s2"]],
 		"prop_map": { "key1": "%s2", "key2": "%s1" },
 		"prop_slice_map": { "key1": ["%s1", "%s2"], "key2": ["%s2", "%s1"] },
 		"prop_map_slice": [{"key1": "%s2"}, {"key2": "%s1"}],
@@ -338,7 +406,8 @@ func TestUnmarshalPrimitiveByteArray(t *testing.T) {
 		"not_a_slice": false,
 		"bad_slice_type": [38, 26],
 		"null_prop": null,
-		"slice_with_null": [ null, "%s1", null ]
+		"slice_with_null": [ null, "%s1", null ],
+		"slice_slice_with_null": [ null, [null], ["%s1"], ["%s1", null] ]
 	}`
 
 	jsonString := strings.ReplaceAll(jsonStringTemplate, "%s1", encodedString1)
@@ -369,6 +438,20 @@ func TestUnmarshalPrimitiveByteArray(t *testing.T) {
 	assert.NotNil(t, model.PropSlice)
 	assert.Equal(t, s1, string(model.PropSlice[0]))
 	assert.Equal(t, s2, string(model.PropSlice[1]))
+
+	err = UnmarshalPrimitive(rawMap, "prop_slice_slice", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+
+	assert.Equal(t, 3, len(model.PropSliceSlice))
+	assert.Equal(t, 1, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+
+	assert.Equal(t, s1, string(model.PropSliceSlice[0][0]))
+	assert.Equal(t, s2, string(model.PropSliceSlice[1][0]))
+	assert.Equal(t, s1, string(model.PropSliceSlice[1][1]))
+	assert.Equal(t, s2, string(model.PropSliceSlice[2][0]))
 
 	err = UnmarshalPrimitive(rawMap, "prop_map", &model.PropMap)
 	assert.Nil(t, err)
@@ -432,6 +515,22 @@ func TestUnmarshalPrimitiveByteArray(t *testing.T) {
 	assert.Equal(t, s1, string(model.PropSlice[1]))
 	assert.Equal(t, zeroValue, model.PropSlice[2])
 
+	model.PropSliceSlice = nil
+	err = UnmarshalPrimitive(rawMap, "slice_slice_with_null", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+	assert.Equal(t, 4, len(model.PropSliceSlice))
+	assert.Equal(t, 0, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[3]))
+
+	assert.Nil(t, model.PropSliceSlice[0])
+	assert.Equal(t, zeroValue, model.PropSliceSlice[1][0])
+	assert.Equal(t, s1, string(model.PropSliceSlice[2][0]))
+	assert.Equal(t, s1, string(model.PropSliceSlice[3][0]))
+	assert.Equal(t, zeroValue, model.PropSliceSlice[3][1])
+
 	// Negative tests
 	err = UnmarshalPrimitive(rawMap, "bad_type", &model.Prop)
 	assert.NotNil(t, err)
@@ -453,6 +552,7 @@ func TestUnmarshalPrimitiveInt64(t *testing.T) {
 	type MyModel struct {
 		Prop              *int64
 		PropSlice         []int64
+		PropSliceSlice    [][]int64
 		PropMap           map[string]int64
 		PropSliceMap      map[string][]int64
 		PropMapSlice      []map[string]int64
@@ -462,6 +562,7 @@ func TestUnmarshalPrimitiveInt64(t *testing.T) {
 	jsonTemplate := `{
 		"prop": %n1,
 		"prop_slice": [%n1, %n2],
+		"prop_slice_slice": [[%n1], [%n2, %n3], [%n4]],
 		"prop_map": { "key1": %n1, "key2": %n2 },
 		"prop_slice_map": { "key1": [%n1, %n2], "key2": [%n3, %n4] },
 		"prop_map_slice": [{"key1": %n1}, {"key2": %n2}],
@@ -471,7 +572,8 @@ func TestUnmarshalPrimitiveInt64(t *testing.T) {
 		"not_a_slice": false,
 		"bad_slice_type": [true, false],
 		"null_prop": null,
-		"slice_with_null": [ null, %n1, null ]
+		"slice_with_null": [ null, %n1, null ],
+		"slice_slice_with_null": [ null, [null], [%n1], [%n1, null] ]
 	}`
 
 	n1 := int64(44)
@@ -509,6 +611,20 @@ func TestUnmarshalPrimitiveInt64(t *testing.T) {
 	assert.Equal(t, n1, model.PropSlice[0])
 	assert.Equal(t, n2, model.PropSlice[1])
 
+	err = UnmarshalPrimitive(rawMap, "prop_slice_slice", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+
+	assert.Equal(t, 3, len(model.PropSliceSlice))
+	assert.Equal(t, 1, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+
+	assert.Equal(t, n1, model.PropSliceSlice[0][0])
+	assert.Equal(t, n2, model.PropSliceSlice[1][0])
+	assert.Equal(t, n3, model.PropSliceSlice[1][1])
+	assert.Equal(t, n4, model.PropSliceSlice[2][0])
+
 	err = UnmarshalPrimitive(rawMap, "prop_map", &model.PropMap)
 	assert.Nil(t, err)
 	assert.NotNil(t, model.PropMap)
@@ -571,6 +687,22 @@ func TestUnmarshalPrimitiveInt64(t *testing.T) {
 	assert.Equal(t, n1, model.PropSlice[1])
 	assert.Equal(t, zeroValue, model.PropSlice[2])
 
+	model.PropSliceSlice = nil
+	err = UnmarshalPrimitive(rawMap, "slice_slice_with_null", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+	assert.Equal(t, 4, len(model.PropSliceSlice))
+	assert.Equal(t, 0, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[3]))
+
+	assert.Nil(t, model.PropSliceSlice[0])
+	assert.Equal(t, zeroValue, model.PropSliceSlice[1][0])
+	assert.Equal(t, n1, model.PropSliceSlice[2][0])
+	assert.Equal(t, n1, model.PropSliceSlice[3][0])
+	assert.Equal(t, zeroValue, model.PropSliceSlice[3][1])
+
 	// Negative tests
 	err = UnmarshalPrimitive(rawMap, "bad_type", &model.Prop)
 	assert.NotNil(t, err)
@@ -592,6 +724,7 @@ func TestUnmarshalPrimitiveFloat32(t *testing.T) {
 	type MyModel struct {
 		Prop              *float32
 		PropSlice         []float32
+		PropSliceSlice    [][]float32
 		PropMap           map[string]float32
 		PropSliceMap      map[string][]float32
 		PropMapSlice      []map[string]float32
@@ -601,6 +734,7 @@ func TestUnmarshalPrimitiveFloat32(t *testing.T) {
 	jsonTemplate := `{
 		"prop": %n1,
 		"prop_slice": [%n1, %n2],
+		"prop_slice_slice": [[%n1], [%n2, %n3], [%n4]],
 		"prop_map": { "key1": %n1, "key2": %n2 },
 		"prop_slice_map": { "key1": [%n1, %n2], "key2": [%n3, %n4] },
 		"prop_map_slice": [{"key1": %n1}, {"key2": %n2}],
@@ -610,7 +744,8 @@ func TestUnmarshalPrimitiveFloat32(t *testing.T) {
 		"not_a_slice": false,
 		"bad_slice_type": [true, false],
 		"null_prop": null,
-		"slice_with_null": [ null, %n1, null ]
+		"slice_with_null": [ null, %n1, null ],
+		"slice_slice_with_null": [ null, [null], [%n1], [%n1, null] ]
 	}`
 
 	n1 := float32(44.5)
@@ -648,6 +783,20 @@ func TestUnmarshalPrimitiveFloat32(t *testing.T) {
 	assert.Equal(t, n1, model.PropSlice[0])
 	assert.Equal(t, n2, model.PropSlice[1])
 
+	err = UnmarshalPrimitive(rawMap, "prop_slice_slice", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+
+	assert.Equal(t, 3, len(model.PropSliceSlice))
+	assert.Equal(t, 1, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+
+	assert.Equal(t, n1, model.PropSliceSlice[0][0])
+	assert.Equal(t, n2, model.PropSliceSlice[1][0])
+	assert.Equal(t, n3, model.PropSliceSlice[1][1])
+	assert.Equal(t, n4, model.PropSliceSlice[2][0])
+
 	err = UnmarshalPrimitive(rawMap, "prop_map", &model.PropMap)
 	assert.Nil(t, err)
 	assert.NotNil(t, model.PropMap)
@@ -710,6 +859,22 @@ func TestUnmarshalPrimitiveFloat32(t *testing.T) {
 	assert.Equal(t, n1, model.PropSlice[1])
 	assert.Equal(t, zeroValue, model.PropSlice[2])
 
+	model.PropSliceSlice = nil
+	err = UnmarshalPrimitive(rawMap, "slice_slice_with_null", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+	assert.Equal(t, 4, len(model.PropSliceSlice))
+	assert.Equal(t, 0, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[3]))
+
+	assert.Nil(t, model.PropSliceSlice[0])
+	assert.Equal(t, zeroValue, model.PropSliceSlice[1][0])
+	assert.Equal(t, n1, model.PropSliceSlice[2][0])
+	assert.Equal(t, n1, model.PropSliceSlice[3][0])
+	assert.Equal(t, zeroValue, model.PropSliceSlice[3][1])
+
 	// Negative tests
 	err = UnmarshalPrimitive(rawMap, "bad_type", &model.Prop)
 	assert.NotNil(t, err)
@@ -731,6 +896,7 @@ func TestUnmarshalPrimitiveFloat64(t *testing.T) {
 	type MyModel struct {
 		Prop              *float64
 		PropSlice         []float64
+		PropSliceSlice    [][]float64
 		PropMap           map[string]float64
 		PropSliceMap      map[string][]float64
 		PropMapSlice      []map[string]float64
@@ -740,6 +906,7 @@ func TestUnmarshalPrimitiveFloat64(t *testing.T) {
 	jsonTemplate := `{
 		"prop": %n1,
 		"prop_slice": [%n1, %n2],
+		"prop_slice_slice": [[%n1], [%n2, %n3], [%n4]],
 		"prop_map": { "key1": %n1, "key2": %n2 },
 		"prop_slice_map": { "key1": [%n1, %n2], "key2": [%n3, %n4] },
 		"prop_map_slice": [{"key1": %n1}, {"key2": %n2}],
@@ -749,7 +916,8 @@ func TestUnmarshalPrimitiveFloat64(t *testing.T) {
 		"not_a_slice": false,
 		"bad_slice_type": [true, false],
 		"null_prop": null,
-		"slice_with_null": [ null, %n1, null ]
+		"slice_with_null": [ null, %n1, null ],
+		"slice_slice_with_null": [ null, [null], [%n1], [%n1, null] ]
 	}`
 
 	n1 := float64(44.5)
@@ -787,6 +955,20 @@ func TestUnmarshalPrimitiveFloat64(t *testing.T) {
 	assert.Equal(t, n1, model.PropSlice[0])
 	assert.Equal(t, n2, model.PropSlice[1])
 
+	err = UnmarshalPrimitive(rawMap, "prop_slice_slice", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+
+	assert.Equal(t, 3, len(model.PropSliceSlice))
+	assert.Equal(t, 1, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+
+	assert.Equal(t, n1, model.PropSliceSlice[0][0])
+	assert.Equal(t, n2, model.PropSliceSlice[1][0])
+	assert.Equal(t, n3, model.PropSliceSlice[1][1])
+	assert.Equal(t, n4, model.PropSliceSlice[2][0])
+
 	err = UnmarshalPrimitive(rawMap, "prop_map", &model.PropMap)
 	assert.Nil(t, err)
 	assert.NotNil(t, model.PropMap)
@@ -849,6 +1031,22 @@ func TestUnmarshalPrimitiveFloat64(t *testing.T) {
 	assert.Equal(t, n1, model.PropSlice[1])
 	assert.Equal(t, zeroValue, model.PropSlice[2])
 
+	model.PropSliceSlice = nil
+	err = UnmarshalPrimitive(rawMap, "slice_slice_with_null", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+	assert.Equal(t, 4, len(model.PropSliceSlice))
+	assert.Equal(t, 0, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[3]))
+
+	assert.Nil(t, model.PropSliceSlice[0])
+	assert.Equal(t, zeroValue, model.PropSliceSlice[1][0])
+	assert.Equal(t, n1, model.PropSliceSlice[2][0])
+	assert.Equal(t, n1, model.PropSliceSlice[3][0])
+	assert.Equal(t, zeroValue, model.PropSliceSlice[3][1])
+
 	// Negative tests
 	err = UnmarshalPrimitive(rawMap, "bad_type", &model.Prop)
 	assert.NotNil(t, err)
@@ -870,6 +1068,7 @@ func TestUnmarshalPrimitiveDate(t *testing.T) {
 	type MyModel struct {
 		Prop              *strfmt.Date
 		PropSlice         []strfmt.Date
+		PropSliceSlice    [][]strfmt.Date
 		PropMap           map[string]strfmt.Date
 		PropSliceMap      map[string][]strfmt.Date
 		PropMapSlice      []map[string]strfmt.Date
@@ -879,6 +1078,7 @@ func TestUnmarshalPrimitiveDate(t *testing.T) {
 	jsonTemplate := `{
 		"prop": "%d1",
 		"prop_slice": ["%d1", "%d2"],
+		"prop_slice_slice": [["%d1"], ["%d2", "%d3"], ["%d4" ]],
 		"prop_map": { "key1": "%d1", "key2": "%d2" },
 		"prop_slice_map": { "key1": ["%d1", "%d2"], "key2": ["%d3", "%d4"] },
 		"prop_map_slice": [{"key1": "%d1"}, {"key2": "%d2"}],
@@ -891,7 +1091,8 @@ func TestUnmarshalPrimitiveDate(t *testing.T) {
 		"not_a_slice": false,
 		"bad_slice_type": [38, 26],
 		"null_prop": null,
-		"slice_with_null": [ null, "%d1", null ]
+		"slice_with_null": [ null, "%d1", null ],
+		"slice_slice_with_null": [ null, [null], ["%d1"], ["%d1", null] ]
 	}`
 
 	d1 := "2004-10-27"
@@ -928,6 +1129,20 @@ func TestUnmarshalPrimitiveDate(t *testing.T) {
 	assert.NotNil(t, model.PropSlice)
 	assert.Equal(t, d1, model.PropSlice[0].String())
 	assert.Equal(t, d2, model.PropSlice[1].String())
+
+	err = UnmarshalPrimitive(rawMap, "prop_slice_slice", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+
+	assert.Equal(t, 3, len(model.PropSliceSlice))
+	assert.Equal(t, 1, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+
+	assert.Equal(t, d1, model.PropSliceSlice[0][0].String())
+	assert.Equal(t, d2, model.PropSliceSlice[1][0].String())
+	assert.Equal(t, d3, model.PropSliceSlice[1][1].String())
+	assert.Equal(t, d4, model.PropSliceSlice[2][0].String())
 
 	err = UnmarshalPrimitive(rawMap, "prop_map", &model.PropMap)
 	assert.Nil(t, err)
@@ -991,6 +1206,22 @@ func TestUnmarshalPrimitiveDate(t *testing.T) {
 	assert.Equal(t, d1, model.PropSlice[1].String())
 	assert.Equal(t, zeroValue.String(), model.PropSlice[2].String())
 
+	model.PropSliceSlice = nil
+	err = UnmarshalPrimitive(rawMap, "slice_slice_with_null", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+	assert.Equal(t, 4, len(model.PropSliceSlice))
+	assert.Equal(t, 0, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[3]))
+
+	assert.Nil(t, model.PropSliceSlice[0])
+	assert.Equal(t, zeroValue.String(), model.PropSliceSlice[1][0].String())
+	assert.Equal(t, d1, model.PropSliceSlice[2][0].String())
+	assert.Equal(t, d1, model.PropSliceSlice[3][0].String())
+	assert.Equal(t, zeroValue.String(), model.PropSliceSlice[3][1].String())
+
 	// Negative tests
 	err = UnmarshalPrimitive(rawMap, "bad_type", &model.Prop)
 	assert.NotNil(t, err)
@@ -1027,6 +1258,7 @@ func TestUnmarshalPrimitiveDateTime(t *testing.T) {
 	type MyModel struct {
 		Prop              *strfmt.DateTime
 		PropSlice         []strfmt.DateTime
+		PropSliceSlice    [][]strfmt.DateTime
 		PropMap           map[string]strfmt.DateTime
 		PropSliceMap      map[string][]strfmt.DateTime
 		PropMapSlice      []map[string]strfmt.DateTime
@@ -1036,6 +1268,7 @@ func TestUnmarshalPrimitiveDateTime(t *testing.T) {
 	jsonTemplate := `{
 		"prop": "%d1",
 		"prop_slice": ["%d1", "%d2"],
+		"prop_slice_slice": [["%d1"], ["%d2", "%d3"], ["%d4" ]],
 		"prop_map": { "key1": "%d1", "key2": "%d2" },
 		"prop_slice_map": { "key1": ["%d1", "%d2"], "key2": ["%d3", "%d4"] },
 		"prop_map_slice": [{"key1": "%d1"}, {"key2": "%d2"}],
@@ -1048,7 +1281,8 @@ func TestUnmarshalPrimitiveDateTime(t *testing.T) {
 		"not_a_slice": false,
 		"bad_slice_type": [38, 26],
 		"null_prop": null,
-		"slice_with_null": [ null, "%d1", null ]
+		"slice_with_null": [ null, "%d1", null ],
+		"slice_slice_with_null": [ null, [null], ["%d1"], ["%d1", null] ]
 	}`
 
 	d1 := "1969-07-20T20:17:00"
@@ -1090,6 +1324,20 @@ func TestUnmarshalPrimitiveDateTime(t *testing.T) {
 	assert.Equal(t, d1, model.PropSlice[0].String())
 	assert.Equal(t, d2, model.PropSlice[1].String())
 
+	err = UnmarshalPrimitive(rawMap, "prop_slice_slice", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+
+	assert.Equal(t, 3, len(model.PropSliceSlice))
+	assert.Equal(t, 1, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+
+	assert.Equal(t, d1, model.PropSliceSlice[0][0].String())
+	assert.Equal(t, d2, model.PropSliceSlice[1][0].String())
+	assert.Equal(t, d3, model.PropSliceSlice[1][1].String())
+	assert.Equal(t, d4, model.PropSliceSlice[2][0].String())
+
 	err = UnmarshalPrimitive(rawMap, "prop_map", &model.PropMap)
 	assert.Nil(t, err)
 	assert.NotNil(t, model.PropMap)
@@ -1152,6 +1400,22 @@ func TestUnmarshalPrimitiveDateTime(t *testing.T) {
 	assert.Equal(t, d1, model.PropSlice[1].String())
 	assert.Equal(t, zeroValue.String(), model.PropSlice[2].String())
 
+	model.PropSliceSlice = nil
+	err = UnmarshalPrimitive(rawMap, "slice_slice_with_null", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+	assert.Equal(t, 4, len(model.PropSliceSlice))
+	assert.Equal(t, 0, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[3]))
+
+	assert.Nil(t, model.PropSliceSlice[0])
+	assert.Equal(t, zeroValue.String(), model.PropSliceSlice[1][0].String())
+	assert.Equal(t, d1, model.PropSliceSlice[2][0].String())
+	assert.Equal(t, d1, model.PropSliceSlice[3][0].String())
+	assert.Equal(t, zeroValue.String(), model.PropSliceSlice[3][1].String())
+
 	// Negative tests
 	err = UnmarshalPrimitive(rawMap, "bad_type", &model.Prop)
 	assert.NotNil(t, err)
@@ -1190,6 +1454,7 @@ func TestUnmarshalPrimitiveUUID(t *testing.T) {
 	type MyModel struct {
 		Prop              *strfmt.UUID
 		PropSlice         []strfmt.UUID
+		PropSliceSlice    [][]strfmt.UUID
 		PropMap           map[string]strfmt.UUID
 		PropSliceMap      map[string][]strfmt.UUID
 		PropMapSlice      []map[string]strfmt.UUID
@@ -1199,6 +1464,7 @@ func TestUnmarshalPrimitiveUUID(t *testing.T) {
 	jsonTemplate := `{
 		"prop": "%u1",
 		"prop_slice": ["%u1", "%u2"],
+		"prop_slice_slice": [["%u1"], ["%u2", "%u3"], ["%u4" ]],
 		"prop_map": { "key1": "%u1", "key2": "%u2" },
 		"prop_slice_map": { "key1": ["%u1", "%u2"], "key2": ["%u3", "%u4"] },
 		"prop_map_slice": [{"key1": "%u1"}, {"key2": "%u2"}],
@@ -1210,7 +1476,8 @@ func TestUnmarshalPrimitiveUUID(t *testing.T) {
 		"not_a_slice": false,
 		"bad_slice_type": [38, 26],
 		"null_prop": null,
-		"slice_with_null": [ null, "%u1", null ]
+		"slice_with_null": [ null, "%u1", null ],
+		"slice_slice_with_null": [ null, [null], ["%u1"], ["%u1", null] ]
 	}`
 
 	u1 := "63769e9f-94e6-4ab6-8c68-dd33f69fb535"
@@ -1247,6 +1514,20 @@ func TestUnmarshalPrimitiveUUID(t *testing.T) {
 	assert.NotNil(t, model.PropSlice)
 	assert.Equal(t, u1, model.PropSlice[0].String())
 	assert.Equal(t, u2, model.PropSlice[1].String())
+
+	err = UnmarshalPrimitive(rawMap, "prop_slice_slice", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+
+	assert.Equal(t, 3, len(model.PropSliceSlice))
+	assert.Equal(t, 1, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+
+	assert.Equal(t, u1, model.PropSliceSlice[0][0].String())
+	assert.Equal(t, u2, model.PropSliceSlice[1][0].String())
+	assert.Equal(t, u3, model.PropSliceSlice[1][1].String())
+	assert.Equal(t, u4, model.PropSliceSlice[2][0].String())
 
 	err = UnmarshalPrimitive(rawMap, "prop_map", &model.PropMap)
 	assert.Nil(t, err)
@@ -1310,6 +1591,22 @@ func TestUnmarshalPrimitiveUUID(t *testing.T) {
 	assert.Equal(t, u1, model.PropSlice[1].String())
 	assert.Equal(t, zeroValue.String(), model.PropSlice[2].String())
 
+	model.PropSliceSlice = nil
+	err = UnmarshalPrimitive(rawMap, "slice_slice_with_null", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+	assert.Equal(t, 4, len(model.PropSliceSlice))
+	assert.Equal(t, 0, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[3]))
+
+	assert.Nil(t, model.PropSliceSlice[0])
+	assert.Equal(t, zeroValue.String(), model.PropSliceSlice[1][0].String())
+	assert.Equal(t, u1, model.PropSliceSlice[2][0].String())
+	assert.Equal(t, u1, model.PropSliceSlice[3][0].String())
+	assert.Equal(t, zeroValue.String(), model.PropSliceSlice[3][1].String())
+
 	// Negative tests
 	err = UnmarshalPrimitive(rawMap, "bad_type", &model.Prop)
 	assert.NotNil(t, err)
@@ -1339,6 +1636,7 @@ func TestUnmarshalPrimitiveAny(t *testing.T) {
 	type MyModel struct {
 		Prop              interface{}
 		PropSlice         []interface{}
+		PropSliceSlice    [][]interface{}
 		PropMap           map[string]interface{}
 		PropSliceMap      map[string][]interface{}
 		PropMapSlice      []map[string]interface{}
@@ -1348,6 +1646,7 @@ func TestUnmarshalPrimitiveAny(t *testing.T) {
 	jsonTemplate := `{
 		"prop": "%s1",
 		"prop_slice": [%n1, %n2],
+		"prop_slice_slice": [["%s1"], [%b1, %b2], [%n1]],
 		"prop_map": { "key1": %b1, "key2": %b2 },
 		"prop_slice_map": { "key1": [%n1, %n2], "key2": [%n2, %n1] },
 		"prop_map_slice": [{"key1": %f1}, {"key2": %f1}],
@@ -1357,7 +1656,8 @@ func TestUnmarshalPrimitiveAny(t *testing.T) {
 		"not_a_slice": false,
 		"ok_slice_type": [38, 26],
 		"null_prop": null,
-		"slice_with_null": [ null, "%s1", null ]
+		"slice_with_null": [ null, "%s1", null ],
+		"slice_slice_with_null": [ null, [null], ["%s1"], [%f1, null] ]
 	}`
 
 	s1 := "value1"
@@ -1393,6 +1693,20 @@ func TestUnmarshalPrimitiveAny(t *testing.T) {
 	assert.NotNil(t, model.PropSlice)
 	assert.Equal(t, n1, int64(model.PropSlice[0].(float64)))
 	assert.Equal(t, n2, int64(model.PropSlice[1].(float64)))
+
+	err = UnmarshalPrimitive(rawMap, "prop_slice_slice", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+
+	assert.Equal(t, 3, len(model.PropSliceSlice))
+	assert.Equal(t, 1, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+
+	assert.Equal(t, s1, model.PropSliceSlice[0][0].(string))
+	assert.Equal(t, b1, model.PropSliceSlice[1][0].(bool))
+	assert.Equal(t, b2, model.PropSliceSlice[1][1].(bool))
+	assert.Equal(t, n1, int64(model.PropSliceSlice[2][0].(float64)))
 
 	err = UnmarshalPrimitive(rawMap, "prop_map", &model.PropMap)
 	assert.Nil(t, err)
@@ -1459,6 +1773,22 @@ func TestUnmarshalPrimitiveAny(t *testing.T) {
 	assert.Equal(t, s1, model.PropSlice[1].(string))
 	assert.Equal(t, zeroValue, model.PropSlice[2])
 
+	model.PropSliceSlice = nil
+	err = UnmarshalPrimitive(rawMap, "slice_slice_with_null", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+	assert.Equal(t, 4, len(model.PropSliceSlice))
+	assert.Equal(t, 0, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[3]))
+
+	assert.Nil(t, model.PropSliceSlice[0])
+	assert.Equal(t, zeroValue, model.PropSliceSlice[1][0])
+	assert.Equal(t, s1, model.PropSliceSlice[2][0].(string))
+	assert.Equal(t, f1, model.PropSliceSlice[3][0].(float64))
+	assert.Equal(t, zeroValue, model.PropSliceSlice[3][1])
+
 	// Negative tests
 	model.Prop = nil
 	err = UnmarshalPrimitive(rawMap, "ok_type", &model.Prop)
@@ -1480,6 +1810,7 @@ func TestUnmarshalPrimitiveAnyObject(t *testing.T) {
 	type MyModel struct {
 		Prop              map[string]interface{}
 		PropSlice         []map[string]interface{}
+		PropSliceSlice    [][]map[string]interface{}
 		PropMap           map[string]map[string]interface{}
 		PropSliceMap      map[string][]map[string]interface{}
 		PropMapSlice      []map[string]map[string]interface{}
@@ -1489,6 +1820,7 @@ func TestUnmarshalPrimitiveAnyObject(t *testing.T) {
 	jsonTemplate := `{
 		"prop": %o1,
 		"prop_slice": [%o1, %o2],
+		"prop_slice_slice": [[%o1], [%o2, %o1], [%o2]],
 		"prop_map": { "key1": %o1, "key2": %o2 },
 		"prop_slice_map": { "key1": [%o1, %o2], "key2": [%o2, %o1] },
 		"prop_map_slice": [{"key1": %o1}, {"key2": %o2}],
@@ -1498,7 +1830,8 @@ func TestUnmarshalPrimitiveAnyObject(t *testing.T) {
 		"not_a_slice": false,
 		"bad_slice_type": [38, 26],
 		"null_prop": null,
-		"slice_with_null": [ null, %o1, null ]
+		"slice_with_null": [ null, %o1, null ],
+		"slice_slice_with_null": [ null, [null], [%o1], [%o1, null] ]
 	}`
 
 	o1 := `{"field1": "value1"}`
@@ -1524,6 +1857,15 @@ func TestUnmarshalPrimitiveAnyObject(t *testing.T) {
 	err = UnmarshalPrimitive(rawMap, "prop_slice", &model.PropSlice)
 	assert.Nil(t, err)
 	assert.NotNil(t, model.PropSlice)
+
+	err = UnmarshalPrimitive(rawMap, "prop_slice_slice", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+
+	assert.Equal(t, 3, len(model.PropSliceSlice))
+	assert.Equal(t, 1, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
 
 	err = UnmarshalPrimitive(rawMap, "prop_map", &model.PropMap)
 	assert.Nil(t, err)
@@ -1577,6 +1919,22 @@ func TestUnmarshalPrimitiveAnyObject(t *testing.T) {
 	assert.Equal(t, zeroValue, model.PropSlice[0])
 	assert.Equal(t, o1AsAnyObject, model.PropSlice[1])
 	assert.Equal(t, zeroValue, model.PropSlice[2])
+
+	model.PropSliceSlice = nil
+	err = UnmarshalPrimitive(rawMap, "slice_slice_with_null", &model.PropSliceSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, model.PropSliceSlice)
+	assert.Equal(t, 4, len(model.PropSliceSlice))
+	assert.Equal(t, 0, len(model.PropSliceSlice[0]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[1]))
+	assert.Equal(t, 1, len(model.PropSliceSlice[2]))
+	assert.Equal(t, 2, len(model.PropSliceSlice[3]))
+
+	assert.Nil(t, model.PropSliceSlice[0])
+	assert.Equal(t, zeroValue, model.PropSliceSlice[1][0])
+	assert.Equal(t, o1AsAnyObject, model.PropSliceSlice[2][0])
+	assert.Equal(t, o1AsAnyObject, model.PropSliceSlice[3][0])
+	assert.Equal(t, zeroValue, model.PropSliceSlice[3][1])
 
 	// Negative tests
 	err = UnmarshalPrimitive(rawMap, "bad_type", &model.Prop)
