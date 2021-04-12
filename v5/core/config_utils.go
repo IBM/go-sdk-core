@@ -118,6 +118,7 @@ func getServicePropertiesFromCredentialFile(credentialKey string) map[string]str
 		if err != nil {
 			return nil
 		}
+		/* #nosec G307 */
 		defer file.Close()
 
 		// Collect the contents of the credential file in a string array.
