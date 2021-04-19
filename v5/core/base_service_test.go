@@ -480,6 +480,123 @@ func TestRequestGoodResponseNoBody(t *testing.T) {
 	assert.Nil(t, detailedResponse.RawResult)
 }
 
+// Test a good response with an empty response body.
+func TestRequestGoodResponseEmptyBody(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusNoContent)
+		_, _ = w.Write([]byte{})
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
+	assert.Nil(t, err)
+	req, _ := builder.Build()
+
+	authenticator, err := NewBasicAuthenticator("xxx", "yyy")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
+
+	var rawResponse map[string]json.RawMessage
+	assert.Nil(t, rawResponse)
+	detailedResponse, err := service.Request(req, &rawResponse)
+	assert.Nil(t, err)
+	assert.Nil(t, rawResponse)
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, http.StatusNoContent, detailedResponse.StatusCode)
+	assert.Equal(t, "application/json", detailedResponse.Headers.Get("Content-Type"))
+	assert.Nil(t, detailedResponse.Result)
+	assert.Nil(t, detailedResponse.RawResult)
+}
+
+// Test a good response with an empty JSON object.
+func TestRequestGoodResponseEmptyJSONObject(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusNoContent)
+		_, _ = w.Write([]byte("{}"))
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
+	assert.Nil(t, err)
+	req, _ := builder.Build()
+
+	authenticator, err := NewBasicAuthenticator("xxx", "yyy")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
+
+	var rawResponse map[string]json.RawMessage
+	assert.Nil(t, rawResponse)
+	detailedResponse, err := service.Request(req, &rawResponse)
+	assert.Nil(t, err)
+	assert.Nil(t, rawResponse)
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, http.StatusNoContent, detailedResponse.StatusCode)
+	assert.Equal(t, "application/json", detailedResponse.Headers.Get("Content-Type"))
+	assert.Nil(t, detailedResponse.Result)
+	assert.Nil(t, detailedResponse.RawResult)
+}
+
+// Test a good response with an empty JSON array.
+func TestRequestGoodResponseEmptyJSONArray(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusNoContent)
+		_, _ = w.Write([]byte("[]"))
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
+	assert.Nil(t, err)
+	req, _ := builder.Build()
+
+	authenticator, err := NewBasicAuthenticator("xxx", "yyy")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
+
+	var rawResponse map[string]json.RawMessage
+	assert.Nil(t, rawResponse)
+	detailedResponse, err := service.Request(req, &rawResponse)
+	assert.Nil(t, err)
+	assert.Nil(t, rawResponse)
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, http.StatusNoContent, detailedResponse.StatusCode)
+	assert.Equal(t, "application/json", detailedResponse.Headers.Get("Content-Type"))
+	assert.Nil(t, detailedResponse.Result)
+	assert.Nil(t, detailedResponse.RawResult)
+}
+
 // Example of a JSON error structure.
 var jsonErrorResponse string = `{
     "errors":[

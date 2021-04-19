@@ -448,18 +448,25 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 				return
 			}
 
-			// Decode the byte array as JSON.
-			decodeErr := json.NewDecoder(bytes.NewReader(responseBody)).Decode(result)
-			if decodeErr != nil {
-				// Error decoding the response body.
-				// Return the response body in RawResult, along with an error.
-				err = fmt.Errorf(ERRORMSG_UNMARSHAL_RESPONSE_BODY, decodeErr.Error())
-				detailedResponse.RawResult = responseBody
-				return
+			// Process the response body if it's not empty.
+			if len(responseBody) > 0 {
+				// Decode the byte array as JSON.
+				decodeErr := json.NewDecoder(bytes.NewReader(responseBody)).Decode(result)
+				if decodeErr != nil {
+					// Error decoding the response body.
+					// Return the response body in RawResult, along with an error.
+					err = fmt.Errorf(ERRORMSG_UNMARSHAL_RESPONSE_BODY, decodeErr.Error())
+					detailedResponse.RawResult = responseBody
+					return
+				}
+
+				// Decode step was successful. Return the decoded response object in the Result field.
+				detailedResponse.Result = reflect.ValueOf(result).Elem().Interface()
+			} else {
+				// We don't have to explicitly set the inner result value, since it's nil.
+				detailedResponse.Result = nil
 			}
 
-			// Decode step was successful. Return the decoded response object in the Result field.
-			detailedResponse.Result = reflect.ValueOf(result).Elem().Interface()
 			return
 		} else {
 			// For any other type of response (i.e. it's not JSON and the caller didn't pass in a io.ReadCloser)
@@ -472,29 +479,35 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 				return
 			}
 
-			// After reading the response body into a []byte, check to see if the caller wanted the
-			// response body as a string.
-			// If the caller passed in 'result' as the address of *string,
-			// then we'll reflectively set result to point to it.
-			if reflect.TypeOf(result).String() == "**string" {
-				responseString := string(responseBody)
-				rResult := reflect.ValueOf(result).Elem()
-				rResult.Set(reflect.ValueOf(&responseString))
+			// Process the response body if it's not empty.
+			if len(responseBody) > 0 {
+				// After reading the response body into a []byte, check to see if the caller wanted the
+				// response body as a string.
+				// If the caller passed in 'result' as the address of *string,
+				// then we'll reflectively set result to point to it.
+				if reflect.TypeOf(result).String() == "**string" {
+					responseString := string(responseBody)
+					rResult := reflect.ValueOf(result).Elem()
+					rResult.Set(reflect.ValueOf(&responseString))
 
-				// And set the string in the Result field.
-				detailedResponse.Result = &responseString
-			} else if reflect.TypeOf(result).String() == "*[]uint8" { // byte is an alias for uint8
-				rResult := reflect.ValueOf(result).Elem()
-				rResult.Set(reflect.ValueOf(responseBody))
+					// And set the string in the Result field.
+					detailedResponse.Result = &responseString
+				} else if reflect.TypeOf(result).String() == "*[]uint8" { // byte is an alias for uint8
+					rResult := reflect.ValueOf(result).Elem()
+					rResult.Set(reflect.ValueOf(responseBody))
 
-				// And set the byte slice in the Result field.
-				detailedResponse.Result = responseBody
+					// And set the byte slice in the Result field.
+					detailedResponse.Result = responseBody
+				} else {
+					// At this point, we don't know how to set the result field, so we have to return an error
+					// But make sure we save the bytes we read in the DetailedResponse for debugging purposes
+					detailedResponse.Result = responseBody
+					err = fmt.Errorf(ERRORMSG_UNEXPECTED_RESPONSE)
+					return
+				}
 			} else {
-				// At this point, we don't know how to set the result field, so we have to return an error
-				// But make sure we save the bytes we read in the DetailedResponse for debugging purposes
-				detailedResponse.Result = responseBody
-				err = fmt.Errorf(ERRORMSG_UNEXPECTED_RESPONSE)
-				return
+				// We don't have to explicitly set the inner result value, since it's nil.
+				detailedResponse.Result = nil
 			}
 		}
 	}
