@@ -201,17 +201,7 @@ func (authenticator *CloudPakForDataAuthenticator) getToken() (string, error) {
 		}
 	} else if authenticator.getTokenData().needsRefresh() {
 		// If refresh needed, kick off a go routine in the background to get a new token
-		ch := make(chan error)
-		go func() {
-			ch <- authenticator.invokeRequestTokenData()
-		}()
-		select {
-		case err := <-ch:
-			if err != nil {
-				return "", err
-			}
-		default:
-		}
+		go authenticator.invokeRequestTokenData()
 	}
 
 	// return an error if the access token is not valid or was not fetched
