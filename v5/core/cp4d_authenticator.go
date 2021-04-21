@@ -201,6 +201,7 @@ func (authenticator *CloudPakForDataAuthenticator) getToken() (string, error) {
 		}
 	} else if authenticator.getTokenData().needsRefresh() {
 		// If refresh needed, kick off a go routine in the background to get a new token
+		//nolint: errcheck
 		go authenticator.invokeRequestTokenData()
 	}
 
