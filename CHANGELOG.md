@@ -1,3 +1,15 @@
+# [5.4.0](https://github.com/IBM/go-sdk-core/compare/v5.3.0...v5.4.0) (2021-04-23)
+
+
+### Bug Fixes
+
+* eliminate goroutine leak in the authenticators ([#109](https://github.com/IBM/go-sdk-core/issues/109)) ([e5d921a](https://github.com/IBM/go-sdk-core/commit/e5d921afe4d792354ce334ea1f6a35ffe7db041a))
+
+
+### Features
+
+* add FileWithMetadata type to the core ([#110](https://github.com/IBM/go-sdk-core/issues/110)) ([c1a4884](https://github.com/IBM/go-sdk-core/commit/c1a48844690488a6efce1c1ecb53a520c0ae1d9c))
+
 # [5.3.0](https://github.com/IBM/go-sdk-core/compare/v5.2.1...v5.3.0) (2021-03-30)
 
 
