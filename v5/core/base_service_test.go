@@ -546,12 +546,13 @@ func TestRequestWithResultGoodResponseNoBody(t *testing.T) {
 	assert.NotNil(t, detailedResponse)
 	assert.Equal(t, 201, detailedResponse.StatusCode)
 	assert.Equal(t, "", detailedResponse.Headers.Get("Content-Type"))
+	assert.Nil(t, rawResult)
 	assert.Nil(t, detailedResponse.Result)
 	assert.Nil(t, detailedResponse.RawResult)
 }
 
 // Test request with result that receives a good response with no response body and JSON content-type.
-func TestRequestWithResultGoodResponseNoBodyJSON(t *testing.T) {
+func TestRequestWithResultGoodResponseNoBodyJSONObject(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -581,6 +582,79 @@ func TestRequestWithResultGoodResponseNoBodyJSON(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, detailedResponse)
 	assert.Equal(t, 201, detailedResponse.StatusCode)
+	assert.Nil(t, rawResult)
+	assert.Nil(t, detailedResponse.Result)
+	assert.Nil(t, detailedResponse.RawResult)
+}
+
+// Test request with result that receives a good response with no response body and JSON content-type.
+func TestRequestWithResultGoodResponseNoBodyJSONArray(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
+	assert.Nil(t, err)
+	req, _ := builder.Build()
+
+	authenticator, err := NewBasicAuthenticator("xxx", "yyy")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
+
+	var rawSlice []json.RawMessage
+	detailedResponse, err := service.Request(req, &rawSlice)
+	assert.Nil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, 201, detailedResponse.StatusCode)
+	assert.Nil(t, rawSlice)
+	assert.Nil(t, detailedResponse.Result)
+	assert.Nil(t, detailedResponse.RawResult)
+}
+
+// Test request with result that receives a good response with no response body and JSON content-type.
+func TestRequestWithResultGoodResponseNoBodyString(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "text/plain")
+		w.WriteHeader(http.StatusCreated)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
+	assert.Nil(t, err)
+	req, _ := builder.Build()
+
+	authenticator, err := NewBasicAuthenticator("xxx", "yyy")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
+
+	var result *string
+	detailedResponse, err := service.Request(req, &result)
+	assert.Nil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, 201, detailedResponse.StatusCode)
+	assert.Nil(t, result)
 	assert.Nil(t, detailedResponse.Result)
 	assert.Nil(t, detailedResponse.RawResult)
 }
@@ -617,6 +691,7 @@ func TestRequestWithResultGoodResponseEmptyObjectBody(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, detailedResponse)
 	assert.Equal(t, 201, detailedResponse.StatusCode)
+	assert.NotNil(t, rawResult)
 	assert.NotNil(t, detailedResponse.Result)
 	assert.Nil(t, detailedResponse.RawResult)
 }
@@ -648,11 +723,12 @@ func TestRequestGoodResponseEmptyArrayBody(t *testing.T) {
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
 
-	var rawResult []json.RawMessage
-	detailedResponse, err := service.Request(req, &rawResult)
+	var rawSlice []json.RawMessage
+	detailedResponse, err := service.Request(req, &rawSlice)
 	assert.Nil(t, err)
 	assert.NotNil(t, detailedResponse)
 	assert.Equal(t, 201, detailedResponse.StatusCode)
+	assert.NotNil(t, rawSlice)
 	assert.NotNil(t, detailedResponse.Result)
 	assert.Nil(t, detailedResponse.RawResult)
 }
