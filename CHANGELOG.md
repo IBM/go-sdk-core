@@ -1,3 +1,10 @@
+## [5.4.1](https://github.com/IBM/go-sdk-core/compare/v5.4.0...v5.4.1) (2021-04-27)
+
+
+### Bug Fixes
+
+* support expected (but empty) response body ([#111](https://github.com/IBM/go-sdk-core/issues/111)) ([2f857c2](https://github.com/IBM/go-sdk-core/commit/2f857c2c62d8df6df9d6b3b954131fc95ac73e73))
+
 # [5.4.0](https://github.com/IBM/go-sdk-core/compare/v5.3.0...v5.4.0) (2021-04-23)
 
 
