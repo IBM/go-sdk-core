@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/form3tech-oss/jwt-go"
 )
 
 // coreJWTClaims are the fields within a JWT's "claims" segment that we're interested in.
