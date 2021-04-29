@@ -1,3 +1,10 @@
+## [5.4.2](https://github.com/IBM/go-sdk-core/compare/v5.4.1...v5.4.2) (2021-04-29)
+
+
+### Bug Fixes
+
+* switch to a fork of the original JWT package ([#114](https://github.com/IBM/go-sdk-core/issues/114)) ([18d04ad](https://github.com/IBM/go-sdk-core/commit/18d04ad2f6e4fa32386898c39a4580eb4bca7910))
+
 ## [5.4.1](https://github.com/IBM/go-sdk-core/compare/v5.4.0...v5.4.1) (2021-04-27)
 
 
