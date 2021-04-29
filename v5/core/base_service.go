@@ -437,8 +437,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			rResult := reflect.ValueOf(result).Elem()
 			rResult.Set(reflect.ValueOf(httpResponse.Body))
 			detailedResponse.Result = httpResponse.Body
-		} else if IsJSONMimeType(contentType) {
-			// If the content-type indicates JSON, then unmarshal the response body as JSON.
+		} else {
 
 			// First, read the response body into a byte array.
 			defer httpResponse.Body.Close()
@@ -448,32 +447,29 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 				return
 			}
 
-			// Decode the byte array as JSON.
-			decodeErr := json.NewDecoder(bytes.NewReader(responseBody)).Decode(result)
-			if decodeErr != nil {
-				// Error decoding the response body.
-				// Return the response body in RawResult, along with an error.
-				err = fmt.Errorf(ERRORMSG_UNMARSHAL_RESPONSE_BODY, decodeErr.Error())
-				detailedResponse.RawResult = responseBody
+			// If the response body is empty, then skip any attempt to deserialize and just return
+			if len(responseBody) == 0 {
 				return
 			}
 
-			// Decode step was successful. Return the decoded response object in the Result field.
-			detailedResponse.Result = reflect.ValueOf(result).Elem().Interface()
-			return
-		} else {
-			// For any other type of response (i.e. it's not JSON and the caller didn't pass in a io.ReadCloser)
-			// then read the response body bytes into a []byte so that we don't have an open io.ReadCloser hanging
-			// around.
-			defer httpResponse.Body.Close()
-			responseBody, readErr := ioutil.ReadAll(httpResponse.Body)
-			if readErr != nil {
-				err = fmt.Errorf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error())
+			// If the content-type indicates JSON, then unmarshal the response body as JSON.
+			if IsJSONMimeType(contentType) {
+				// Decode the byte array as JSON.
+				decodeErr := json.NewDecoder(bytes.NewReader(responseBody)).Decode(result)
+				if decodeErr != nil {
+					// Error decoding the response body.
+					// Return the response body in RawResult, along with an error.
+					err = fmt.Errorf(ERRORMSG_UNMARSHAL_RESPONSE_BODY, decodeErr.Error())
+					detailedResponse.RawResult = responseBody
+					return
+				}
+
+				// Decode step was successful. Return the decoded response object in the Result field.
+				detailedResponse.Result = reflect.ValueOf(result).Elem().Interface()
 				return
 			}
 
-			// After reading the response body into a []byte, check to see if the caller wanted the
-			// response body as a string.
+			// Check to see if the caller wanted the response body as a string.
 			// If the caller passed in 'result' as the address of *string,
 			// then we'll reflectively set result to point to it.
 			if reflect.TypeOf(result).String() == "**string" {

@@ -17,6 +17,7 @@ package core
 // limitations under the License.
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -73,13 +74,13 @@ func TestValidateNotNil(t *testing.T) {
 
 // This function is used to demonstrate the problem with comparing
 // a function argument received as an "interface{}"" value with nil.
-func isitnil(obj interface{}) bool {
+func isNilAsIntf(obj interface{}) bool {
 	return obj == nil
 }
 
 func TestIsNil(t *testing.T) {
-	assert.Equal(t, true, IsNil(nil))
-	assert.Equal(t, false, IsNil("test"))
+	assert.True(t, IsNil(nil))
+	assert.False(t, IsNil("test"))
 
 	type MyInnerModel struct {
 		Name *string
@@ -95,15 +96,67 @@ func TestIsNil(t *testing.T) {
 
 	assert.True(t, IsNil(myModel.InnerModel))
 	assert.True(t, myModel.InnerModel == nil)
-	assert.False(t, isitnil(myModel.InnerModel))
+	assert.False(t, isNilAsIntf(myModel.InnerModel))
 
 	assert.True(t, IsNil(myModel.MyMap))
 	assert.True(t, myModel.MyMap == nil)
-	assert.False(t, isitnil(myModel.MyMap))
+	assert.False(t, isNilAsIntf(myModel.MyMap))
 
 	assert.True(t, IsNil(myModel.MySlice))
 	assert.True(t, myModel.MySlice == nil)
-	assert.False(t, isitnil(myModel.MySlice))
+	assert.False(t, isNilAsIntf(myModel.MySlice))
+
+	// Declare (but don't initialize) local vars of type map and slice.
+	var testMap map[string]json.RawMessage
+	var testSlice []json.RawMessage
+
+	// Map and slice are nil.
+	assert.True(t, testMap == nil)
+	assert.True(t, testSlice == nil)
+
+	// As interface{} variables, map and slice are NOT nil.
+	assert.False(t, isNilAsIntf(testMap))
+	assert.False(t, isNilAsIntf(testSlice))
+
+	// IsNil() looks at the interface's value so will appear as nil.
+	assert.True(t, IsNil(testMap))
+	assert.True(t, IsNil(testSlice))
+
+	// Declare two interface{} variables to hold the map and slice values.
+	var testMapIntf interface{} = nil
+	var testSliceIntf interface{} = nil
+
+	// First, verify the interface{} variables are in fact nil.
+	assert.True(t, testMapIntf == nil)
+	assert.True(t, testSliceIntf == nil)
+
+	// Assign the map and slice to the interface{} variables.
+	testMapIntf = testMap
+	testSliceIntf = testSlice
+
+	// As interface{} values, map and slice are NOT nil.
+	assert.False(t, testMapIntf == nil)
+	assert.False(t, testSliceIntf == nil)
+
+	// IsNil() looks at the interface's value so will appear as nil.
+	assert.True(t, IsNil(testMapIntf))
+	assert.True(t, IsNil(testSliceIntf))
+
+	// Initialize the map and slice.
+	testMap = make(map[string]json.RawMessage)
+	testSlice = make([]json.RawMessage, 0)
+
+	assert.False(t, testMap == nil)
+	assert.False(t, testSlice == nil)
+
+	assert.Equal(t, 0, len(testMap))
+	assert.Equal(t, 0, len(testSlice))
+
+	assert.False(t, IsNil(testMap))
+	assert.False(t, IsNil(testSlice))
+
+	assert.False(t, isNilAsIntf(testMap))
+	assert.False(t, isNilAsIntf(testSlice))
 }
 
 func TestValidateStruct(t *testing.T) {
