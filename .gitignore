@@ -3,7 +3,6 @@
 .DS_Store
 credentials.txt
 *.coverprofile
-node_modules/
 .project
 *.env
 
@@ -18,4 +17,8 @@ coverage.txt
 .secrets.baseline
 /.settings/
 /.vscode/
+
+# files produced by "npm install" commands during build
+package.json
 package-lock.json
+node_modules/
