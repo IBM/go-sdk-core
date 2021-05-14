@@ -1,3 +1,10 @@
+## [5.4.3](https://github.com/IBM/go-sdk-core/compare/v5.4.2...v5.4.3) (2021-05-14)
+
+
+### Bug Fixes
+
+* **build:** prevent semantic-release from committing package-lock.json ([#115](https://github.com/IBM/go-sdk-core/issues/115)) ([7fa259f](https://github.com/IBM/go-sdk-core/commit/7fa259f0da0926f043961de45243b4e40643bb12))
+
 ## [5.4.2](https://github.com/IBM/go-sdk-core/compare/v5.4.1...v5.4.2) (2021-04-29)
 
 
