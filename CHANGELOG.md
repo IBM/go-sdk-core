@@ -1,3 +1,10 @@
+## [5.4.4](https://github.com/IBM/go-sdk-core/compare/v5.4.3...v5.4.4) (2021-05-21)
+
+
+### Bug Fixes
+
+* add check for empty string in ParseDate with tests ([#116](https://github.com/IBM/go-sdk-core/issues/116)) ([35cd647](https://github.com/IBM/go-sdk-core/commit/35cd64717c0920cddab0720abac6dc450d9b9099))
+
 ## [5.4.3](https://github.com/IBM/go-sdk-core/compare/v5.4.2...v5.4.3) (2021-05-14)
 
 
