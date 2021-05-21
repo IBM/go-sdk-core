@@ -172,6 +172,10 @@ func TestDateTimeUtil(t *testing.T) {
 	assert.Equal(t, strfmt.Date{}, fmtDate)
 	assert.NotNil(t, err)
 
+	fmtDate, err = ParseDate("")
+	assert.Equal(t, strfmt.Date(time.Unix(0, 0).UTC()), fmtDate)
+	assert.Nil(t, err)
+
 	dateTimeVar := strfmt.DateTime(time.Now())
 	var fmtDTime strfmt.DateTime
 	fmtDTime, err = ParseDateTime(dateTimeVar.String())
@@ -181,4 +185,8 @@ func TestDateTimeUtil(t *testing.T) {
 	fmtDTime, err = ParseDateTime("not a datetime")
 	assert.Equal(t, strfmt.DateTime{}, fmtDTime)
 	assert.NotNil(t, err)
+
+	fmtDTime, err = ParseDateTime("")
+	assert.Equal(t, strfmt.NewDateTime(), fmtDTime)
+	assert.Nil(t, err)
 }
