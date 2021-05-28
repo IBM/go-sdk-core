@@ -1,3 +1,10 @@
+## [5.4.5](https://github.com/IBM/go-sdk-core/compare/v5.4.4...v5.4.5) (2021-05-28)
+
+
+### Bug Fixes
+
+* allow user to set "Host" request header ([#118](https://github.com/IBM/go-sdk-core/issues/118)) ([efd7fe3](https://github.com/IBM/go-sdk-core/commit/efd7fe36930f794aad1c2a14a1a414611afae340))
+
 ## [5.4.4](https://github.com/IBM/go-sdk-core/compare/v5.4.3...v5.4.4) (2021-05-21)
 
 
