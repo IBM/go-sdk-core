@@ -554,6 +554,7 @@ func TestCp4dUserHeaders(t *testing.T) {
 		verifyAuthRequest(t, r, "mookie", "", "King of the North")
 		assert.Equal(t, "Value1", r.Header.Get("Header1"))
 		assert.Equal(t, "Value2", r.Header.Get("Header2"))
+		assert.Equal(t, "cp4d.cloud.ibm.com", r.Host)
 
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `{ "_messageCode_":"200", "message":"success", "token":"%s"}`, cp4dUsernameApikey1)
@@ -563,6 +564,7 @@ func TestCp4dUserHeaders(t *testing.T) {
 	headers := make(map[string]string)
 	headers["Header1"] = "Value1"
 	headers["Header2"] = "Value2"
+	headers["Host"] = "cp4d.cloud.ibm.com"
 
 	authenticator := &CloudPakForDataAuthenticator{
 		URL:      server.URL,
