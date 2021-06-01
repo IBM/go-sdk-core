@@ -43,13 +43,10 @@ func constructServiceURL(
 	// Verify the provided variable names.
 	for providedName := range providedUrlVariables {
 		if _, ok := defaultUrlVariables[providedName]; !ok {
-			// Get all variable names (the keys of the default variables map).
-			acceptedNames := make([]string, len(defaultUrlVariables))
-
-			i := 0
+			// Get all accepted variable names (the keys of the default variables map).
+			var acceptedNames []string
 			for name := range defaultUrlVariables {
-				acceptedNames[i] = name
-				i++
+				acceptedNames = append(acceptedNames, name)
 			}
 			sort.Strings(acceptedNames)
 
