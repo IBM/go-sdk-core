@@ -40,12 +40,6 @@ func constructServiceURL(
 	providedUrlVariables map[string]string,
 ) (string, error) {
 
-	// If null was passed, we set the variables to an empty map.
-	// This results in all default variable values being used.
-	if providedUrlVariables == nil {
-		providedUrlVariables = map[string]string{}
-	}
-
 	// Verify the provided variable names.
 	for providedName := range providedUrlVariables {
 		if _, ok := defaultUrlVariables[providedName]; !ok {
