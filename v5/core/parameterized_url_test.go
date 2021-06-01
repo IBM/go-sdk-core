@@ -31,7 +31,7 @@ var defaultUrlVariables = map[string]string{
 }
 
 func TestConstructServiceURLWithNil(t *testing.T) {
-	url, err := constructServiceURL(parameterizedUrl, defaultUrlVariables, nil)
+	url, err := ConstructServiceURL(parameterizedUrl, defaultUrlVariables, nil)
 
 	assert.Equal(t, url, "http://ibm.com:9300")
 	assert.Nil(t, err)
@@ -43,7 +43,7 @@ func TestConstructServiceURLWithSomeProvidedVariables(t *testing.T) {
 		"port":   "22",
 	}
 
-	url, err := constructServiceURL(parameterizedUrl, defaultUrlVariables, providedUrlVariables)
+	url, err := ConstructServiceURL(parameterizedUrl, defaultUrlVariables, providedUrlVariables)
 
 	assert.Equal(t, url, "https://ibm.com:22")
 	assert.Nil(t, err)
@@ -56,7 +56,7 @@ func TestConstructServiceURLWithAllProvidedVariables(t *testing.T) {
 		"port":   "22",
 	}
 
-	url, err := constructServiceURL(parameterizedUrl, defaultUrlVariables, providedUrlVariables)
+	url, err := ConstructServiceURL(parameterizedUrl, defaultUrlVariables, providedUrlVariables)
 
 	assert.Equal(t, url, "https://google.com:22")
 	assert.Nil(t, err)
@@ -67,7 +67,7 @@ func TestConstructServiceURLWithInvalidVariable(t *testing.T) {
 		"server": "value",
 	}
 
-	url, err := constructServiceURL(parameterizedUrl, defaultUrlVariables, providedUrlVariables)
+	url, err := ConstructServiceURL(parameterizedUrl, defaultUrlVariables, providedUrlVariables)
 
 	assert.Equal(t, url, "")
 	assert.EqualError(

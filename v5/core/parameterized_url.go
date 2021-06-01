@@ -21,7 +21,7 @@ import (
 )
 
 //
-// constructServiceURL returns a service URL that is constructed by formatting a parameterized URL.
+// ConstructServiceURL returns a service URL that is constructed by formatting a parameterized URL.
 //
 // Parameters:
 //
@@ -34,7 +34,7 @@ import (
 // 		If a variable is not provided in this map,
 // 		the default variable value will be used instead.
 //
-func constructServiceURL(
+func ConstructServiceURL(
 	parameterizedUrl string,
 	defaultUrlVariables map[string]string,
 	providedUrlVariables map[string]string,
