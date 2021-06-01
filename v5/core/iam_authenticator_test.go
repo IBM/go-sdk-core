@@ -535,12 +535,14 @@ func TestIamUserHeaders(t *testing.T) {
 		assert.False(t, ok)
 		assert.Equal(t, "Value1", r.Header.Get("Header1"))
 		assert.Equal(t, "Value2", r.Header.Get("Header2"))
+		assert.Equal(t, "iam.cloud.ibm.com", r.Host)
 	}))
 	defer server.Close()
 
 	headers := make(map[string]string)
 	headers["Header1"] = "Value1"
 	headers["Header2"] = "Value2"
+	headers["Host"] = "iam.cloud.ibm.com"
 
 	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, headers)
 	assert.Nil(t, err)

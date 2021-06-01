@@ -675,3 +675,37 @@ func TestRequestWithContextTimeout(t *testing.T) {
 	assert.Contains(t, err.Error(), "context deadline exceeded")
 	assert.Nil(t, detailedResponse)
 }
+
+func TestHostHeader1(t *testing.T) {
+	// "baseline" test to ensure that if the Host header is not explicitly set,
+	// then the host from the request URL is used.
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ResolveRequestURL("https://localhost:80/api/v1", "", nil)
+	assert.Nil(t, err)
+
+	req, err := builder.Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, req)
+
+	assert.Equal(t, "localhost:80", req.Host)
+	t.Logf("Host: %s\n", req.Host)
+}
+
+func TestHostHeader2(t *testing.T) {
+	// Verify that if the "Host" header is set on the request builder,
+	// then the resulting Request object will have its Host field set as well.
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ResolveRequestURL("https://localhost:80/api/v1", "", nil)
+	assert.Nil(t, err)
+
+	builder.AddHeader("Host", "overridehost:81")
+
+	req, err := builder.Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, req)
+
+	assert.Equal(t, "overridehost:81", req.Host)
+	t.Logf("Host: %s\n", req.Host)
+}

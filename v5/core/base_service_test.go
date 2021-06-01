@@ -975,6 +975,35 @@ func TestRequestForProvidedUserAgent(t *testing.T) {
 	_, _ = service.Request(req, &foo)
 }
 
+func TestRequestHostHeaderDefault(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		fmt.Fprint(w, `{"name": "wonder woman"}`)
+		assert.Equal(t, "server1.cloud.ibm.com", r.Host)
+	}))
+	defer server.Close()
+
+	authenticator := &NoAuthAuthenticator{}
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, _ := NewBaseService(options)
+	headers := http.Header{}
+	headers.Add("Host", "server1.cloud.ibm.com")
+	service.SetDefaultHeaders(headers)
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	var foo *Foo
+	_, _ = service.Request(req, &foo)
+}
+
 func TestIncorrectURL(t *testing.T) {
 	authenticator, _ := NewNoAuthAuthenticator()
 	options := &ServiceOptions{
