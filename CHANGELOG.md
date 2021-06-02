@@ -1,3 +1,10 @@
+# [5.5.0](https://github.com/IBM/go-sdk-core/compare/v5.4.5...v5.5.0) (2021-06-02)
+
+
+### Features
+
+* add `constructServiceURL` function ([#119](https://github.com/IBM/go-sdk-core/issues/119)) ([8213faa](https://github.com/IBM/go-sdk-core/commit/8213faaed484fe22c73a9fbb13eac37e992aab46))
+
 ## [5.4.5](https://github.com/IBM/go-sdk-core/compare/v5.4.4...v5.4.5) (2021-05-28)
 
 
