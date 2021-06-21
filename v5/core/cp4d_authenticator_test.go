@@ -187,13 +187,13 @@ func TestCp4dGetTokenSuccessPW(t *testing.T) {
 	assert.NotNil(t, authenticator)
 
 	// Force the first fetch and verify we got the correct access token back
-	accessToken, err := authenticator.getToken()
+	accessToken, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernamePwd1, accessToken)
 
 	// Force an expiration and verify we get back the second access token.
 	authenticator.setTokenData(nil)
-	accessToken, err = authenticator.getToken()
+	accessToken, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator.getTokenData())
 	assert.Equal(t, cp4dUsernamePwd2, accessToken)
@@ -221,13 +221,13 @@ func TestCp4dGetTokenSuccessAPIKey(t *testing.T) {
 	assert.NotNil(t, authenticator)
 
 	// Force the first fetch and verify we got the correct access token back
-	accessToken, err := authenticator.getToken()
+	accessToken, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, accessToken)
 
 	// Force an expiration and verify we get back the second access token.
 	authenticator.setTokenData(nil)
-	accessToken, err = authenticator.getToken()
+	accessToken, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator.getTokenData())
 	assert.Equal(t, cp4dUsernameApikey2, accessToken)
@@ -255,7 +255,7 @@ func TestCp4dGetCachedTokenSuccessPW(t *testing.T) {
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernamePwd1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -264,7 +264,7 @@ func TestCp4dGetCachedTokenSuccessPW(t *testing.T) {
 	authenticator.getTokenData().Expiration = GetCurrentTime() + 9999
 
 	// Subsequent fetch should still return first access token.
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernamePwd1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -292,7 +292,7 @@ func TestCp4dGetCachedTokenAPIKey(t *testing.T) {
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -301,7 +301,7 @@ func TestCp4dGetCachedTokenAPIKey(t *testing.T) {
 	authenticator.getTokenData().Expiration = GetCurrentTime() + 9999
 
 	// Subsequent fetch should still return first access token.
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -320,7 +320,7 @@ func TestCp4dGetTokenAuthFailure(t *testing.T) {
 		Password: "snow",
 	}
 
-	_, err := authenticator.getToken()
+	_, err := authenticator.GetToken()
 	assert.NotNil(t, err)
 	assert.Equal(t, "Forbidden!", err.Error())
 
@@ -352,7 +352,7 @@ func TestCp4dGetTokenDeserFailure(t *testing.T) {
 		Password: "snow",
 	}
 
-	_, err := authenticator.getToken()
+	_, err := authenticator.GetToken()
 	assert.NotNil(t, err)
 	assert.True(t, strings.HasPrefix(err.Error(), "error unmarshalling authentication response"))
 
@@ -384,7 +384,7 @@ func TestCp4dBackgroundTokenRefreshSuccess(t *testing.T) {
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -394,16 +394,16 @@ func TestCp4dBackgroundTokenRefreshSuccess(t *testing.T) {
 	authenticator.getTokenData().RefreshTime = GetCurrentTime() - 720
 
 	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
-	// getToken() again. The immediate response should be the token which was already stored, since it's not yet
+	// GetToken() again. The immediate response should be the token which was already stored, since it's not yet
 	// expired.
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Wait for the background thread to finish.
 	time.Sleep(5 * time.Second)
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey2, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -433,7 +433,7 @@ func TestCp4dBackgroundTokenRefreshAuthFailure(t *testing.T) {
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernamePwd1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -443,16 +443,16 @@ func TestCp4dBackgroundTokenRefreshAuthFailure(t *testing.T) {
 	authenticator.getTokenData().RefreshTime = GetCurrentTime() - 720
 
 	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
-	// getToken() again. The immediate response should be the token which was already stored, since it's not yet
+	// GetToken() again. The immediate response should be the token which was already stored, since it's not yet
 	// expired.
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernamePwd1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Wait for the background thread to finish
 	time.Sleep(5 * time.Second)
-	_, err = authenticator.getToken()
+	_, err = authenticator.GetToken()
 	assert.NotNil(t, err)
 	assert.Equal(t, "Forbidden!", err.Error())
 
@@ -483,7 +483,7 @@ func TestCp4dBackgroundTokenRefreshIdle(t *testing.T) {
 	assert.Nil(t, authenticator.getTokenData())
 
 	// // Force the first fetch and verify we got the first access token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -494,8 +494,8 @@ func TestCp4dBackgroundTokenRefreshIdle(t *testing.T) {
 	authenticator.getTokenData().RefreshTime = tenMinutesBeforeNow
 
 	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
-	// getToken() again. The immediate response should be the token which was already stored, since it's not yet expired.
-	token, err = authenticator.getToken()
+	// GetToken() again. The immediate response should be the token which was already stored, since it's not yet expired.
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -507,7 +507,7 @@ func TestCp4dBackgroundTokenRefreshIdle(t *testing.T) {
 	// In the next request, the RefreshTime should be unchanged and another thread
 	// shouldn't be spawned to request another token once more since the first thread already spawned
 	// a goroutine & refreshed the token.
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -515,7 +515,7 @@ func TestCp4dBackgroundTokenRefreshIdle(t *testing.T) {
 
 	// Wait for the background thread to finish and verify both the RefreshTime & tokenData were updated
 	time.Sleep(5 * time.Second)
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey2, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -538,7 +538,7 @@ func TestCp4dDisableSSL(t *testing.T) {
 		DisableSSLVerification: true,
 	}
 
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Equal(t, cp4dUsernamePwd1, token)
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator.Client)
@@ -573,7 +573,7 @@ func TestCp4dUserHeaders(t *testing.T) {
 		Headers:  headers,
 	}
 
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Equal(t, cp4dUsernameApikey1, token)
 	assert.Nil(t, err)
 }
@@ -663,7 +663,7 @@ func TestCp4dGetTokenTimeoutError(t *testing.T) {
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernameApikey1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -673,7 +673,7 @@ func TestCp4dGetTokenTimeoutError(t *testing.T) {
 
 	// Set the client timeout to something very low
 	authenticator.Client.Timeout = time.Second * 2
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Equal(t, "", token)
 	assert.NotNil(t, err)
 	assert.NotNil(t, err.Error())
@@ -704,14 +704,14 @@ func TestCp4dGetTokenServerError(t *testing.T) {
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernamePwd1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Force expiration and verify that we got a server error.
 	authenticator.getTokenData().Expiration = GetCurrentTime() - 3600
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.NotNil(t, err)
 
 	// We expect an AuthenticationError to be returned, so cast the returned error

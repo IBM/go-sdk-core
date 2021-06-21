@@ -127,7 +127,7 @@ func TestIamGetTokenSuccess(t *testing.T) {
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -136,7 +136,7 @@ func TestIamGetTokenSuccess(t *testing.T) {
 	authenticator.getTokenData().Expiration = GetCurrentTime() - 3600
 	authenticator.ClientId = "mookie"
 	authenticator.ClientSecret = "betts"
-	_, err = authenticator.getToken()
+	_, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator.getTokenData())
 	assert.Equal(t, AccessToken2, authenticator.getTokenData().AccessToken)
@@ -194,7 +194,7 @@ func TestIamGetTokenSuccessWithScope(t *testing.T) {
 	authenticator.Scope = "scope1 scope2"
 
 	// Force the first fetch and verify we got the first access token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -203,7 +203,7 @@ func TestIamGetTokenSuccessWithScope(t *testing.T) {
 	authenticator.getTokenData().Expiration = GetCurrentTime() - 3600
 	authenticator.ClientId = "mookie"
 	authenticator.ClientSecret = "betts"
-	_, err = authenticator.getToken()
+	_, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator.getTokenData())
 	assert.Equal(t, AccessToken2, authenticator.getTokenData().AccessToken)
@@ -243,13 +243,13 @@ func TestIamGetCachedToken(t *testing.T) {
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Subsequent fetch should still return first access token.
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -290,7 +290,7 @@ func TestIamBackgroundTokenRefresh(t *testing.T) {
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -299,16 +299,16 @@ func TestIamBackgroundTokenRefresh(t *testing.T) {
 	authenticator.getTokenData().RefreshTime = GetCurrentTime() - 720
 
 	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
-	// getToken() again. The immediate response should be the token which was already stored, since it's not yet
+	// GetToken() again. The immediate response should be the token which was already stored, since it's not yet
 	// expired.
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Wait for the background thread to finish
 	time.Sleep(5 * time.Second)
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken2, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -341,7 +341,7 @@ func TestIamBackgroundTokenRefreshFailure(t *testing.T) {
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Successfully fetch the first token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -349,15 +349,15 @@ func TestIamBackgroundTokenRefreshFailure(t *testing.T) {
 	// Now put the test in the "refresh window" where the token is not expired but still needs to be refreshed.
 	authenticator.getTokenData().RefreshTime = GetCurrentTime() - 720
 	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
-	// getToken() again. The immediate response should be the token which was already stored, since it's not yet
+	// GetToken() again. The immediate response should be the token which was already stored, since it's not yet
 	// expired.
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 	// Wait for the background thread to finish
 	time.Sleep(5 * time.Second)
-	_, err = authenticator.getToken()
+	_, err = authenticator.GetToken()
 	assert.NotNil(t, err)
 	assert.Equal(t, "Error while trying to get access token", err.Error())
 	// We don't expect a AuthenticateError to be returned, so casting should fail
@@ -402,7 +402,7 @@ func TestIamBackgroundTokenRefreshIdle(t *testing.T) {
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -412,9 +412,9 @@ func TestIamBackgroundTokenRefreshIdle(t *testing.T) {
 	authenticator.getTokenData().RefreshTime = tenMinutesBeforeNow
 
 	// Authenticator should detect the need to refresh and request a new access token IN THE BACKGROUND when we call
-	// getToken() again. The immediate response should be the token which was already stored, since it's not yet
+	// GetToken() again. The immediate response should be the token which was already stored, since it's not yet
 	// expired.
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -426,7 +426,7 @@ func TestIamBackgroundTokenRefreshIdle(t *testing.T) {
 	// In the next request, the RefreshTime should be unchanged and another thread
 	// shouldn't be spawned to request another token once more since the first thread already spawned
 	// a goroutine & refreshed the token.
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken1, token)
 
@@ -435,7 +435,7 @@ func TestIamBackgroundTokenRefreshIdle(t *testing.T) {
 
 	// Wait for the background thread to finish and verify both the RefreshTime & tokenData were updated
 	time.Sleep(5 * time.Second)
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken2, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -468,7 +468,7 @@ func TestIamClientIdAndSecret(t *testing.T) {
 		ClientSecret: "betts",
 	}
 
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Equal(t, accessToken, token)
 	assert.Nil(t, err)
 }
@@ -509,7 +509,7 @@ func TestIamDisableSSL(t *testing.T) {
 	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", true, nil)
 	assert.Nil(t, err)
 
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Equal(t, accessToken, token)
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator.Client)
@@ -547,7 +547,7 @@ func TestIamUserHeaders(t *testing.T) {
 	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, headers)
 	assert.Nil(t, err)
 
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Equal(t, accessToken, token)
 	assert.Nil(t, err)
 }
@@ -566,7 +566,7 @@ func TestIamGetTokenFailure(t *testing.T) {
 
 	var expectedResponse = []byte("Sorry you are forbidden")
 
-	_, err := authenticator.getToken()
+	_, err := authenticator.GetToken()
 	assert.NotNil(t, err)
 	assert.Equal(t, "Sorry you are forbidden", err.Error())
 	// We expect an AuthenticationError to be returned, so cast the returned error
@@ -617,7 +617,7 @@ func TestIamGetTokenTimeoutError(t *testing.T) {
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -627,7 +627,7 @@ func TestIamGetTokenTimeoutError(t *testing.T) {
 
 	// Set the client timeout to something very low
 	authenticator.Client.Timeout = time.Second * 2
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.Empty(t, token)
 	assert.NotNil(t, err)
 	assert.NotNil(t, err.Error())
@@ -664,7 +664,7 @@ func TestIamGetTokenServerError(t *testing.T) {
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
-	token, err := authenticator.getToken()
+	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.Equal(t, AccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
@@ -673,7 +673,7 @@ func TestIamGetTokenServerError(t *testing.T) {
 
 	// Force expiration and verify that we got a server error
 	authenticator.getTokenData().Expiration = GetCurrentTime() - 3600
-	token, err = authenticator.getToken()
+	token, err = authenticator.GetToken()
 	assert.NotNil(t, err)
 	// We expect an AuthenticationError to be returned, so cast the returned error
 	authError, ok := err.(*AuthenticationError)
