@@ -1,3 +1,10 @@
+## [5.5.1](https://github.com/IBM/go-sdk-core/compare/v5.5.0...v5.5.1) (2021-06-22)
+
+
+### Bug Fixes
+
+* make the get token method exported ([#120](https://github.com/IBM/go-sdk-core/issues/120)) ([658327c](https://github.com/IBM/go-sdk-core/commit/658327c27eecfccda4933c18fbb76b04284f1b3e))
+
 # [5.5.0](https://github.com/IBM/go-sdk-core/compare/v5.4.5...v5.5.0) (2021-06-02)
 
 
