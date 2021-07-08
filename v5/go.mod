@@ -3,7 +3,6 @@ module github.com/IBM/go-sdk-core/v5
 go 1.12
 
 require (
-	github.com/form3tech-oss/jwt-go v3.2.2+incompatible
 	github.com/go-openapi/strfmt v0.20.1
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.1

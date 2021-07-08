@@ -53,3 +53,28 @@ func TestParseJWT(t *testing.T) {
 	assert.Equal(t, int64(1610591412), claims.ExpiresAt)
 	assert.Equal(t, int64(1610548248), claims.IssuedAt)
 }
+
+func TestDecodeSegment(t *testing.T) {
+	testStringDecoded := "testString\n"
+	testStringEncoded := "dGVzdFN0cmluZwo="
+	testStringEncodedShort := "dGVzdFN0cmluZwo"
+	testStringInvalid := "???!"
+
+	var err error
+	var decoded []byte
+
+	decoded, err = decodeSegment(testStringEncoded)
+	assert.Nil(t, err)
+	assert.Equal(t, testStringDecoded, string(decoded))
+
+	decoded, err = decodeSegment(testStringEncodedShort)
+	assert.Nil(t, err)
+	assert.Equal(t, testStringDecoded, string(decoded))
+
+	decoded, err = decodeSegment("")
+	assert.Nil(t, err)
+	assert.Equal(t, []byte{}, decoded)
+
+	_, err = decodeSegment(testStringInvalid)
+	assert.NotNil(t, err)
+}
