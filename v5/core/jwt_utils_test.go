@@ -75,6 +75,6 @@ func TestDecodeSegment(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, []byte{}, decoded)
 
-	decoded, err = decodeSegment(testStringInvalid)
+	_, err = decodeSegment(testStringInvalid)
 	assert.NotNil(t, err)
 }
