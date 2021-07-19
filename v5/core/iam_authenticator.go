@@ -82,6 +82,11 @@ type IamAuthenticator struct {
 var iamRequestTokenMutex sync.Mutex
 var iamNeedsRefreshMutex sync.Mutex
 
+const (
+	// The default (prod) IAM token server base endpoint address.
+	defaultIamTokenServerEndpoint = "https://iam.cloud.ibm.com"
+)
+
 // NewIamAuthenticator constructs a new IamAuthenticator instance.
 func NewIamAuthenticator(apikey string, url string, clientId string, clientSecret string,
 	disableSSLVerification bool, headers map[string]string) (*IamAuthenticator, error) {
@@ -254,7 +259,7 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 	// Use the default IAM URL if one was not specified by the user.
 	url := authenticator.URL
 	if url == "" {
-		url = "https://iam.cloud.ibm.com"
+		url = defaultIamTokenServerEndpoint
 	} else {
 		// Canonicalize the URL by removing the operation path if it was specified by the user.
 		url = strings.TrimSuffix(url, operationPath)
