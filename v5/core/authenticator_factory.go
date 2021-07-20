@@ -27,10 +27,15 @@ func GetAuthenticatorFromEnvironment(credentialKey string) (authenticator Authen
 		return
 	}
 
-	// Default the authentication type to IAM if not specified.
+	// Determine the authentication type if not specified explicitly.
 	authType := properties[PROPNAME_AUTH_TYPE]
 	if authType == "" {
-		authType = AUTHTYPE_IAM
+		// If the APIKEY property is specified, then we'll guess IAM... otherwise CRI.
+		if properties[PROPNAME_APIKEY] != "" {
+			authType = AUTHTYPE_IAM
+		} else {
+			authType = AUTHTYPE_CRI
+		}
 	}
 
 	// Create the authenticator appropriate for the auth type.
@@ -40,6 +45,8 @@ func GetAuthenticatorFromEnvironment(credentialKey string) (authenticator Authen
 		authenticator, err = newBearerTokenAuthenticatorFromMap(properties)
 	} else if strings.EqualFold(authType, AUTHTYPE_IAM) {
 		authenticator, err = newIamAuthenticatorFromMap(properties)
+	} else if strings.EqualFold(authType, AUTHTYPE_CRI) {
+		authenticator, err = newCriAuthenticatorFromMap(properties)
 	} else if strings.EqualFold(authType, AUTHTYPE_CP4D) {
 		authenticator, err = newCloudPakForDataAuthenticatorFromMap(properties)
 	} else if strings.EqualFold(authType, AUTHTYPE_NOAUTH) {
