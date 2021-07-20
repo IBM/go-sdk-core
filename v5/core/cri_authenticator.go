@@ -103,7 +103,7 @@ const (
 	defaultImdsEndpoint    = "http://169.254.169.254"
 	imdsVersionDate        = "2021-07-15"
 	imdsMetadataFlavor     = "ibm"
-	iamGrantTypeCRToken    = "urn:ibm:params:oauth:grant-type:cr-token"
+	iamGrantTypeCRToken    = "urn:ibm:params:oauth:grant-type:cr-token" // #nosec G101
 	crtokenLifetime        = 300
 )
 
