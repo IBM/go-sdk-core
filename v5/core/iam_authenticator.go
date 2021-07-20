@@ -85,6 +85,7 @@ var iamNeedsRefreshMutex sync.Mutex
 const (
 	// The default (prod) IAM token server base endpoint address.
 	defaultIamTokenServerEndpoint = "https://iam.cloud.ibm.com"
+	iamGrantTypeApiKey            = "urn:ibm:params:oauth:grant-type:apikey"
 )
 
 // NewIamAuthenticator constructs a new IamAuthenticator instance.
@@ -146,7 +147,7 @@ func (authenticator *IamAuthenticator) Authenticate(request *http.Request) error
 		return err
 	}
 
-	request.Header.Set("Authorization", fmt.Sprintf(`Bearer %s`, token))
+	request.Header.Set("Authorization", "Bearer "+token)
 	return nil
 }
 
