@@ -85,7 +85,7 @@ var iamNeedsRefreshMutex sync.Mutex
 const (
 	// The default (prod) IAM token server base endpoint address.
 	defaultIamTokenServerEndpoint = "https://iam.cloud.ibm.com"
-	iamGrantTypeApiKey            = "urn:ibm:params:oauth:grant-type:apikey"
+	iamGrantTypeApiKey            = "urn:ibm:params:oauth:grant-type:apikey" // #nosec G101
 )
 
 // NewIamAuthenticator constructs a new IamAuthenticator instance.
@@ -274,7 +274,7 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 
 	builder.AddHeader(CONTENT_TYPE, "application/x-www-form-urlencoded").
 		AddHeader(Accept, APPLICATION_JSON).
-		AddFormData("grant_type", "", "", "urn:ibm:params:oauth:grant-type:apikey"). // #nosec G101
+		AddFormData("grant_type", "", "", iamGrantTypeApiKey).
 		AddFormData("apikey", "", "", authenticator.ApiKey).
 		AddFormData("response_type", "", "", "cloud_iam")
 
