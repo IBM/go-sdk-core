@@ -59,6 +59,23 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	assert.NotNil(t, iamAuthenticator)
 	assert.Equal(t, "scope1 scope2 scope3", iamAuthenticator.Scope)
 
+	authenticator, err = GetAuthenticatorFromEnvironment("service7")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_CRI, authenticator.AuthenticationType())
+	criAuthenticator, ok := authenticator.(*CriAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, criAuthenticator)
+	assert.Equal(t, "crtoken.txt", criAuthenticator.CRTokenFilename)
+	assert.Equal(t, "http://1.1.1.1", criAuthenticator.InstanceMetadataServiceURL)
+	assert.Equal(t, "iam-user1", criAuthenticator.IAMProfileName)
+	assert.Equal(t, "iam-id1", criAuthenticator.IAMProfileID)
+	assert.Equal(t, "https://iamhost/iam/api", criAuthenticator.URL)
+	assert.Equal(t, "iam-client1", criAuthenticator.ClientID)
+	assert.Equal(t, "iam-secret1", criAuthenticator.ClientSecret)
+	assert.True(t, criAuthenticator.DisableSSLVerification)
+	assert.Equal(t, "scope1", criAuthenticator.Scope)
+
 	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
 
@@ -84,6 +101,22 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, authenticator)
 
+	authenticator, err = GetAuthenticatorFromEnvironment("service7")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_CRI, authenticator.AuthenticationType())
+	criAuthenticator, ok := authenticator.(*CriAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, criAuthenticator)
+	assert.Equal(t, "crtoken.txt", criAuthenticator.CRTokenFilename)
+	assert.Equal(t, "http://2.2.2.2", criAuthenticator.InstanceMetadataServiceURL)
+	assert.Equal(t, "iam-user2", criAuthenticator.IAMProfileName)
+	assert.Equal(t, "iam-id2", criAuthenticator.IAMProfileID)
+	assert.Equal(t, "https://iamhost/iam/api", criAuthenticator.URL)
+	assert.Equal(t, "iam-client2", criAuthenticator.ClientID)
+	assert.Equal(t, "iam-secret2", criAuthenticator.ClientSecret)
+	assert.False(t, criAuthenticator.DisableSSLVerification)
+	assert.Equal(t, "scope2 scope3", criAuthenticator.Scope)
 	clearTestEnvironment()
 }
 
