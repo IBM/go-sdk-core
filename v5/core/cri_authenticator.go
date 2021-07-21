@@ -247,15 +247,19 @@ func (authenticator *CriAuthenticator) Validate() error {
 // a new access token is fetched from the token server.
 func (authenticator *CriAuthenticator) GetToken() (string, error) {
 	if authenticator.getTokenData() == nil || !authenticator.getTokenData().isTokenValid() {
+		GetLogger().Debug("Performing synchronous token fetch...")
 		// synchronously request the token
 		err := authenticator.synchronizedRequestToken()
 		if err != nil {
 			return "", err
 		}
 	} else if authenticator.getTokenData().needsRefresh() {
+		GetLogger().Debug("Performing background asynchronous token fetch...")
 		// If refresh needed, kick off a go routine in the background to get a new token
 		//nolint: errcheck
 		go authenticator.invokeRequestTokenData()
+	} else {
+		GetLogger().Debug("Using cached access token...")
 	}
 
 	// return an error if the access token is not valid or was not fetched
