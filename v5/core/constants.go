@@ -21,7 +21,7 @@ const (
 	AUTHTYPE_NOAUTH       = "noAuth"
 	AUTHTYPE_IAM          = "iam"
 	AUTHTYPE_CP4D         = "cp4d"
-	AUTHTYPE_CRI          = "cri"
+	AUTHTYPE_CRAUTH       = "crAuth"
 
 	// Names of properties that can be defined as part of an external configuration (credential file, env vars, etc.).
 	// Example:  export MYSERVICE_URL=https://myurl
@@ -45,7 +45,7 @@ const (
 	PROPNAME_CLIENT_ID                     = "CLIENT_ID"
 	PROPNAME_CLIENT_SECRET                 = "CLIENT_SECRET"
 	PROPNAME_SCOPE                         = "SCOPE"
-	PROPNAME_CRTOKEN_FILENAME              = "CRTOKEN_FILENAME"
+	PROPNAME_CRTOKEN_FILENAME              = "CR_TOKEN_FILENAME"
 	PROPNAME_INSTANCE_METADATA_SERVICE_URL = "INSTANCE_METADATA_SERVICE_URL"
 	PROPNAME_IAM_PROFILE_NAME              = "IAM_PROFILE_NAME"
 	PROPNAME_IAM_PROFILE_ID                = "IAM_PROFILE_ID"

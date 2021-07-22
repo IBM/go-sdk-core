@@ -29,16 +29,17 @@ import (
 )
 
 const (
-	testLogLevel          LogLevel = LevelError
-	criMockCRTokenFile    string   = "../resources/cr-token.txt"
-	criMockIAMProfileName string   = "iam-user-123"
-	criMockIAMProfileID   string   = "iam-id-123"
-	criMockClientID       string   = "client-id-1"
-	criMockClientSecret   string   = "client-secret-1"
-	criTestCRToken1       string   = "cr-token-1"
-	criTestAccessToken1   string   = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
-	criTestAccessToken2   string   = "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
-	criTestRefreshToken   string   = "Xj7Gle500MachEOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
+	// To enable debug logging during test execution, set this to "LevelDebug"
+	craTestLogLevel       LogLevel = LevelDebug
+	craMockCRTokenFile    string   = "../resources/cr-token.txt"
+	craMockIAMProfileName string   = "iam-user-123"
+	craMockIAMProfileID   string   = "iam-id-123"
+	craMockClientID       string   = "client-id-1"
+	craMockClientSecret   string   = "client-secret-1"
+	craTestCRToken1       string   = "cr-token-1"
+	craTestAccessToken1   string   = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
+	craTestAccessToken2   string   = "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
+	craTestRefreshToken   string   = "Xj7Gle500MachEOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
 )
 
 // Struct that models the request body for the "create_access_token" operation
@@ -46,45 +47,45 @@ type instanceIdentityTokenPrototype struct {
 	ExpiresIn int `json:"expires_in"`
 }
 
-func TestCriCtorErrors(t *testing.T) {
+func TestCraCtorErrors(t *testing.T) {
 	var err error
-	var auth *CriAuthenticator
+	var auth *ComputeResourceAuthenticator
 
 	// Error: missing IAMProfileName and IBMProfileID.
-	auth, err = NewCriAuthenticator("", "", "", "", "", "", "", false, "", nil)
+	auth, err = NewComputeResourceAuthenticator("", "", "", "", "", "", "", false, "", nil)
 	assert.NotNil(t, err)
 	assert.Nil(t, auth)
 	t.Logf("Expected error: %s", err.Error())
 
 	// Error: missing ClientID.
-	auth, err = NewCriAuthenticator("", "", criMockIAMProfileName, "", "", "", "client-secret", false, "", nil)
+	auth, err = NewComputeResourceAuthenticator("", "", craMockIAMProfileName, "", "", "", "client-secret", false, "", nil)
 	assert.NotNil(t, err)
 	assert.Nil(t, auth)
 	t.Logf("Expected error: %s", err.Error())
 
 	// Error: missing ClientSecret.
-	auth, err = NewCriAuthenticator("", "", "", "iam-id-123", "", "client-id", "", false, "", nil)
+	auth, err = NewComputeResourceAuthenticator("", "", "", "iam-id-123", "", "client-id", "", false, "", nil)
 	assert.NotNil(t, err)
 	assert.Nil(t, auth)
 	t.Logf("Expected error: %s", err.Error())
 }
 
-func TestCriCtorSuccess(t *testing.T) {
+func TestCraCtorSuccess(t *testing.T) {
 	var err error
-	var auth *CriAuthenticator
+	var auth *ComputeResourceAuthenticator
 	var expectedHeaders = map[string]string{
 		"header1": "value1",
 	}
 
 	// Success - only required params
 	// 1. only IAMProfileName
-	auth, err = NewCriAuthenticator("", "", criMockIAMProfileName, "", "", "", "", false, "", nil)
+	auth, err = NewComputeResourceAuthenticator("", "", craMockIAMProfileName, "", "", "", "", false, "", nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
-	assert.Equal(t, AUTHTYPE_CRI, auth.AuthenticationType())
+	assert.Equal(t, AUTHTYPE_CRAUTH, auth.AuthenticationType())
 	assert.Equal(t, "", auth.CRTokenFilename)
 	assert.Equal(t, "", auth.InstanceMetadataServiceURL)
-	assert.Equal(t, criMockIAMProfileName, auth.IAMProfileName)
+	assert.Equal(t, craMockIAMProfileName, auth.IAMProfileName)
 	assert.Equal(t, "", auth.IAMProfileID)
 	assert.Equal(t, "", auth.URL)
 	assert.Equal(t, "", auth.ClientID)
@@ -93,14 +94,14 @@ func TestCriCtorSuccess(t *testing.T) {
 	assert.Nil(t, auth.Headers)
 
 	// 2. only IAMProfileID
-	auth, err = NewCriAuthenticator("", "", "", criMockIAMProfileID, "", "", "", false, "", nil)
+	auth, err = NewComputeResourceAuthenticator("", "", "", craMockIAMProfileID, "", "", "", false, "", nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
-	assert.Equal(t, AUTHTYPE_CRI, auth.AuthenticationType())
+	assert.Equal(t, AUTHTYPE_CRAUTH, auth.AuthenticationType())
 	assert.Equal(t, "", auth.CRTokenFilename)
 	assert.Equal(t, "", auth.InstanceMetadataServiceURL)
 	assert.Equal(t, "", auth.IAMProfileName)
-	assert.Equal(t, criMockIAMProfileID, auth.IAMProfileID)
+	assert.Equal(t, craMockIAMProfileID, auth.IAMProfileID)
 	assert.Equal(t, "", auth.URL)
 	assert.Equal(t, "", auth.ClientID)
 	assert.Equal(t, "", auth.ClientSecret)
@@ -108,15 +109,15 @@ func TestCriCtorSuccess(t *testing.T) {
 	assert.Nil(t, auth.Headers)
 
 	// Success - all parameters
-	auth, err = NewCriAuthenticator("cr-token-file", "http://1.1.1.1", criMockIAMProfileName, criMockIAMProfileID,
+	auth, err = NewComputeResourceAuthenticator("cr-token-file", "http://1.1.1.1", craMockIAMProfileName, craMockIAMProfileID,
 		defaultIamTokenServerEndpoint, "client-id", "client-secret", true, "scope1", expectedHeaders)
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
-	assert.Equal(t, AUTHTYPE_CRI, auth.AuthenticationType())
+	assert.Equal(t, AUTHTYPE_CRAUTH, auth.AuthenticationType())
 	assert.Equal(t, "cr-token-file", auth.CRTokenFilename)
 	assert.Equal(t, "http://1.1.1.1", auth.InstanceMetadataServiceURL)
-	assert.Equal(t, criMockIAMProfileName, auth.IAMProfileName)
-	assert.Equal(t, criMockIAMProfileID, auth.IAMProfileID)
+	assert.Equal(t, craMockIAMProfileName, auth.IAMProfileName)
+	assert.Equal(t, craMockIAMProfileID, auth.IAMProfileID)
 	assert.Equal(t, defaultIamTokenServerEndpoint, auth.URL)
 	assert.Equal(t, "client-id", auth.ClientID)
 	assert.Equal(t, "client-secret", auth.ClientSecret)
@@ -124,30 +125,30 @@ func TestCriCtorSuccess(t *testing.T) {
 	assert.Equal(t, expectedHeaders, auth.Headers)
 }
 
-func TestCriCtorFromMapErrors(t *testing.T) {
+func TestCraCtorFromMapErrors(t *testing.T) {
 	var err error
-	var auth *CriAuthenticator
+	var auth *ComputeResourceAuthenticator
 	var configProps map[string]string
 
 	// Error: nil config map
-	auth, err = newCriAuthenticatorFromMap(configProps)
+	auth, err = newComputeResourceAuthenticatorFromMap(configProps)
 	assert.NotNil(t, err)
 	assert.Nil(t, auth)
 	t.Logf("Expected error: %s", err.Error())
 
 	// Error: missing IAMProfileName and IAMProfileID
 	configProps = map[string]string{}
-	auth, err = newCriAuthenticatorFromMap(configProps)
+	auth, err = newComputeResourceAuthenticatorFromMap(configProps)
 	assert.NotNil(t, err)
 	assert.Nil(t, auth)
 	t.Logf("Expected error: %s", err.Error())
 
 	// Error: missing ClientID.
 	configProps = map[string]string{
-		PROPNAME_IAM_PROFILE_NAME: criMockIAMProfileName,
+		PROPNAME_IAM_PROFILE_NAME: craMockIAMProfileName,
 		PROPNAME_CLIENT_SECRET:    "client-secret",
 	}
-	auth, err = newCriAuthenticatorFromMap(configProps)
+	auth, err = newComputeResourceAuthenticatorFromMap(configProps)
 	assert.NotNil(t, err)
 	assert.Nil(t, auth)
 	t.Logf("Expected error: %s", err.Error())
@@ -157,28 +158,28 @@ func TestCriCtorFromMapErrors(t *testing.T) {
 		PROPNAME_IAM_PROFILE_ID: "iam-id-123",
 		PROPNAME_CLIENT_ID:      "client-id",
 	}
-	auth, err = newCriAuthenticatorFromMap(configProps)
+	auth, err = newComputeResourceAuthenticatorFromMap(configProps)
 	assert.NotNil(t, err)
 	assert.Nil(t, auth)
 	t.Logf("Expected error: %s", err.Error())
 }
-func TestCriCtorFromMapSuccess(t *testing.T) {
+func TestCraCtorFromMapSuccess(t *testing.T) {
 	var err error
-	var auth *CriAuthenticator
+	var auth *ComputeResourceAuthenticator
 	var configProps map[string]string
 
 	// Success - only required params
 	// 1. only IAMProfileName
 	configProps = map[string]string{
-		PROPNAME_IAM_PROFILE_NAME: criMockIAMProfileName,
+		PROPNAME_IAM_PROFILE_NAME: craMockIAMProfileName,
 	}
-	auth, err = newCriAuthenticatorFromMap(configProps)
+	auth, err = newComputeResourceAuthenticatorFromMap(configProps)
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
-	assert.Equal(t, AUTHTYPE_CRI, auth.AuthenticationType())
+	assert.Equal(t, AUTHTYPE_CRAUTH, auth.AuthenticationType())
 	assert.Equal(t, "", auth.CRTokenFilename)
 	assert.Equal(t, "", auth.InstanceMetadataServiceURL)
-	assert.Equal(t, criMockIAMProfileName, auth.IAMProfileName)
+	assert.Equal(t, craMockIAMProfileName, auth.IAMProfileName)
 	assert.Equal(t, "", auth.IAMProfileID)
 	assert.Equal(t, "", auth.URL)
 	assert.Equal(t, "", auth.ClientID)
@@ -188,16 +189,16 @@ func TestCriCtorFromMapSuccess(t *testing.T) {
 
 	// 2. only IAMProfileID
 	configProps = map[string]string{
-		PROPNAME_IAM_PROFILE_ID: criMockIAMProfileID,
+		PROPNAME_IAM_PROFILE_ID: craMockIAMProfileID,
 	}
-	auth, err = newCriAuthenticatorFromMap(configProps)
+	auth, err = newComputeResourceAuthenticatorFromMap(configProps)
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
-	assert.Equal(t, AUTHTYPE_CRI, auth.AuthenticationType())
+	assert.Equal(t, AUTHTYPE_CRAUTH, auth.AuthenticationType())
 	assert.Equal(t, "", auth.CRTokenFilename)
 	assert.Equal(t, "", auth.InstanceMetadataServiceURL)
 	assert.Equal(t, "", auth.IAMProfileName)
-	assert.Equal(t, criMockIAMProfileID, auth.IAMProfileID)
+	assert.Equal(t, craMockIAMProfileID, auth.IAMProfileID)
 	assert.Equal(t, "", auth.URL)
 	assert.Equal(t, "", auth.ClientID)
 	assert.Equal(t, "", auth.ClientSecret)
@@ -208,7 +209,7 @@ func TestCriCtorFromMapSuccess(t *testing.T) {
 	configProps = map[string]string{
 		PROPNAME_CRTOKEN_FILENAME:              "cr-token-file",
 		PROPNAME_INSTANCE_METADATA_SERVICE_URL: "http://1.1.1.1",
-		PROPNAME_IAM_PROFILE_NAME:              criMockIAMProfileName,
+		PROPNAME_IAM_PROFILE_NAME:              craMockIAMProfileName,
 		PROPNAME_IAM_PROFILE_ID:                "iam-id-123",
 		PROPNAME_AUTH_URL:                      defaultIamTokenServerEndpoint,
 		PROPNAME_CLIENT_ID:                     "client-id",
@@ -216,13 +217,13 @@ func TestCriCtorFromMapSuccess(t *testing.T) {
 		PROPNAME_AUTH_DISABLE_SSL:              "true",
 		PROPNAME_SCOPE:                         "scope1",
 	}
-	auth, err = newCriAuthenticatorFromMap(configProps)
+	auth, err = newComputeResourceAuthenticatorFromMap(configProps)
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
-	assert.Equal(t, AUTHTYPE_CRI, auth.AuthenticationType())
+	assert.Equal(t, AUTHTYPE_CRAUTH, auth.AuthenticationType())
 	assert.Equal(t, "cr-token-file", auth.CRTokenFilename)
 	assert.Equal(t, "http://1.1.1.1", auth.InstanceMetadataServiceURL)
-	assert.Equal(t, criMockIAMProfileName, auth.IAMProfileName)
+	assert.Equal(t, craMockIAMProfileName, auth.IAMProfileName)
 	assert.Equal(t, "iam-id-123", auth.IAMProfileID)
 	assert.Equal(t, defaultIamTokenServerEndpoint, auth.URL)
 	assert.Equal(t, "client-id", auth.ClientID)
@@ -257,13 +258,13 @@ func startMockServer(t *testing.T) *httptest.Server {
 			assert.Equal(t, crtokenLifetime, requestBody.ExpiresIn)
 
 			res.WriteHeader(http.StatusOK)
-			fmt.Fprintf(res, `{"access_token":"%s"}`, criTestCRToken1)
+			fmt.Fprintf(res, `{"access_token":"%s"}`, craTestCRToken1)
 		} else if operationPath == "/identity/token" {
 			// If this is an invocation of the IAM "get_token" operation,
 			// then validate it a bit and then send back a good response.
 			assert.Equal(t, APPLICATION_JSON, req.Header.Get("Accept"))
 			assert.Equal(t, FORM_URL_ENCODED_HEADER, req.Header.Get("Content-Type"))
-			assert.Equal(t, criTestCRToken1, req.FormValue("cr_token"))
+			assert.Equal(t, craTestCRToken1, req.FormValue("cr_token"))
 			assert.Equal(t, iamGrantTypeCRToken, req.FormValue("grant_type"))
 
 			iamProfileID := req.FormValue("profile_id")
@@ -276,7 +277,7 @@ func startMockServer(t *testing.T) *httptest.Server {
 			// This is the access token we'll send back in the mock response.
 			// We'll default to token 1, then see if the caller asked for token 2
 			// via the scope setting below.
-			accessToken := criTestAccessToken1
+			accessToken := craTestAccessToken1
 
 			// We'll use the scope value to control the behavior of this mock endpoint so that we can force
 			// certain things to happen:
@@ -287,12 +288,12 @@ func startMockServer(t *testing.T) *httptest.Server {
 			scope := req.FormValue("scope")
 
 			if scope == "send-second-token" {
-				accessToken = criTestAccessToken2
+				accessToken = craTestAccessToken2
 			} else if scope == "check-basic-auth" {
 				username, password, ok := req.BasicAuth()
 				assert.True(t, ok)
-				assert.Equal(t, criMockClientID, username)
-				assert.Equal(t, criMockClientSecret, password)
+				assert.Equal(t, craMockClientID, username)
+				assert.Equal(t, craMockClientSecret, password)
 			} else if scope == "check-user-headers" {
 				assert.Equal(t, "Value-1", req.Header.Get("User-Header-1"))
 				assert.Equal(t, "iam.cloud.ibm.com", req.Host)
@@ -309,7 +310,7 @@ func startMockServer(t *testing.T) *httptest.Server {
 			switch statusCode {
 			case http.StatusOK:
 				fmt.Fprintf(res, `{"access_token": "%s", "token_type": "Bearer", "expires_in": 3600, "expiration": %d, "refresh_token": "%s"}`,
-					accessToken, expiration, criTestRefreshToken)
+					accessToken, expiration, craTestRefreshToken)
 			case http.StatusBadRequest:
 				fmt.Fprintf(res, `Sorry, bad request!`)
 
@@ -323,23 +324,23 @@ func startMockServer(t *testing.T) *httptest.Server {
 	return server
 }
 
-func TestCriRetrieveCRTokenFromFileSuccess(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraRetrieveCRTokenFromFileSuccess(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	// Set the authenticator to read the CR token from our mock file.
-	auth := &CriAuthenticator{
-		CRTokenFilename: criMockCRTokenFile,
+	auth := &ComputeResourceAuthenticator{
+		CRTokenFilename: craMockCRTokenFile,
 	}
 	crToken, err := auth.readCRTokenFromFile()
 	assert.Nil(t, err)
-	assert.Equal(t, criTestCRToken1, crToken)
+	assert.Equal(t, craTestCRToken1, crToken)
 }
 
-func TestCriRetrieveCRTokenFromFileFail(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraRetrieveCRTokenFromFileFail(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	// Use a non-existent cr token file.
-	auth := &CriAuthenticator{
+	auth := &ComputeResourceAuthenticator{
 		CRTokenFilename: "bogus-cr-token-file",
 	}
 	crToken, err := auth.readCRTokenFromFile()
@@ -348,26 +349,26 @@ func TestCriRetrieveCRTokenFromFileFail(t *testing.T) {
 	t.Logf("Expected error: %s", err.Error())
 }
 
-func TestCriRetrieveCRTokenFromIMDSSuccess(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraRetrieveCRTokenFromIMDSSuccess(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	server := startMockServer(t)
 	defer server.Close()
 
 	// Set up the authenticator to use the mock server.
-	auth := &CriAuthenticator{
+	auth := &ComputeResourceAuthenticator{
 		InstanceMetadataServiceURL: server.URL,
 	}
 	crToken, err := auth.retrieveCRTokenFromIMDS()
 	assert.Nil(t, err)
-	assert.Equal(t, criTestCRToken1, crToken)
+	assert.Equal(t, craTestCRToken1, crToken)
 }
 
-func TestCriRetrieveCRTokenFromIMDSFail(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraRetrieveCRTokenFromIMDSFail(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	// Set up the authenticator to use a bogus IMDS endpoint.
-	auth := &CriAuthenticator{
+	auth := &ComputeResourceAuthenticator{
 		InstanceMetadataServiceURL: "http://bogus.imds.endpoint",
 	}
 	crToken, err := auth.retrieveCRTokenFromIMDS()
@@ -376,15 +377,15 @@ func TestCriRetrieveCRTokenFromIMDSFail(t *testing.T) {
 	t.Logf("Expected error: %s", err.Error())
 }
 
-func TestCriGetTokenSuccess(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraGetTokenSuccess(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	server := startMockServer(t)
 	defer server.Close()
 
-	auth := &CriAuthenticator{
-		CRTokenFilename: criMockCRTokenFile,
-		IAMProfileName:  criMockIAMProfileName,
+	auth := &ComputeResourceAuthenticator{
+		CRTokenFilename: craMockCRTokenFile,
+		IAMProfileName:  craMockIAMProfileName,
 		URL:             server.URL,
 	}
 	err := auth.Validate()
@@ -401,8 +402,8 @@ func TestCriGetTokenSuccess(t *testing.T) {
 	// Verify that the access token was returned by GetToken() and also
 	// stored in the authenticator's tokenData field as well.
 	assert.NotNil(t, auth.getTokenData())
-	assert.Equal(t, criTestAccessToken1, accessToken)
-	assert.Equal(t, criTestAccessToken1, auth.getTokenData().AccessToken)
+	assert.Equal(t, craTestAccessToken1, accessToken)
+	assert.Equal(t, craTestAccessToken1, auth.getTokenData().AccessToken)
 
 	// Call GetToken() again and verify that we get the cached value.
 	// Note: we'll Set Scope so that if the IAM operation is actually called again,
@@ -410,28 +411,28 @@ func TestCriGetTokenSuccess(t *testing.T) {
 	auth.Scope = "send-second-token"
 	accessToken, err = auth.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, criTestAccessToken1, accessToken)
+	assert.Equal(t, craTestAccessToken1, accessToken)
 
 	// Force expiration and verify that GetToken() fetched the second access token.
 	auth.getTokenData().Expiration = GetCurrentTime() - 1
 	auth.IAMProfileName = ""
-	auth.IAMProfileID = criMockIAMProfileID
+	auth.IAMProfileID = craMockIAMProfileID
 	accessToken, err = auth.GetToken()
 	assert.Nil(t, err)
 	assert.NotNil(t, auth.getTokenData())
-	assert.Equal(t, criTestAccessToken2, accessToken)
-	assert.Equal(t, criTestAccessToken2, auth.getTokenData().AccessToken)
+	assert.Equal(t, craTestAccessToken2, accessToken)
+	assert.Equal(t, craTestAccessToken2, auth.getTokenData().AccessToken)
 }
 
-func TestCriRequestTokenSuccess(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraRequestTokenSuccess(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	server := startMockServer(t)
 	defer server.Close()
 
-	auth := &CriAuthenticator{
-		CRTokenFilename: criMockCRTokenFile,
-		IAMProfileName:  criMockIAMProfileName,
+	auth := &ComputeResourceAuthenticator{
+		CRTokenFilename: craMockCRTokenFile,
+		IAMProfileName:  craMockIAMProfileName,
 		URL:             server.URL,
 	}
 	err := auth.Validate()
@@ -441,18 +442,18 @@ func TestCriRequestTokenSuccess(t *testing.T) {
 	tokenResponse, err := auth.RequestToken()
 	assert.Nil(t, err)
 	assert.NotNil(t, tokenResponse)
-	assert.Equal(t, criTestRefreshToken, tokenResponse.RefreshToken)
+	assert.Equal(t, craTestRefreshToken, tokenResponse.RefreshToken)
 }
 
-func TestCriAuthenticateSuccess(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraAuthenticateSuccess(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	server := startMockServer(t)
 	defer server.Close()
 
 	// Set up the authenticator to use the mock server for the IMDS and IAM operations.
-	auth := &CriAuthenticator{
-		IAMProfileID:               criMockIAMProfileID,
+	auth := &ComputeResourceAuthenticator{
+		IAMProfileID:               craMockIAMProfileID,
 		InstanceMetadataServiceURL: server.URL,
 		URL:                        server.URL,
 	}
@@ -473,32 +474,32 @@ func TestCriAuthenticateSuccess(t *testing.T) {
 	// Verify that it succeeded.
 	assert.Nil(t, err)
 	authHeader := request.Header.Get("Authorization")
-	assert.Equal(t, "Bearer "+criTestAccessToken1, authHeader)
+	assert.Equal(t, "Bearer "+craTestAccessToken1, authHeader)
 
 	// Call Authenticate again to make sure we used the cached access token.
 	auth.Scope = "send-second-token"
 	err = auth.Authenticate(request)
 	assert.Nil(t, err)
 	authHeader = request.Header.Get("Authorization")
-	assert.Equal(t, "Bearer "+criTestAccessToken1, authHeader)
+	assert.Equal(t, "Bearer "+craTestAccessToken1, authHeader)
 
 	// Force expiration and verify that Authenticate() fetched the second access token.
 	auth.getTokenData().Expiration = GetCurrentTime() - 1
 	err = auth.Authenticate(request)
 	assert.Nil(t, err)
 	authHeader = request.Header.Get("Authorization")
-	assert.Equal(t, "Bearer "+criTestAccessToken2, authHeader)
+	assert.Equal(t, "Bearer "+craTestAccessToken2, authHeader)
 }
 
-func TestCriAuthenticateFailNoCRToken(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraAuthenticateFailNoCRToken(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	// Set up the authenticator with both a bogus cr token filename and IMDS endpoint
 	// so that we can't successfully retrieve a CR Token value.
-	auth := &CriAuthenticator{
+	auth := &ComputeResourceAuthenticator{
 		CRTokenFilename:            "bogus-cr-token-file",
 		InstanceMetadataServiceURL: "http://bogus.imds.endpoint",
-		IAMProfileName:             criMockIAMProfileName,
+		IAMProfileName:             craMockIAMProfileName,
 		URL:                        "https://bogus.iam.endpoint",
 	}
 	err := auth.Validate()
@@ -526,17 +527,17 @@ func TestCriAuthenticateFailNoCRToken(t *testing.T) {
 	assert.Equal(t, err.Error(), authErr.Error())
 }
 
-func TestCriAuthenticateFailIAM(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraAuthenticateFailIAM(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	server := startMockServer(t)
 	defer server.Close()
 
 	// Setup the authenticator to get the CR token from our mock server,
 	// and set scope to cause the mock server to send a bad status code for the IAM call.
-	auth := &CriAuthenticator{
+	auth := &ComputeResourceAuthenticator{
 		InstanceMetadataServiceURL: server.URL,
-		IAMProfileName:             criMockIAMProfileName,
+		IAMProfileName:             craMockIAMProfileName,
 		URL:                        server.URL,
 		Scope:                      "status-bad-request",
 	}
@@ -564,15 +565,15 @@ func TestCriAuthenticateFailIAM(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, authErr.Response.StatusCode)
 }
 
-func TestCriBackgroundTokenRefreshSuccess(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraBackgroundTokenRefreshSuccess(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	server := startMockServer(t)
 	defer server.Close()
 
-	auth := &CriAuthenticator{
-		CRTokenFilename: criMockCRTokenFile,
-		IAMProfileName:  criMockIAMProfileName,
+	auth := &ComputeResourceAuthenticator{
+		CRTokenFilename: craMockCRTokenFile,
+		IAMProfileName:  craMockIAMProfileName,
 		URL:             server.URL,
 	}
 	err := auth.Validate()
@@ -581,7 +582,7 @@ func TestCriBackgroundTokenRefreshSuccess(t *testing.T) {
 	// Force the first fetch and verify we got the first access token.
 	accessToken, err := auth.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, criTestAccessToken1, accessToken)
+	assert.Equal(t, craTestAccessToken1, accessToken)
 
 	// Now simulate being in the refresh window where the token is not expired but still needs to be refreshed.
 	auth.getTokenData().RefreshTime = GetCurrentTime() - 1
@@ -593,24 +594,24 @@ func TestCriBackgroundTokenRefreshSuccess(t *testing.T) {
 	auth.Scope = "send-second-token"
 	accessToken, err = auth.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, criTestAccessToken1, accessToken)
+	assert.Equal(t, craTestAccessToken1, accessToken)
 
 	// Wait for the background thread to finish.
 	time.Sleep(2 * time.Second)
 	accessToken, err = auth.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, criTestAccessToken2, accessToken)
+	assert.Equal(t, craTestAccessToken2, accessToken)
 }
 
-func TestCriBackgroundTokenRefreshFail(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraBackgroundTokenRefreshFail(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	server := startMockServer(t)
 	defer server.Close()
 
-	auth := &CriAuthenticator{
-		CRTokenFilename: criMockCRTokenFile,
-		IAMProfileName:  criMockIAMProfileName,
+	auth := &ComputeResourceAuthenticator{
+		CRTokenFilename: craMockCRTokenFile,
+		IAMProfileName:  craMockIAMProfileName,
 		URL:             server.URL,
 	}
 	err := auth.Validate()
@@ -619,7 +620,7 @@ func TestCriBackgroundTokenRefreshFail(t *testing.T) {
 	// Force the first fetch and verify we got the first access token.
 	accessToken, err := auth.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, criTestAccessToken1, accessToken)
+	assert.Equal(t, craTestAccessToken1, accessToken)
 
 	// Now simulate being in the refresh window where the token is not expired but still needs to be refreshed.
 	auth.getTokenData().RefreshTime = GetCurrentTime() - 1
@@ -630,7 +631,7 @@ func TestCriBackgroundTokenRefreshFail(t *testing.T) {
 	auth.Scope = "status-unauthorized"
 	accessToken, err = auth.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, criTestAccessToken1, accessToken)
+	assert.Equal(t, craTestAccessToken1, accessToken)
 
 	// Wait for the background thread to finish.
 	time.Sleep(2 * time.Second)
@@ -641,7 +642,7 @@ func TestCriBackgroundTokenRefreshFail(t *testing.T) {
 	// that we had previously cached.
 	accessToken, err = auth.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, criTestAccessToken1, accessToken)
+	assert.Equal(t, craTestAccessToken1, accessToken)
 
 	// Next, simulate the expiration of the token, then we should expect
 	// an error from GetToken().
@@ -652,17 +653,17 @@ func TestCriBackgroundTokenRefreshFail(t *testing.T) {
 	t.Logf("Expected error: %s\n", err.Error())
 }
 
-func TestCriClientIdAndSecret(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraClientIdAndSecret(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	server := startMockServer(t)
 	defer server.Close()
 
-	auth := &CriAuthenticator{
-		CRTokenFilename: criMockCRTokenFile,
-		IAMProfileName:  criMockIAMProfileName,
-		ClientID:        criMockClientID,
-		ClientSecret:    criMockClientSecret,
+	auth := &ComputeResourceAuthenticator{
+		CRTokenFilename: craMockCRTokenFile,
+		IAMProfileName:  craMockIAMProfileName,
+		ClientID:        craMockClientID,
+		ClientSecret:    craMockClientSecret,
 		URL:             server.URL,
 	}
 	err := auth.Validate()
@@ -672,18 +673,18 @@ func TestCriClientIdAndSecret(t *testing.T) {
 	auth.Scope = "check-basic-auth"
 	accessToken, err := auth.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, criTestAccessToken1, accessToken)
+	assert.Equal(t, craTestAccessToken1, accessToken)
 }
 
-func TestCriDisableSSL(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraDisableSSL(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	server := startMockServer(t)
 	defer server.Close()
 
-	auth := &CriAuthenticator{
-		CRTokenFilename:        criMockCRTokenFile,
-		IAMProfileName:         criMockIAMProfileName,
+	auth := &ComputeResourceAuthenticator{
+		CRTokenFilename:        craMockCRTokenFile,
+		IAMProfileName:         craMockIAMProfileName,
 		URL:                    server.URL,
 		DisableSSLVerification: true,
 	}
@@ -693,7 +694,7 @@ func TestCriDisableSSL(t *testing.T) {
 	// Force the first fetch and verify we got the first access token.
 	accessToken, err := auth.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, criTestAccessToken1, accessToken)
+	assert.Equal(t, craTestAccessToken1, accessToken)
 
 	// Next, verify that the authenticator's Client is configured correctly.
 	assert.NotNil(t, auth.Client)
@@ -704,8 +705,8 @@ func TestCriDisableSSL(t *testing.T) {
 	assert.True(t, transport.TLSClientConfig.InsecureSkipVerify)
 }
 
-func TestCriUserHeaders(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraUserHeaders(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	server := startMockServer(t)
 	defer server.Close()
@@ -714,9 +715,9 @@ func TestCriUserHeaders(t *testing.T) {
 	headers["User-Header-1"] = "Value-1"
 	headers["Host"] = "iam.cloud.ibm.com"
 
-	auth := &CriAuthenticator{
-		CRTokenFilename: criMockCRTokenFile,
-		IAMProfileName:  criMockIAMProfileName,
+	auth := &ComputeResourceAuthenticator{
+		CRTokenFilename: craMockCRTokenFile,
+		IAMProfileName:  craMockIAMProfileName,
 		URL:             server.URL,
 		Headers:         headers,
 	}
@@ -727,18 +728,18 @@ func TestCriUserHeaders(t *testing.T) {
 	auth.Scope = "check-user-headers"
 	accessToken, err := auth.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, criTestAccessToken1, accessToken)
+	assert.Equal(t, craTestAccessToken1, accessToken)
 }
 
-func TestCriGetTokenTimeout(t *testing.T) {
-	GetLogger().SetLogLevel(testLogLevel)
+func TestCraGetTokenTimeout(t *testing.T) {
+	GetLogger().SetLogLevel(craTestLogLevel)
 
 	server := startMockServer(t)
 	defer server.Close()
 
-	auth := &CriAuthenticator{
-		CRTokenFilename: criMockCRTokenFile,
-		IAMProfileName:  criMockIAMProfileName,
+	auth := &ComputeResourceAuthenticator{
+		CRTokenFilename: craMockCRTokenFile,
+		IAMProfileName:  craMockIAMProfileName,
 		URL:             server.URL,
 	}
 	err := auth.Validate()
@@ -747,7 +748,7 @@ func TestCriGetTokenTimeout(t *testing.T) {
 	// Force the first fetch and verify we got the first access token.
 	accessToken, err := auth.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, criTestAccessToken1, accessToken)
+	assert.Equal(t, craTestAccessToken1, accessToken)
 
 	// Next, tell the mock server to sleep for a bit, force the expiration of the token,
 	// and configure the client with a short timeout.

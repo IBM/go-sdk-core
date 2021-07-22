@@ -28,14 +28,15 @@ import (
 	"time"
 )
 
-// CriAuthenticator retrieves a "compute resource token" from the local compute resource (VM)
-// and uses that to obtain an IAM access token by invoking the IAM "get token" operation w/grant-type=cr-token.
+// ComputeResourceAuthenticator implements an IAM-based authentication schema where by it
+// retrieves a "compute resource token" from the local compute resource (VM)
+// and uses that to obtain an IAM access token by invoking the IAM "get token" operation with grant-type=cr-token.
 // The resulting IAM access token is then added to outbound requests in an Authorization header
 // of the form:
 //
 // 		Authorization: Bearer <access-token>
 //
-type CriAuthenticator struct {
+type ComputeResourceAuthenticator struct {
 
 	// [optional] The name of the file containing the injected CR token value (applies to
 	// IKS-managed compute resources).
@@ -107,14 +108,14 @@ const (
 	crtokenLifetime        = 300
 )
 
-var criRequestTokenMutex sync.Mutex
+var craRequestTokenMutex sync.Mutex
 
-// NewCriAuthenticator constructs a new CriAuthenticator instance with the supplied values and
-// invokes the CriAuthenticator's Validate() method.
-func NewCriAuthenticator(crtokenFilename string, instanceMetadataServiceURL, iamProfileName string, iamProfileID string,
+// NewComputeResourceAuthenticator constructs a new ComputeResourceAuthenticator instance with the supplied values and
+// invokes the ComputeResourceAuthenticator's Validate() method.
+func NewComputeResourceAuthenticator(crtokenFilename string, instanceMetadataServiceURL, iamProfileName string, iamProfileID string,
 	url string, clientID string, clientSecret string, disableSSLVerification bool, scope string,
-	headers map[string]string) (*CriAuthenticator, error) {
-	authenticator := &CriAuthenticator{
+	headers map[string]string) (*ComputeResourceAuthenticator, error) {
+	authenticator := &ComputeResourceAuthenticator{
 		CRTokenFilename:            crtokenFilename,
 		InstanceMetadataServiceURL: instanceMetadataServiceURL,
 		IAMProfileName:             iamProfileName,
@@ -136,9 +137,9 @@ func NewCriAuthenticator(crtokenFilename string, instanceMetadataServiceURL, iam
 	return authenticator, nil
 }
 
-// newCriAuthenticatorFromMap constructs a new CriAuthenticator instance from a map containing
+// newComputeResourceAuthenticatorFromMap constructs a new ComputeResourceAuthenticator instance from a map containing
 // configuration properties.
-func newCriAuthenticatorFromMap(properties map[string]string) (authenticator *CriAuthenticator, err error) {
+func newComputeResourceAuthenticatorFromMap(properties map[string]string) (authenticator *ComputeResourceAuthenticator, err error) {
 	if properties == nil {
 		return nil, fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
 	}
@@ -149,7 +150,7 @@ func newCriAuthenticatorFromMap(properties map[string]string) (authenticator *Cr
 		disableSSL = false
 	}
 
-	authenticator, err = NewCriAuthenticator(
+	authenticator, err = NewComputeResourceAuthenticator(
 		properties[PROPNAME_CRTOKEN_FILENAME],
 		properties[PROPNAME_INSTANCE_METADATA_SERVICE_URL],
 		properties[PROPNAME_IAM_PROFILE_NAME],
@@ -165,8 +166,8 @@ func newCriAuthenticatorFromMap(properties map[string]string) (authenticator *Cr
 }
 
 // AuthenticationType returns the authentication type for this authenticator.
-func (*CriAuthenticator) AuthenticationType() string {
-	return AUTHTYPE_CRI
+func (*ComputeResourceAuthenticator) AuthenticationType() string {
+	return AUTHTYPE_CRAUTH
 }
 
 // Authenticate adds IAM authentication information to the request.
@@ -175,7 +176,7 @@ func (*CriAuthenticator) AuthenticationType() string {
 //
 // 		Authorization: Bearer <access-token>
 //
-func (authenticator *CriAuthenticator) Authenticate(request *http.Request) error {
+func (authenticator *ComputeResourceAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.GetToken()
 	if err != nil {
 		return err
@@ -186,7 +187,7 @@ func (authenticator *CriAuthenticator) Authenticate(request *http.Request) error
 }
 
 // getTokenData returns the tokenData field from the authenticator with synchronization.
-func (authenticator *CriAuthenticator) getTokenData() *iamTokenData {
+func (authenticator *ComputeResourceAuthenticator) getTokenData() *iamTokenData {
 	authenticator.tokenDataMutex.Lock()
 	defer authenticator.tokenDataMutex.Unlock()
 
@@ -194,7 +195,7 @@ func (authenticator *CriAuthenticator) getTokenData() *iamTokenData {
 }
 
 // setTokenData sets the 'tokenData' field in the authenticator with synchronization.
-func (authenticator *CriAuthenticator) setTokenData(tokenData *iamTokenData) {
+func (authenticator *ComputeResourceAuthenticator) setTokenData(tokenData *iamTokenData) {
 	authenticator.tokenDataMutex.Lock()
 	defer authenticator.tokenDataMutex.Unlock()
 
@@ -205,7 +206,7 @@ func (authenticator *CriAuthenticator) setTokenData(tokenData *iamTokenData) {
 //
 // Ensures that one of IAMProfileName or IAMProfileID are specified, and the ClientId and ClientSecret pair are
 // mutually inclusive.
-func (authenticator *CriAuthenticator) Validate() error {
+func (authenticator *ComputeResourceAuthenticator) Validate() error {
 
 	// Check to make sure that one of IAMProfileName or IAMProfileID are specified.
 	if authenticator.IAMProfileName == "" && authenticator.IAMProfileID == "" {
@@ -245,7 +246,7 @@ func (authenticator *CriAuthenticator) Validate() error {
 // GetToken returns an access token to be used in an Authorization header.
 // Whenever a new token is needed (when a token doesn't yet exist or the existing token has expired),
 // a new access token is fetched from the token server.
-func (authenticator *CriAuthenticator) GetToken() (string, error) {
+func (authenticator *ComputeResourceAuthenticator) GetToken() (string, error) {
 	if authenticator.getTokenData() == nil || !authenticator.getTokenData().isTokenValid() {
 		GetLogger().Debug("Performing synchronous token fetch...")
 		// synchronously request the token
@@ -274,9 +275,9 @@ func (authenticator *CriAuthenticator) GetToken() (string, error) {
 // a valid cached access token.
 // If yes, then nothing else needs to be done.
 // If no, then a blocking request is made to obtain a new IAM access token.
-func (authenticator *CriAuthenticator) synchronizedRequestToken() error {
-	criRequestTokenMutex.Lock()
-	defer criRequestTokenMutex.Unlock()
+func (authenticator *ComputeResourceAuthenticator) synchronizedRequestToken() error {
+	craRequestTokenMutex.Lock()
+	defer craRequestTokenMutex.Unlock()
 	// if cached token is still valid, then just continue to use it
 	if authenticator.getTokenData() != nil && authenticator.getTokenData().isTokenValid() {
 		return nil
@@ -288,7 +289,7 @@ func (authenticator *CriAuthenticator) synchronizedRequestToken() error {
 // invokeRequestTokenData requests a new token from the IAM token server and
 // unmarshals the response to produce the authenticator's 'tokenData' field (cache).
 // Returns an error if the token was unable to be fetched, otherwise returns nil.
-func (authenticator *CriAuthenticator) invokeRequestTokenData() error {
+func (authenticator *ComputeResourceAuthenticator) invokeRequestTokenData() error {
 	tokenResponse, err := authenticator.RequestToken()
 	if err != nil {
 		return err
@@ -305,7 +306,7 @@ func (authenticator *CriAuthenticator) invokeRequestTokenData() error {
 
 // RequestToken first retrieves a CR token value from the current compute resource, then uses
 // that to obtain a new IAM access token from the IAM token server.
-func (authenticator *CriAuthenticator) RequestToken() (*IamTokenServerResponse, error) {
+func (authenticator *ComputeResourceAuthenticator) RequestToken() (*IamTokenServerResponse, error) {
 	var err error
 	var operationPath string = "/identity/token"
 
@@ -443,7 +444,7 @@ func (authenticator *CriAuthenticator) RequestToken() (*IamTokenServerResponse, 
 }
 
 // retrieveCRToken retrieves the CR token for the current compute resource.
-func (authenticator *CriAuthenticator) retrieveCRToken() (crToken string, err error) {
+func (authenticator *ComputeResourceAuthenticator) retrieveCRToken() (crToken string, err error) {
 	var errs []error
 	var crTokenErr error
 
@@ -479,7 +480,7 @@ func (authenticator *CriAuthenticator) retrieveCRToken() (crToken string, err er
 }
 
 // readCRTokenFromFile tries to read the CR token value from the local file system.
-func (authenticator *CriAuthenticator) readCRTokenFromFile() (crToken string, err error) {
+func (authenticator *ComputeResourceAuthenticator) readCRTokenFromFile() (crToken string, err error) {
 
 	// Use the default filename if one wasn't supplied by the user.
 	crTokenFilename := authenticator.CRTokenFilename
@@ -517,7 +518,7 @@ type instanceIdentityToken struct {
 // retrieveCRTokenFromIMDS tries to retrieve the CR token value by invoking
 // the "create_access_token" operation on the compute resource's
 // local Instance Metadata Service.
-func (authenticator *CriAuthenticator) retrieveCRTokenFromIMDS() (crToken string, err error) {
+func (authenticator *ComputeResourceAuthenticator) retrieveCRTokenFromIMDS() (crToken string, err error) {
 	var operationPath string = "instance_identity/v1/token"
 
 	url := authenticator.InstanceMetadataServiceURL
