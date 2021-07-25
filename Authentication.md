@@ -1,9 +1,10 @@
 # Authentication
 The go-sdk-core project supports the following types of authentication:
 - Basic Authentication
-- Bearer Token 
-- Identity and Access Management (IAM)
-- Cloud Pak for Data
+- Bearer Token Authentication
+- Identity and Access Management (IAM) Authentication
+- Compute Resource Authentication
+- Cloud Pak for Data Authentication
 - No Authentication
 
 The SDK user configures the appropriate type of authentication for use with service instances.  
@@ -23,15 +24,20 @@ configuration information.  The configuration examples below will use
 environment variables, although the same properties could be specified in a
 credentials file instead.
 
+
 ## Basic Authentication
 The `BasicAuthenticator` is used to add Basic Authentication information to
 each outbound request in the `Authorization` header in the form:
 ```
    Authorization: Basic <encoded username and password>
 ```
+
 ### Properties
+
 - Username: (required) the basic auth username
+
 - Password: (required) the basic auth password
+
 ### Programming example
 ```go
 import {
@@ -55,6 +61,7 @@ service := exampleservicev1.NewExampleServiceV1(options)
 
 // 'service' can now be used to invoke operations.
 ```
+
 ### Configuration example
 External configuration:
 ```
@@ -74,6 +81,7 @@ authenticator := &core.GetAuthenticatorFromEnvironment("example_service")
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
+    ServiceName:   "example_service",
     Authenticator: authenticator,
 }
 
@@ -83,14 +91,18 @@ service := exampleservicev1.NewExampleServiceV1(options)
 // 'service' can now be used to invoke operations.
 ```
 
+
 ## Bearer Token Authentication
 The `BearerTokenAuthenticator` will add a user-supplied bearer token to
 each outbound request in the `Authorization` header in the form:
 ```
     Authorization: Bearer <bearer-token>
 ```
+
 ### Properties
+
 - BearerToken: (required) the bearer token value
+
 ### Programming example
 ```go
 import {
@@ -118,6 +130,7 @@ service := exampleservicev1.NewExampleServiceV1(options)
 newToken := // ... obtain new bearer token value
 authenticator.BearerToken = newToken
 ```
+
 ### Configuration example
 External configuration:
 ```
@@ -136,6 +149,7 @@ authenticator := &core.GetAuthenticatorFromEnvironment("example_service")
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
+    ServiceName:   "example_service",
     Authenticator: authenticator,
 }
 
@@ -154,6 +168,7 @@ programmatically since they normally have a relatively short lifespan before the
 authenticator type is intended for situations in which the application will be managing the bearer 
 token itself in terms of initial acquisition and refreshing as needed.
 
+
 ## Identity and Access Management Authentication (IAM)
 The `IamAuthenticator` will accept a user-supplied api key and will perform
 the necessary interactions with the IAM token service to obtain a suitable
@@ -164,20 +179,31 @@ form:
 ```
    Authorization: Bearer <bearer-token>
 ```
+
 ### Properties
+
 - ApiKey: (required) the IAM api key
+
 - URL: (optional) The URL representing the IAM token service endpoint.  If not specified, a suitable
 default value is used.
+
 - ClientId/ClientSecret: (optional) The `ClientId` and `ClientSecret` fields are used to form a 
 "basic auth" Authorization header for interactions with the IAM token server. If neither field 
 is specified, then no Authorization header will be sent with token server requests.  These fields 
 are optional, but must be specified together.
+
+- Scope: (optional) the scope to be associated with the IAM access token.
+If not specified, then no scope will be associated with the access token.
+
 - DisableSSLVerification: (optional) A flag that indicates whether verificaton of the server's SSL 
 certificate should be disabled or not. The default value is `false`.
+
 - Headers: (optional) A set of key/value pairs that will be sent as HTTP headers in requests
 made to the IAM token service.
+
 - Client: (Optional) The `http.Client` object used to invoke token servive requests. If not specified
 by the user, a suitable default Client will be constructed.
+
 ### Programming example
 ```go
 import {
@@ -200,6 +226,7 @@ service := exampleservicev1.NewExampleServiceV1(options)
 
 // 'service' can now be used to invoke operations.
 ```
+
 ### Configuration example
 External configuration:
 ```
@@ -218,6 +245,7 @@ authenticator := &core.GetAuthenticatorFromEnvironment("example_service")
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
+    ServiceName:   "example_service",
     Authenticator: authenticator,
 }
 
@@ -227,7 +255,143 @@ service := exampleservicev1.NewExampleServiceV1(options)
 // 'service' can now be used to invoke operations.
 ```
 
-##  Cloud Pak for Data
+
+## Compute Resource Authentication
+The `ComputeResourceAuthenticator` is intended to be used by application code
+running inside a compute resource (a VM) in which a secure compute resource
+token (CR token) has been injected by the compute resource
+provider (e.g. IBM Kubernetes Service (IKS), VPC Gen2 Virtual Server Instances (VSI), etc.).
+The CR token is similar to an IAM apikey except that it is managed automatically by
+the compute resource provider.
+This allows the application developer to:
+- avoid storing credentials in application code, configuraton files or a password vault
+- avoid managing or rotating credentials
+
+The `ComputeResourceAuthenticator` will retrieve the CR token from
+the compute resource in which the application is running, and will then perform
+the necessary interactions with the IAM token service to obtain an IAM access token
+using the IAM "get token" operation with grant-type `cr-token`.
+The authenticator will repeat these steps to obtain a new IAM access token when the
+current access token expires.
+The IAM access token is added to each outbound request in the `Authorization` header in the form:
+```
+   Authorization: Bearer <IAM-access-token>
+```
+
+### Compute Resource Token Retrieval Algorithm
+The `ComputeResourceAuthenticator` will retrieve a fresh CR token value each time it needs
+to obtain a new access token from the IAM token service.
+It will do this according to the following algorithm:
+
+1. First, the authenticator will attempt to read the CR token value from a file in the
+compute resource's local file system.
+By default, the authenticator will use the filename `/var/run/secrets/tokens/vault-token`, but this
+can be overridden by setting the `CRTokenFilename` property (described below).
+If a suitable CR token value is obtained from this step, then the authenticator will use this value.
+Otherwise, the authenticator will proceed to step 2 below.
+
+2. If no CR token was obtained from step 1 above, then the authenticator will attempt to invoke the
+`PUT /instance_identity/v1/token` (aka `create_access_token`) operation from the compute resource's
+local Instance Metadata Service.  The CR token value is obtained from the `access_token`
+field of the operation response.
+By default, the authenticator will use `http://169.254.169.254` as the base endpoint URL for this
+invocation, but this can be overridden by setting the
+`InstanceMetadataServiceURL` property (described below).
+If a suitable CR token value is obtained from this step, then the authenticator will use this value.
+Otherwise, an error is reported and the authentication fails.
+
+### Properties
+
+- CRTokenFilename: (optional) the name of the file containing the injected CR token value
+(applies to the IKS use-case).
+If not specified, then `/var/run/secrets/tokens/vault-token` is used as the default value.
+The application must have `read` permissions on the file containing the CR token value.
+
+- InstanceMetadataServiceURL: (optional) the base endpoint URL to be used for invoking
+operations of the compute resource's local Instance Metadata Service (applies to the VSI use-case).
+If not specified, then `http://169.254.169.254` is used as the default value.
+
+- IAMProfileName: (optional) the name of the linked trusted IAM profile to be used when obtaining the
+IAM access token (a CR token might map to multiple IAM profiles).
+One of `IAMProfileName` or `IAMProfileID` must be specified.
+
+- IAMProfileID: (optional) the id of the linked trusted IAM profile to be used when obtaining the
+IAM access token (a CR token might map to multiple IAM profiles).
+One of `IAMProfileName` or `IAMProfileID` must be specified.
+
+- URL: (optional) The base endpoint URL of the IAM token service.
+The default value of this property is the "prod" IAM token service endpoint (`https://iam.cloud.ibm.com`).
+
+- ClientId/ClientSecret: (optional) The `ClientId` and `ClientSecret` fields are used to form a 
+"basic auth" Authorization header for interactions with the IAM token server. If neither field 
+is specified, then no Authorization header will be sent with token server requests.  These fields 
+are optional, but must be specified together.
+
+- Scope: (optional) the scope to be associated with the IAM access token.
+If not specified, then no scope will be associated with the access token.
+
+- DisableSSLVerification: (optional) A flag that indicates whether verificaton of the server's SSL 
+certificate should be disabled or not. The default value is `false`.
+
+- Headers: (optional) A set of key/value pairs that will be sent as HTTP headers in requests
+made to the IAM token service.
+
+- Client: (Optional) The `http.Client` object used to invoke token servive requests. If not specified
+by the user, a suitable default Client will be constructed.
+
+### Programming example
+```go
+import {
+    "github.com/IBM/go-sdk-core/v5/core"
+    "<appropriate-git-repo-url>/exampleservicev1"
+}
+...
+// Create the authenticator.
+authenticator := &core.ComputeResourceAuthenticator{
+    IAMProfileName: "iam-user123",
+}
+
+// Create the service options struct.
+options := &exampleservicev1.ExampleServiceV1Options{
+    Authenticator: authenticator,
+}
+
+// Construct the service instance.
+service := exampleservicev1.NewExampleServiceV1(options)
+
+// 'service' can now be used to invoke operations.
+```
+
+### Configuration example
+External configuration:
+```
+export EXAMPLE_SERVICE_AUTH_TYPE=crauth
+export EXAMPLE_SERVICE_IAM_PROFILE_NAME=iam-user123
+```
+Application code:
+```go
+import {
+    "github.com/IBM/go-sdk-core/v5/core"
+    "<appropriate-git-repo-url>/exampleservicev1"
+}
+...
+// Construct the authenticator from external configuration information for service "example_service".
+authenticator := &core.GetAuthenticatorFromEnvironment("example_service")
+
+// Create the service options struct.
+options := &exampleservicev1.ExampleServiceV1Options{
+    ServiceName:   "example_service",
+    Authenticator: authenticator,
+}
+
+// Construct the service instance.
+service := exampleservicev1.NewExampleServiceV1(options)
+
+// 'service' can now be used to invoke operations.
+```
+
+
+##  Cloud Pak for Data Authentication
 The `CloudPakForDataAuthenticator` will accept a user-supplied username value, along with either a
 password or apikey, and will 
 perform the necessary interactions with the Cloud Pak for Data token service to obtain a suitable
@@ -238,19 +402,27 @@ form:
    Authorization: Bearer <bearer-token>
 ```
 ### Properties
+
 - Username: (required) the username used to obtain a bearer token.
+
 - Password: (required if APIKey is not specified) the user's password used to obtain a bearer token.
 Exactly one of Password or APIKey should be specified.
+
 - APIKey: (required if Password is not specified) the user's apikey used to obtain a bearer token.
 Exactly one of Password or APIKey should be specified.
+
 - URL: (required) The URL representing the Cloud Pak for Data token service endpoint's base URL string.
 This value should not include the `/v1/authorize` path portion.
+
 - DisableSSLVerification: (optional) A flag that indicates whether verificaton of the server's SSL 
 certificate should be disabled or not. The default value is `false`.
+
 - Headers: (optional) A set of key/value pairs that will be sent as HTTP headers in requests
 made to the IAM token service.
+
 - Client: (Optional) The `http.Client` object used to invoke token servive requests. If not specified
 by the user, a suitable default Client will be constructed.
+
 ### Programming example
 ```go
 import {
@@ -282,6 +454,7 @@ service := exampleservicev1.NewExampleServiceV1(options)
 
 // 'service' can now be used to invoke operations.
 ```
+
 ### Configuration example
 External configuration:
 ```
@@ -309,6 +482,7 @@ authenticator := &core.GetAuthenticatorFromEnvironment("example_service1")
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
+    ServiceName:   "example_service1",
     Authenticator: authenticator,
 }
 
@@ -317,10 +491,14 @@ service := exampleservicev1.NewExampleServiceV1(options)
 
 // 'service' can now be used to invoke operations.
 ```
+
+
 ## No Auth Authentication
 The `NoAuthAuthenticator` is a placeholder authenticator which performs no actual authentication function.   It can be used in situations where authentication needs to be bypassed, perhaps while developing or debugging an application or service.
+
 ### Properties
 None
+
 ### Programming example
 ```go
 import {
@@ -341,6 +519,7 @@ service := exampleservicev1.NewExampleServiceV1(options)
 
 // 'service' can now be used to invoke operations.
 ```
+
 ### Configuration example
 External configuration:
 ```
@@ -358,6 +537,7 @@ authenticator := &core.GetAuthenticatorFromEnvironment("example_service")
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
+    ServiceName:   "example_service",
     Authenticator: authenticator,
 }
 
