@@ -30,7 +30,7 @@ import (
 
 const (
 	// To enable debug logging during test execution, set this to "LevelDebug"
-	craTestLogLevel       LogLevel = LevelDebug
+	craTestLogLevel       LogLevel = LevelError
 	craMockCRTokenFile    string   = "../resources/cr-token.txt"
 	craMockIAMProfileName string   = "iam-user-123"
 	craMockIAMProfileID   string   = "iam-id-123"
