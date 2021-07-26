@@ -26,21 +26,11 @@ import (
 	"time"
 )
 
-// IamAuthenticator-related constants.
-const (
-	DEFAULT_IAM_URL      = "https://iam.cloud.ibm.com"
-	OPERATION_PATH       = "/identity/token"
-	DEFAULT_CONTENT_TYPE = "application/x-www-form-urlencoded"
-	/* #nosec G101 */
-	REQUEST_TOKEN_GRANT_TYPE    = "urn:ibm:params:oauth:grant-type:apikey"
-	REQUEST_TOKEN_RESPONSE_TYPE = "cloud_iam"
-)
-
-// IamAuthenticator uses an apikey to obtain a suitable bearer token value,
-// and adds the bearer token to requests via an Authorization header
+// IamAuthenticator uses an apikey to obtain an IAM access token,
+// and adds the access token to requests via an Authorization header
 // of the form:
 //
-// 		Authorization: Bearer <bearer-token>
+// 		Authorization: Bearer <access-token>
 //
 type IamAuthenticator struct {
 
@@ -91,6 +81,12 @@ type IamAuthenticator struct {
 
 var iamRequestTokenMutex sync.Mutex
 var iamNeedsRefreshMutex sync.Mutex
+
+const (
+	// The default (prod) IAM token server base endpoint address.
+	defaultIamTokenServerEndpoint = "https://iam.cloud.ibm.com"
+	iamGrantTypeApiKey            = "urn:ibm:params:oauth:grant-type:apikey" // #nosec G101
+)
 
 // NewIamAuthenticator constructs a new IamAuthenticator instance.
 func NewIamAuthenticator(apikey string, url string, clientId string, clientSecret string,
@@ -151,7 +147,7 @@ func (authenticator *IamAuthenticator) Authenticate(request *http.Request) error
 		return err
 	}
 
-	request.Header.Set("Authorization", fmt.Sprintf(`Bearer %s`, token))
+	request.Header.Set("Authorization", "Bearer "+token)
 	return nil
 }
 
@@ -259,26 +255,28 @@ func (authenticator *IamAuthenticator) invokeRequestTokenData() error {
 
 // RequestToken fetches a new access token from the token server.
 func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, error) {
+	var operationPath = "/identity/token"
+
 	// Use the default IAM URL if one was not specified by the user.
 	url := authenticator.URL
 	if url == "" {
-		url = DEFAULT_IAM_URL
+		url = defaultIamTokenServerEndpoint
 	} else {
 		// Canonicalize the URL by removing the operation path if it was specified by the user.
-		url = strings.TrimSuffix(url, OPERATION_PATH)
+		url = strings.TrimSuffix(url, operationPath)
 	}
 
 	builder := NewRequestBuilder(POST)
-	_, err := builder.ResolveRequestURL(url, OPERATION_PATH, nil)
+	_, err := builder.ResolveRequestURL(url, operationPath, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	builder.AddHeader(CONTENT_TYPE, DEFAULT_CONTENT_TYPE).
+	builder.AddHeader(CONTENT_TYPE, "application/x-www-form-urlencoded").
 		AddHeader(Accept, APPLICATION_JSON).
-		AddFormData("grant_type", "", "", REQUEST_TOKEN_GRANT_TYPE).
+		AddFormData("grant_type", "", "", iamGrantTypeApiKey).
 		AddFormData("apikey", "", "", authenticator.ApiKey).
-		AddFormData("response_type", "", "", REQUEST_TOKEN_RESPONSE_TYPE)
+		AddFormData("response_type", "", "", "cloud_iam")
 
 	// Add any optional parameters to the request.
 	if authenticator.Scope != "" {

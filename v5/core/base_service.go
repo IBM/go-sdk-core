@@ -343,9 +343,9 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	if GetLogger().IsLogLevelEnabled(LevelDebug) {
 		buf, dumpErr := httputil.DumpRequestOut(req, req.Body != nil)
 		if dumpErr == nil {
-			GetLogger().Debug(fmt.Sprintf("Request:\n%s\n", string(buf)))
+			GetLogger().Debug("Request:\n%s\n", string(buf))
 		} else {
-			GetLogger().Debug(fmt.Sprintf("error while attempting to log outbound request: %s", dumpErr.Error()))
+			GetLogger().Debug("error while attempting to log outbound request: %s", dumpErr.Error())
 		}
 	}
 
@@ -379,9 +379,9 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	if GetLogger().IsLogLevelEnabled(LevelDebug) {
 		buf, dumpErr := httputil.DumpResponse(httpResponse, httpResponse.Body != nil)
 		if err == nil {
-			GetLogger().Debug(fmt.Sprintf("Response:\n%s\n", string(buf)))
+			GetLogger().Debug("Response:\n%s\n", string(buf))
 		} else {
-			GetLogger().Debug(fmt.Sprintf("error while attempting to log inbound response: %s", dumpErr.Error()))
+			GetLogger().Debug("error while attempting to log inbound response: %s", dumpErr.Error())
 		}
 	}
 
