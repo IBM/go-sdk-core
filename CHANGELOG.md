@@ -1,3 +1,10 @@
+# [5.6.0](https://github.com/IBM/go-sdk-core/compare/v5.5.1...v5.6.0) (2021-07-26)
+
+
+### Features
+
+* add support for new ComputeResourceAuthenticator ([#123](https://github.com/IBM/go-sdk-core/issues/123)) ([c7631e3](https://github.com/IBM/go-sdk-core/commit/c7631e392f99c703aaeafee04c1dae177ab56bd2))
+
 ## [5.5.1](https://github.com/IBM/go-sdk-core/compare/v5.5.0...v5.5.1) (2021-06-22)
 
 
