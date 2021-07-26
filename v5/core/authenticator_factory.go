@@ -30,7 +30,7 @@ func GetAuthenticatorFromEnvironment(credentialKey string) (authenticator Authen
 	// Determine the authentication type if not specified explicitly.
 	authType := properties[PROPNAME_AUTH_TYPE]
 	if authType == "" {
-		// If the APIKEY property is specified, then we'll guess IAM... otherwise CRI.
+		// If the APIKEY property is specified, then we'll guess IAM... otherwise CR Auth.
 		if properties[PROPNAME_APIKEY] != "" {
 			authType = AUTHTYPE_IAM
 		} else {

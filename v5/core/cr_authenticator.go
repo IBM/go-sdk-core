@@ -227,19 +227,6 @@ func (authenticator *ComputeResourceAuthenticator) Validate() error {
 		}
 	}
 
-	//
-	// Note: I'm not convinced that we should actually do this type of validation here
-	// in the Validate() method.   For now, we'll just catch this failure as part of the
-	// GetToken() processing later when an actual access token is needed.
-	//
-	// // Finally, check to make sure that we can in fact retrieve the CR token value.
-	// // We do this here as a preliminary validation check (fail fast),
-	// // rather than wait until we actually try to retrieve an access token.
-	// crToken := authenticator.retrieveCRToken()
-	// if crToken == "" {
-	// 	return fmt.Errorf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN)
-	// }
-
 	return nil
 }
 
