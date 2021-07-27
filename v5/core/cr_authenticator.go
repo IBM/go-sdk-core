@@ -210,7 +210,7 @@ func (authenticator *ComputeResourceAuthenticator) Validate() error {
 
 	// Check to make sure that one of IAMProfileName or IAMProfileID are specified.
 	if authenticator.IAMProfileName == "" && authenticator.IAMProfileID == "" {
-		return fmt.Errorf(ERRORMSG_EXCLUSIVE_PROPS_ERROR, "IAMProfileName", "IAMProfileID")
+		return fmt.Errorf(ERRORMSG_ATLEAST_ONE_PROP_ERROR, "IAMProfileName", "IAMProfileID")
 	}
 
 	// Validate ClientId and ClientSecret.  They must both be specified togther or neither should be specified.
