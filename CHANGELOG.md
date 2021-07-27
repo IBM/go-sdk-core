@@ -1,3 +1,10 @@
+## [5.6.1](https://github.com/IBM/go-sdk-core/compare/v5.6.0...v5.6.1) (2021-07-27)
+
+
+### Bug Fixes
+
+* error message used by CR Authenticator ([#126](https://github.com/IBM/go-sdk-core/issues/126)) ([3632ce6](https://github.com/IBM/go-sdk-core/commit/3632ce65e98981fe02e864ca4b39430ecaf1deeb))
+
 # [5.6.0](https://github.com/IBM/go-sdk-core/compare/v5.5.1...v5.6.0) (2021-07-26)
 
 
