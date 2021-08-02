@@ -18,7 +18,6 @@ package core
 
 import (
 	"os"
-	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,9 +30,7 @@ import (
 // clearTestVCAP()
 
 func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
-	pwd, _ := os.Getwd()
-	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
-	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
+	os.Setenv("IBM_CREDENTIALS_FILE", "../resources/my-credentials.env")
 
 	authenticator, err := GetAuthenticatorFromEnvironment("service-1")
 	assert.Nil(t, err)
@@ -67,7 +64,6 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotNil(t, crAuthenticator)
 	assert.Equal(t, "crtoken.txt", crAuthenticator.CRTokenFilename)
-	assert.Equal(t, "http://1.1.1.1", crAuthenticator.InstanceMetadataServiceURL)
 	assert.Equal(t, "iam-user1", crAuthenticator.IAMProfileName)
 	assert.Equal(t, "iam-id1", crAuthenticator.IAMProfileID)
 	assert.Equal(t, "https://iamhost/iam/api", crAuthenticator.URL)
@@ -109,7 +105,6 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotNil(t, crAuthenticator)
 	assert.Equal(t, "crtoken.txt", crAuthenticator.CRTokenFilename)
-	assert.Equal(t, "http://2.2.2.2", crAuthenticator.InstanceMetadataServiceURL)
 	assert.Equal(t, "iam-user2", crAuthenticator.IAMProfileName)
 	assert.Equal(t, "iam-id2", crAuthenticator.IAMProfileID)
 	assert.Equal(t, "https://iamhost/iam/api", crAuthenticator.URL)
