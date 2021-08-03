@@ -34,7 +34,7 @@ func GetAuthenticatorFromEnvironment(credentialKey string) (authenticator Authen
 		if properties[PROPNAME_APIKEY] != "" {
 			authType = AUTHTYPE_IAM
 		} else {
-			authType = AUTHTYPE_CRAUTH
+			authType = AUTHTYPE_CONTAINER
 		}
 	}
 
@@ -45,8 +45,8 @@ func GetAuthenticatorFromEnvironment(credentialKey string) (authenticator Authen
 		authenticator, err = newBearerTokenAuthenticatorFromMap(properties)
 	} else if strings.EqualFold(authType, AUTHTYPE_IAM) {
 		authenticator, err = newIamAuthenticatorFromMap(properties)
-	} else if strings.EqualFold(authType, AUTHTYPE_CRAUTH) {
-		authenticator, err = newComputeResourceAuthenticatorFromMap(properties)
+	} else if strings.EqualFold(authType, AUTHTYPE_CONTAINER) {
+		authenticator, err = newContainerAuthenticatorFromMap(properties)
 	} else if strings.EqualFold(authType, AUTHTYPE_CP4D) {
 		authenticator, err = newCloudPakForDataAuthenticatorFromMap(properties)
 	} else if strings.EqualFold(authType, AUTHTYPE_NOAUTH) {

@@ -67,7 +67,7 @@ var testEnvironment = map[string]string{
 	"SERVICE6_AUTH_TYPE":                     "iam",
 	"SERVICE6_APIKEY":                        "my-api-key",
 	"SERVICE6_SCOPE":                         "A B C D",
-	"SERVICE7_AUTH_TYPE":                     "crauth",
+	"SERVICE7_AUTH_TYPE":                     "container",
 	"SERVICE7_CR_TOKEN_FILENAME":             "crtoken.txt",
 	"SERVICE7_IAM_PROFILE_NAME":              "iam-user2",
 	"SERVICE7_IAM_PROFILE_ID":                "iam-id2",

@@ -21,7 +21,7 @@ const (
 	AUTHTYPE_NOAUTH       = "noAuth"
 	AUTHTYPE_IAM          = "iam"
 	AUTHTYPE_CP4D         = "cp4d"
-	AUTHTYPE_CRAUTH       = "crAuth"
+	AUTHTYPE_CONTAINER    = "container"
 
 	// Names of properties that can be defined as part of an external configuration (credential file, env vars, etc.).
 	// Example:  export MYSERVICE_URL=https://myurl
