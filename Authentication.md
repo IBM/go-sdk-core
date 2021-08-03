@@ -256,18 +256,18 @@ service := exampleservicev1.NewExampleServiceV1(options)
 ```
 
 
-## Compute Resource Authentication
-The `ComputeResourceAuthenticator` is intended to be used by application code
-running inside a compute resource (a VM) in which a secure compute resource
-token (CR token) has been injected by the compute resource
-provider (e.g. IBM Kubernetes Service (IKS), VPC Gen2 Virtual Server Instances (VSI), etc.).
+## Container Authentication
+The `ContainerAuthenticator` is intended to be used by application code
+running inside a compute resource managed by the IBM Kubernetes Service (IKS)
+in which a secure compute resource token (CR token) has been stored in a file
+within the compute resource's local file system.
 The CR token is similar to an IAM apikey except that it is managed automatically by
-the compute resource provider.
+the compute resource provider (IKS).
 This allows the application developer to:
 - avoid storing credentials in application code, configuraton files or a password vault
 - avoid managing or rotating credentials
 
-The `ComputeResourceAuthenticator` will retrieve the CR token from
+The `ContainerAuthenticator` will retrieve the CR token from
 the compute resource in which the application is running, and will then perform
 the necessary interactions with the IAM token service to obtain an IAM access token
 using the IAM "get token" operation with grant-type `cr-token`.
@@ -278,38 +278,11 @@ The IAM access token is added to each outbound request in the `Authorization` he
    Authorization: Bearer <IAM-access-token>
 ```
 
-### Compute Resource Token Retrieval Algorithm
-The `ComputeResourceAuthenticator` will retrieve a fresh CR token value each time it needs
-to obtain a new access token from the IAM token service.
-It will do this according to the following algorithm:
-
-1. First, the authenticator will attempt to read the CR token value from a file in the
-compute resource's local file system.
-By default, the authenticator will use the filename `/var/run/secrets/tokens/vault-token`, but this
-can be overridden by setting the `CRTokenFilename` property (described below).
-If a suitable CR token value is obtained from this step, then the authenticator will use this value.
-Otherwise, the authenticator will proceed to step 2 below.
-
-2. If no CR token was obtained from step 1 above, then the authenticator will attempt to invoke the
-`PUT /instance_identity/v1/token` (aka `create_access_token`) operation from the compute resource's
-local Instance Metadata Service.  The CR token value is obtained from the `access_token`
-field of the operation response.
-By default, the authenticator will use `http://169.254.169.254` as the base endpoint URL for this
-invocation, but this can be overridden by setting the
-`InstanceMetadataServiceURL` property (described below).
-If a suitable CR token value is obtained from this step, then the authenticator will use this value.
-Otherwise, an error is reported and the authentication fails.
-
 ### Properties
 
-- CRTokenFilename: (optional) the name of the file containing the injected CR token value
-(applies to the IKS use-case).
+- CRTokenFilename: (optional) the name of the file containing the injected CR token value.
 If not specified, then `/var/run/secrets/tokens/vault-token` is used as the default value.
 The application must have `read` permissions on the file containing the CR token value.
-
-- InstanceMetadataServiceURL: (optional) the base endpoint URL to be used for invoking
-operations of the compute resource's local Instance Metadata Service (applies to the VSI use-case).
-If not specified, then `http://169.254.169.254` is used as the default value.
 
 - IAMProfileName: (optional) the name of the linked trusted IAM profile to be used when obtaining the
 IAM access token (a CR token might map to multiple IAM profiles).
@@ -320,10 +293,11 @@ IAM access token (a CR token might map to multiple IAM profiles).
 One of `IAMProfileName` or `IAMProfileID` must be specified.
 
 - URL: (optional) The base endpoint URL of the IAM token service.
-The default value of this property is the "prod" IAM token service endpoint (`https://iam.cloud.ibm.com`).
+The default value of this property is the "prod" IAM token service endpoint
+(`https://iam.cloud.ibm.com`).
 
 - ClientId/ClientSecret: (optional) The `ClientId` and `ClientSecret` fields are used to form a 
-"basic auth" Authorization header for interactions with the IAM token server. If neither field 
+"basic auth" Authorization header for interactions with the IAM token service. If neither field 
 is specified, then no Authorization header will be sent with token server requests.  These fields 
 are optional, but must be specified together.
 
@@ -347,9 +321,9 @@ import {
 }
 ...
 // Create the authenticator.
-authenticator := &core.ComputeResourceAuthenticator{
-    IAMProfileName: "iam-user123",
-}
+authenticator := core.NewContainerAuthenticatorBuilder().
+	SetIAMProfileName("iam-user123").
+	Build()
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
@@ -365,7 +339,7 @@ service := exampleservicev1.NewExampleServiceV1(options)
 ### Configuration example
 External configuration:
 ```
-export EXAMPLE_SERVICE_AUTH_TYPE=crauth
+export EXAMPLE_SERVICE_AUTH_TYPE=container
 export EXAMPLE_SERVICE_IAM_PROFILE_NAME=iam-user123
 ```
 Application code:
