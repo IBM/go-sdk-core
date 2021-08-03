@@ -84,7 +84,7 @@ var iamNeedsRefreshMutex sync.Mutex
 
 const (
 	// The default (prod) IAM token server base endpoint address.
-	defaultIamTokenServerEndpoint = "https://iam.cloud.ibm.com"
+	defaultIamTokenServerEndpoint = "https://iam.cloud.ibm.com" // #nosec G101
 	iamGrantTypeApiKey            = "urn:ibm:params:oauth:grant-type:apikey" // #nosec G101
 )
 

@@ -45,6 +45,7 @@ const (
 	PROPNAME_CLIENT_ID                     = "CLIENT_ID"
 	PROPNAME_CLIENT_SECRET                 = "CLIENT_SECRET"
 	PROPNAME_SCOPE                         = "SCOPE"
+	/* #nosec G101 */
 	PROPNAME_CRTOKEN_FILENAME              = "CR_TOKEN_FILENAME"
 	PROPNAME_INSTANCE_METADATA_SERVICE_URL = "INSTANCE_METADATA_SERVICE_URL"
 	PROPNAME_IAM_PROFILE_NAME              = "IAM_PROFILE_NAME"
@@ -77,6 +78,7 @@ const (
 	ERRORMSG_UNEXPECTED_STATUS_CODE  = "Unexpected HTTP status code %d (%s)"
 	ERRORMSG_UNMARSHAL_AUTH_RESPONSE = "error unmarshalling authentication response: %s"
 	ERRORMSG_UNABLE_RETRIEVE_CRTOKEN = "unable to retrieve the CR token value from current compute resource"
+	/* #nosec G101 */
 	ERRORMSG_IAM_GETTOKEN_ERROR      = "IAM 'get token' error, status code %d received from '%s': %s"
 	ERRORMSG_IMDS_OPERATION_ERROR    = "Instance Metadata Service error, status code %d received from '%s': %s"
 )

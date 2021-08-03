@@ -100,6 +100,7 @@ type ComputeResourceAuthenticator struct {
 }
 
 const (
+	/* #nosec G101 */
 	defaultCRTokenFilename = "/var/run/secrets/tokens/vault-token"
 	defaultImdsEndpoint    = "http://169.254.169.254"
 	imdsVersionDate        = "2021-07-15"
@@ -405,6 +406,7 @@ func (authenticator *ComputeResourceAuthenticator) RequestToken() (*IamTokenServ
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		buff := new(bytes.Buffer)
 		_, _ = buff.ReadFrom(resp.Body)
+		/* #nosec G104 */
 		resp.Body.Close()
 
 		// Create a DetailedResponse to be included in the error below.
@@ -479,6 +481,7 @@ func (authenticator *ComputeResourceAuthenticator) readCRTokenFromFile() (crToke
 
 	// Read the entire file into a byte slice, then convert to string.
 	var bytes []byte
+	/* #nosec G304 */
 	bytes, err = ioutil.ReadFile(crTokenFilename)
 	if err == nil {
 		crToken = string(bytes)
@@ -574,6 +577,7 @@ func (authenticator *ComputeResourceAuthenticator) retrieveCRTokenFromIMDS() (cr
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		buff := new(bytes.Buffer)
 		_, _ = buff.ReadFrom(resp.Body)
+		/* #nosec G104 */
 		resp.Body.Close()
 
 		// Create a DetailedResponse to be included in the error below.
