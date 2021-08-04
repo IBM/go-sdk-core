@@ -21,7 +21,7 @@ const (
 	AUTHTYPE_NOAUTH       = "noAuth"
 	AUTHTYPE_IAM          = "iam"
 	AUTHTYPE_CP4D         = "cp4d"
-	AUTHTYPE_CRAUTH       = "crAuth"
+	AUTHTYPE_CONTAINER    = "container"
 
 	// Names of properties that can be defined as part of an external configuration (credential file, env vars, etc.).
 	// Example:  export MYSERVICE_URL=https://myurl
@@ -35,20 +35,19 @@ const (
 	PROPNAME_SVC_RETRY_INTERVAL = "RETRY_INTERVAL"
 
 	// Authenticator properties.
-	PROPNAME_AUTH_TYPE                     = "AUTH_TYPE"
-	PROPNAME_USERNAME                      = "USERNAME"
-	PROPNAME_PASSWORD                      = "PASSWORD"
-	PROPNAME_BEARER_TOKEN                  = "BEARER_TOKEN"
-	PROPNAME_AUTH_URL                      = "AUTH_URL"
-	PROPNAME_AUTH_DISABLE_SSL              = "AUTH_DISABLE_SSL"
-	PROPNAME_APIKEY                        = "APIKEY"
-	PROPNAME_CLIENT_ID                     = "CLIENT_ID"
-	PROPNAME_CLIENT_SECRET                 = "CLIENT_SECRET"
-	PROPNAME_SCOPE                         = "SCOPE"
-	PROPNAME_CRTOKEN_FILENAME              = "CR_TOKEN_FILENAME"
-	PROPNAME_INSTANCE_METADATA_SERVICE_URL = "INSTANCE_METADATA_SERVICE_URL"
-	PROPNAME_IAM_PROFILE_NAME              = "IAM_PROFILE_NAME"
-	PROPNAME_IAM_PROFILE_ID                = "IAM_PROFILE_ID"
+	PROPNAME_AUTH_TYPE        = "AUTH_TYPE"
+	PROPNAME_USERNAME         = "USERNAME"
+	PROPNAME_PASSWORD         = "PASSWORD"
+	PROPNAME_BEARER_TOKEN     = "BEARER_TOKEN"
+	PROPNAME_AUTH_URL         = "AUTH_URL"
+	PROPNAME_AUTH_DISABLE_SSL = "AUTH_DISABLE_SSL"
+	PROPNAME_APIKEY           = "APIKEY"
+	PROPNAME_CLIENT_ID        = "CLIENT_ID"
+	PROPNAME_CLIENT_SECRET    = "CLIENT_SECRET"
+	PROPNAME_SCOPE            = "SCOPE"
+	PROPNAME_CRTOKEN_FILENAME = "CR_TOKEN_FILENAME"
+	PROPNAME_IAM_PROFILE_NAME = "IAM_PROFILE_NAME"
+	PROPNAME_IAM_PROFILE_ID   = "IAM_PROFILE_ID"
 
 	// SSL error
 	SSL_CERTIFICATION_ERROR = "x509: certificate"
@@ -76,7 +75,6 @@ const (
 	ERRORMSG_CREATE_RETRYABLE_REQ    = "An error occurred while creating a retryable http Request: %s"
 	ERRORMSG_UNEXPECTED_STATUS_CODE  = "Unexpected HTTP status code %d (%s)"
 	ERRORMSG_UNMARSHAL_AUTH_RESPONSE = "error unmarshalling authentication response: %s"
-	ERRORMSG_UNABLE_RETRIEVE_CRTOKEN = "unable to retrieve the CR token value from current compute resource"
+	ERRORMSG_UNABLE_RETRIEVE_CRTOKEN = "unable to retrieve compute resource token value: %s"
 	ERRORMSG_IAM_GETTOKEN_ERROR      = "IAM 'get token' error, status code %d received from '%s': %s"
-	ERRORMSG_IMDS_OPERATION_ERROR    = "Instance Metadata Service error, status code %d received from '%s': %s"
 )

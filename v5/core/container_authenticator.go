@@ -28,34 +28,26 @@ import (
 	"time"
 )
 
-// ComputeResourceAuthenticator implements an IAM-based authentication schema where by it
+// ContainerAuthenticator implements an IAM-based authentication schema whereby it
 // retrieves a "compute resource token" from the local compute resource (VM)
 // and uses that to obtain an IAM access token by invoking the IAM "get token" operation with grant-type=cr-token.
 // The resulting IAM access token is then added to outbound requests in an Authorization header
 // of the form:
-//
 // 		Authorization: Bearer <access-token>
 //
-type ComputeResourceAuthenticator struct {
+type ContainerAuthenticator struct {
 
 	// [optional] The name of the file containing the injected CR token value (applies to
 	// IKS-managed compute resources).
 	// Default value: "/var/run/secrets/tokens/vault-token"
 	CRTokenFilename string
 
-	// [optional] The base endpoint URL to be used for invoking operations of the compute resource's
-	// local Instance Metadata Service (applies to VSI-managed compute resources).
-	// Default value: "http://169.254.169.254"
-	InstanceMetadataServiceURL string
-
-	// [optional] The name of the linked trusted IAM profile to be used when obtaining the IAM access token
-	// (a CR token might map to multiple IAM profiles).
+	// [optional] The name of the linked trusted IAM profile to be used when obtaining the IAM access token.
 	// One of IAMProfileName or IAMProfileID must be specified.
 	// Default value: ""
 	IAMProfileName string
 
-	// [optional] The id of the linked trusted IAM profile to be used when obtaining the IAM access token
-	// (a CR token might map to multiple IAM profiles).
+	// [optional] The id of the linked trusted IAM profile to be used when obtaining the IAM access token.
 	// One of IAMProfileName or IAMProfileID must be specified.
 	// Default value: ""
 	IAMProfileID string
@@ -101,73 +93,118 @@ type ComputeResourceAuthenticator struct {
 
 const (
 	defaultCRTokenFilename = "/var/run/secrets/tokens/vault-token"
-	defaultImdsEndpoint    = "http://169.254.169.254"
-	imdsVersionDate        = "2021-07-15"
-	imdsMetadataFlavor     = "ibm"
-	iamGrantTypeCRToken    = "urn:ibm:params:oauth:grant-type:cr-token" // #nosec G101
-	crtokenLifetime        = 300
+	iamGrantTypeCRToken = "urn:ibm:params:oauth:grant-type:cr-token" // #nosec G101
 )
 
 var craRequestTokenMutex sync.Mutex
 
-// NewComputeResourceAuthenticator constructs a new ComputeResourceAuthenticator instance with the supplied values and
-// invokes the ComputeResourceAuthenticator's Validate() method.
-func NewComputeResourceAuthenticator(crtokenFilename string, instanceMetadataServiceURL, iamProfileName string, iamProfileID string,
-	url string, clientID string, clientSecret string, disableSSLVerification bool, scope string,
-	headers map[string]string) (*ComputeResourceAuthenticator, error) {
-	authenticator := &ComputeResourceAuthenticator{
-		CRTokenFilename:            crtokenFilename,
-		InstanceMetadataServiceURL: instanceMetadataServiceURL,
-		IAMProfileName:             iamProfileName,
-		IAMProfileID:               iamProfileID,
-		URL:                        url,
-		ClientID:                   clientID,
-		ClientSecret:               clientSecret,
-		DisableSSLVerification:     disableSSLVerification,
-		Scope:                      scope,
-		Headers:                    headers,
-	}
+// ContainerAuthenticatorBuilder is used to construct an instance of the ContainerAuthenticator
+type ContainerAuthenticatorBuilder struct {
+	ContainerAuthenticator
+}
+
+// NewContainerAuthenticatorBuilder returns a new builder struct that
+// can be used to construct a ContainerAuthenticator instance.
+func NewContainerAuthenticatorBuilder() *ContainerAuthenticatorBuilder {
+	return &ContainerAuthenticatorBuilder{}
+}
+
+// SetCRTokenFilename sets the CRTokenFilename field in the builder.
+func (builder *ContainerAuthenticatorBuilder) SetCRTokenFilename(s string) *ContainerAuthenticatorBuilder {
+	builder.ContainerAuthenticator.CRTokenFilename = s
+	return builder
+}
+
+// SetIAMProfileName sets the IAMProfileName field in the builder.
+func (builder *ContainerAuthenticatorBuilder) SetIAMProfileName(s string) *ContainerAuthenticatorBuilder {
+	builder.ContainerAuthenticator.IAMProfileName = s
+	return builder
+}
+
+// SetIAMProfileID sets the IAMProfileID field in the builder.
+func (builder *ContainerAuthenticatorBuilder) SetIAMProfileID(s string) *ContainerAuthenticatorBuilder {
+	builder.ContainerAuthenticator.IAMProfileID = s
+	return builder
+}
+
+// SetURL sets the URL field in the builder.
+func (builder *ContainerAuthenticatorBuilder) SetURL(s string) *ContainerAuthenticatorBuilder {
+	builder.ContainerAuthenticator.URL = s
+	return builder
+}
+
+// SetClientIDSecret sets the ClientID and ClientSecret fields in the builder.
+func (builder *ContainerAuthenticatorBuilder) SetClientIDSecret(clientID, clientSecret string) *ContainerAuthenticatorBuilder {
+	builder.ContainerAuthenticator.ClientID = clientID
+	builder.ContainerAuthenticator.ClientSecret = clientSecret
+	return builder
+}
+
+// SetDisableSSLVerification sets the DisableSSLVerification field in the builder.
+func (builder *ContainerAuthenticatorBuilder) SetDisableSSLVerification(b bool) *ContainerAuthenticatorBuilder {
+	builder.ContainerAuthenticator.DisableSSLVerification = b
+	return builder
+}
+
+// SetScope sets the Scope field in the builder.
+func (builder *ContainerAuthenticatorBuilder) SetScope(s string) *ContainerAuthenticatorBuilder {
+	builder.ContainerAuthenticator.Scope = s
+	return builder
+}
+
+// SetHeaders sets the Headers field in the builder.
+func (builder *ContainerAuthenticatorBuilder) SetHeaders(headers map[string]string) *ContainerAuthenticatorBuilder {
+	builder.ContainerAuthenticator.Headers = headers
+	return builder
+}
+
+// SetClient sets the Client field in the builder.
+func (builder *ContainerAuthenticatorBuilder) SetClient(client *http.Client) *ContainerAuthenticatorBuilder {
+	builder.ContainerAuthenticator.Client = client
+	return builder
+}
+
+// Build() returns a validated instance of the ContainerAuthenticator with the config that was set in the builder.
+func (builder *ContainerAuthenticatorBuilder) Build() (*ContainerAuthenticator, error) {
 
 	// Make sure the config is valid.
-	err := authenticator.Validate()
+	err := builder.ContainerAuthenticator.Validate()
 	if err != nil {
 		return nil, err
 	}
 
-	return authenticator, nil
+	return &builder.ContainerAuthenticator, nil
 }
 
-// newComputeResourceAuthenticatorFromMap constructs a new ComputeResourceAuthenticator instance from a map containing
+// newContainerAuthenticatorFromMap constructs a new ContainerAuthenticator instance from a map containing
 // configuration properties.
-func newComputeResourceAuthenticatorFromMap(properties map[string]string) (authenticator *ComputeResourceAuthenticator, err error) {
+func newContainerAuthenticatorFromMap(properties map[string]string) (authenticator *ContainerAuthenticator, err error) {
 	if properties == nil {
 		return nil, fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
 	}
 
-	// Grab the AUTH_DISABLE_SSL string property and convert to a boolean.
+	// Grab the AUTH_DISABLE_SSL string property and convert to a boolean value.
 	disableSSL, err := strconv.ParseBool(properties[PROPNAME_AUTH_DISABLE_SSL])
 	if err != nil {
 		disableSSL = false
 	}
 
-	authenticator, err = NewComputeResourceAuthenticator(
-		properties[PROPNAME_CRTOKEN_FILENAME],
-		properties[PROPNAME_INSTANCE_METADATA_SERVICE_URL],
-		properties[PROPNAME_IAM_PROFILE_NAME],
-		properties[PROPNAME_IAM_PROFILE_ID],
-		properties[PROPNAME_AUTH_URL],
-		properties[PROPNAME_CLIENT_ID],
-		properties[PROPNAME_CLIENT_SECRET],
-		disableSSL,
-		properties[PROPNAME_SCOPE],
-		nil)
+	authenticator, err = NewContainerAuthenticatorBuilder().
+		SetCRTokenFilename(properties[PROPNAME_CRTOKEN_FILENAME]).
+		SetIAMProfileName(properties[PROPNAME_IAM_PROFILE_NAME]).
+		SetIAMProfileID(properties[PROPNAME_IAM_PROFILE_ID]).
+		SetURL(properties[PROPNAME_AUTH_URL]).
+		SetClientIDSecret(properties[PROPNAME_CLIENT_ID], properties[PROPNAME_CLIENT_SECRET]).
+		SetDisableSSLVerification(disableSSL).
+		SetScope(properties[PROPNAME_SCOPE]).
+		Build()
 
 	return
 }
 
 // AuthenticationType returns the authentication type for this authenticator.
-func (*ComputeResourceAuthenticator) AuthenticationType() string {
-	return AUTHTYPE_CRAUTH
+func (*ContainerAuthenticator) AuthenticationType() string {
+	return AUTHTYPE_CONTAINER
 }
 
 // Authenticate adds IAM authentication information to the request.
@@ -176,7 +213,7 @@ func (*ComputeResourceAuthenticator) AuthenticationType() string {
 //
 // 		Authorization: Bearer <access-token>
 //
-func (authenticator *ComputeResourceAuthenticator) Authenticate(request *http.Request) error {
+func (authenticator *ContainerAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.GetToken()
 	if err != nil {
 		return err
@@ -187,7 +224,7 @@ func (authenticator *ComputeResourceAuthenticator) Authenticate(request *http.Re
 }
 
 // getTokenData returns the tokenData field from the authenticator with synchronization.
-func (authenticator *ComputeResourceAuthenticator) getTokenData() *iamTokenData {
+func (authenticator *ContainerAuthenticator) getTokenData() *iamTokenData {
 	authenticator.tokenDataMutex.Lock()
 	defer authenticator.tokenDataMutex.Unlock()
 
@@ -195,7 +232,7 @@ func (authenticator *ComputeResourceAuthenticator) getTokenData() *iamTokenData 
 }
 
 // setTokenData sets the 'tokenData' field in the authenticator with synchronization.
-func (authenticator *ComputeResourceAuthenticator) setTokenData(tokenData *iamTokenData) {
+func (authenticator *ContainerAuthenticator) setTokenData(tokenData *iamTokenData) {
 	authenticator.tokenDataMutex.Lock()
 	defer authenticator.tokenDataMutex.Unlock()
 
@@ -206,7 +243,7 @@ func (authenticator *ComputeResourceAuthenticator) setTokenData(tokenData *iamTo
 //
 // Ensures that one of IAMProfileName or IAMProfileID are specified, and the ClientId and ClientSecret pair are
 // mutually inclusive.
-func (authenticator *ComputeResourceAuthenticator) Validate() error {
+func (authenticator *ContainerAuthenticator) Validate() error {
 
 	// Check to make sure that one of IAMProfileName or IAMProfileID are specified.
 	if authenticator.IAMProfileName == "" && authenticator.IAMProfileID == "" {
@@ -233,7 +270,7 @@ func (authenticator *ComputeResourceAuthenticator) Validate() error {
 // GetToken returns an access token to be used in an Authorization header.
 // Whenever a new token is needed (when a token doesn't yet exist or the existing token has expired),
 // a new access token is fetched from the token server.
-func (authenticator *ComputeResourceAuthenticator) GetToken() (string, error) {
+func (authenticator *ContainerAuthenticator) GetToken() (string, error) {
 	if authenticator.getTokenData() == nil || !authenticator.getTokenData().isTokenValid() {
 		GetLogger().Debug("Performing synchronous token fetch...")
 		// synchronously request the token
@@ -262,7 +299,7 @@ func (authenticator *ComputeResourceAuthenticator) GetToken() (string, error) {
 // a valid cached access token.
 // If yes, then nothing else needs to be done.
 // If no, then a blocking request is made to obtain a new IAM access token.
-func (authenticator *ComputeResourceAuthenticator) synchronizedRequestToken() error {
+func (authenticator *ContainerAuthenticator) synchronizedRequestToken() error {
 	craRequestTokenMutex.Lock()
 	defer craRequestTokenMutex.Unlock()
 	// if cached token is still valid, then just continue to use it
@@ -276,7 +313,7 @@ func (authenticator *ComputeResourceAuthenticator) synchronizedRequestToken() er
 // invokeRequestTokenData requests a new token from the IAM token server and
 // unmarshals the response to produce the authenticator's 'tokenData' field (cache).
 // Returns an error if the token was unable to be fetched, otherwise returns nil.
-func (authenticator *ComputeResourceAuthenticator) invokeRequestTokenData() error {
+func (authenticator *ContainerAuthenticator) invokeRequestTokenData() error {
 	tokenResponse, err := authenticator.RequestToken()
 	if err != nil {
 		return err
@@ -293,7 +330,7 @@ func (authenticator *ComputeResourceAuthenticator) invokeRequestTokenData() erro
 
 // RequestToken first retrieves a CR token value from the current compute resource, then uses
 // that to obtain a new IAM access token from the IAM token server.
-func (authenticator *ComputeResourceAuthenticator) RequestToken() (*IamTokenServerResponse, error) {
+func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResponse, error) {
 	var err error
 	var operationPath string = "/identity/token"
 
@@ -301,7 +338,7 @@ func (authenticator *ComputeResourceAuthenticator) RequestToken() (*IamTokenServ
 	crToken, err := authenticator.retrieveCRToken()
 	if crToken == "" {
 		if err == nil {
-			err = fmt.Errorf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN + ": reason unknown")
+			err = fmt.Errorf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN, "reason unknown")
 		}
 		return nil, NewAuthenticationError(&DetailedResponse{}, err)
 	}
@@ -406,6 +443,7 @@ func (authenticator *ComputeResourceAuthenticator) RequestToken() (*IamTokenServ
 		buff := new(bytes.Buffer)
 		_, _ = buff.ReadFrom(resp.Body)
 		resp.Body.Close()
+		/* #nosec G104 */
 
 		// Create a DetailedResponse to be included in the error below.
 		detailedResponse := &DetailedResponse{
@@ -430,44 +468,8 @@ func (authenticator *ComputeResourceAuthenticator) RequestToken() (*IamTokenServ
 	return tokenResponse, nil
 }
 
-// retrieveCRToken retrieves the CR token for the current compute resource.
-func (authenticator *ComputeResourceAuthenticator) retrieveCRToken() (crToken string, err error) {
-	var errs []error
-	var crTokenErr error
-
-	// 1. IKS use-case
-	// First, try to read the CR token value from a local file.
-	crToken, crTokenErr = authenticator.readCRTokenFromFile()
-	if crTokenErr != nil {
-		errs = append(errs, crTokenErr)
-	}
-
-	// 2. VPC/VSI use-case
-	// Next, try to obtain the CR token value from the Instance Metadata Service.
-	if crToken == "" {
-		crToken, crTokenErr = authenticator.retrieveCRTokenFromIMDS()
-		if crTokenErr != nil {
-			errs = append(errs, crTokenErr)
-		}
-	}
-
-	// If we're going to return "" for the crToken (an error condition), then
-	// gather up each of the error objects that resulted from each attempt at
-	// retrieving the CR token value as we want to present the entire list
-	// to the caller.
-	if crToken == "" {
-		var errorMsgs []string
-		for _, e := range errs {
-			errorMsgs = append(errorMsgs, "\t"+e.Error())
-		}
-		err = fmt.Errorf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN + "\n" + strings.Join(errorMsgs, "\n"))
-	}
-
-	return
-}
-
-// readCRTokenFromFile tries to read the CR token value from the local file system.
-func (authenticator *ComputeResourceAuthenticator) readCRTokenFromFile() (crToken string, err error) {
+// retrieveCRToken tries to read the CR token value from the local file system.
+func (authenticator *ContainerAuthenticator) retrieveCRToken() (crToken string, err error) {
 
 	// Use the default filename if one wasn't supplied by the user.
 	crTokenFilename := authenticator.CRTokenFilename
@@ -480,124 +482,14 @@ func (authenticator *ComputeResourceAuthenticator) readCRTokenFromFile() (crToke
 	// Read the entire file into a byte slice, then convert to string.
 	var bytes []byte
 	bytes, err = ioutil.ReadFile(crTokenFilename)
-	if err == nil {
-		crToken = string(bytes)
-		GetLogger().Debug("Successfully read CR token from file: %s\n", crTokenFilename)
-	} else {
-		GetLogger().Debug("Failed to read CR token value from file %s: %s\n", crTokenFilename, err.Error())
-	}
-
-	return
-}
-
-// This struct models the response to the "create_access_token" operation (PUT instance_identity/v1/token).
-type instanceIdentityToken struct {
-	AccessToken string `json:"access_token"`
-
-	// The following fields are also present in the response, but
-	// we don't need these fields because we're going to use the access token
-	// (CR token value) immediately and will never cache it.
-	// CreatedAt   string `json:"created_at"`
-	// ExpiresAt   string `json:"expires_at"`
-	// ExpiresIn   int64  `json:"expires_in"`
-}
-
-// retrieveCRTokenFromIMDS tries to retrieve the CR token value by invoking
-// the "create_access_token" operation on the compute resource's
-// local Instance Metadata Service.
-func (authenticator *ComputeResourceAuthenticator) retrieveCRTokenFromIMDS() (crToken string, err error) {
-	var operationPath string = "instance_identity/v1/token"
-
-	url := authenticator.InstanceMetadataServiceURL
-	if url == "" {
-		url = defaultImdsEndpoint
-	} else {
-		// Canonicalize the URL by removing the operation path if it was specified by the user.
-		url = strings.TrimSuffix(url, operationPath)
-	}
-
-	// Set up the request to invoke the "create_access_token" operation.
-	builder := NewRequestBuilder(PUT)
-	_, err = builder.ResolveRequestURL(url, operationPath, nil)
 	if err != nil {
+		err = fmt.Errorf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN, err.Error())
+		GetLogger().Debug(err.Error())
 		return
 	}
 
-	// Set the params and request body.
-	builder.AddQuery("version", imdsVersionDate)
-	builder.AddHeader(CONTENT_TYPE, APPLICATION_JSON)
-	builder.AddHeader(Accept, APPLICATION_JSON)
-	builder.AddHeader("Metadata-Flavor", imdsMetadataFlavor)
-
-	requestBody := fmt.Sprintf(`{"expires_in": %d}`, crtokenLifetime)
-	_, _ = builder.SetBodyContentString(requestBody)
-
-	req, err := builder.Build()
-	if err != nil {
-		return
-	}
-
-	// Create a Client with 30 sec timeout.
-	client := &http.Client{
-		Timeout: time.Second * 30,
-	}
-
-	// If debug is enabled, then dump the request.
-	if GetLogger().IsLogLevelEnabled(LevelDebug) {
-		buf, dumpErr := httputil.DumpRequestOut(req, req.Body != nil)
-		if dumpErr == nil {
-			GetLogger().Debug("Request:\n%s\n", string(buf))
-		} else {
-			GetLogger().Debug(fmt.Sprintf("error while attempting to log outbound request: %s", dumpErr.Error()))
-		}
-	}
-
-	// Invoke the request.
-	GetLogger().Debug("Invoking IMDS 'create_access_token' operation: %s", builder.URL)
-	resp, err := client.Do(req)
-	if err != nil {
-		return
-	}
-	GetLogger().Debug("Returned from IMDS 'create_access_token' operation, received status code %d", resp.StatusCode)
-
-	// If debug is enabled, then dump the response.
-	if GetLogger().IsLogLevelEnabled(LevelDebug) {
-		buf, dumpErr := httputil.DumpResponse(resp, resp.Body != nil)
-		if dumpErr == nil {
-			GetLogger().Debug("Response:\n%s\n", string(buf))
-		} else {
-			GetLogger().Debug(fmt.Sprintf("error while attempting to log inbound response: %s", dumpErr.Error()))
-		}
-	}
-
-	// Check for a bad status code and handle the operation error.
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		buff := new(bytes.Buffer)
-		_, _ = buff.ReadFrom(resp.Body)
-		resp.Body.Close()
-
-		// Create a DetailedResponse to be included in the error below.
-		detailedResponse := &DetailedResponse{
-			StatusCode: resp.StatusCode,
-			Headers:    resp.Header,
-			RawResult:  buff.Bytes(),
-		}
-
-		imdsErrorMsg := string(detailedResponse.RawResult)
-		if imdsErrorMsg == "" {
-			imdsErrorMsg = "IMDS error response not available"
-		}
-		err = fmt.Errorf(ERRORMSG_IMDS_OPERATION_ERROR, detailedResponse.StatusCode, builder.URL, imdsErrorMsg)
-		return
-	}
-
-	// IMDS operation invocation must have worked, so unmarshal the response and retrieve the CR token.
-	createTokenResponse := &instanceIdentityToken{}
-	_ = json.NewDecoder(resp.Body).Decode(createTokenResponse)
-	defer resp.Body.Close()
-
-	// The CR token value is returned in the "access_token" field of the response object.
-	crToken = createTokenResponse.AccessToken
+	crToken = string(bytes)
+	GetLogger().Debug("Successfully read CR token from file: %s\n", crTokenFilename)
 
 	return
 }

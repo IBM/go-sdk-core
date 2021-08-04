@@ -18,7 +18,6 @@ package core
 
 import (
 	"os"
-	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -31,9 +30,7 @@ import (
 // clearTestVCAP()
 
 func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
-	pwd, _ := os.Getwd()
-	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
-	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
+	os.Setenv("IBM_CREDENTIALS_FILE", "../resources/my-credentials.env")
 
 	authenticator, err := GetAuthenticatorFromEnvironment("service-1")
 	assert.Nil(t, err)
@@ -62,19 +59,18 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	authenticator, err = GetAuthenticatorFromEnvironment("service7")
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
-	assert.Equal(t, AUTHTYPE_CRAUTH, authenticator.AuthenticationType())
-	crAuthenticator, ok := authenticator.(*ComputeResourceAuthenticator)
+	assert.Equal(t, AUTHTYPE_CONTAINER, authenticator.AuthenticationType())
+	containerAuth, ok := authenticator.(*ContainerAuthenticator)
 	assert.True(t, ok)
-	assert.NotNil(t, crAuthenticator)
-	assert.Equal(t, "crtoken.txt", crAuthenticator.CRTokenFilename)
-	assert.Equal(t, "http://1.1.1.1", crAuthenticator.InstanceMetadataServiceURL)
-	assert.Equal(t, "iam-user1", crAuthenticator.IAMProfileName)
-	assert.Equal(t, "iam-id1", crAuthenticator.IAMProfileID)
-	assert.Equal(t, "https://iamhost/iam/api", crAuthenticator.URL)
-	assert.Equal(t, "iam-client1", crAuthenticator.ClientID)
-	assert.Equal(t, "iam-secret1", crAuthenticator.ClientSecret)
-	assert.True(t, crAuthenticator.DisableSSLVerification)
-	assert.Equal(t, "scope1", crAuthenticator.Scope)
+	assert.NotNil(t, containerAuth)
+	assert.Equal(t, "crtoken.txt", containerAuth.CRTokenFilename)
+	assert.Equal(t, "iam-user1", containerAuth.IAMProfileName)
+	assert.Equal(t, "iam-id1", containerAuth.IAMProfileID)
+	assert.Equal(t, "https://iamhost/iam/api", containerAuth.URL)
+	assert.Equal(t, "iam-client1", containerAuth.ClientID)
+	assert.Equal(t, "iam-secret1", containerAuth.ClientSecret)
+	assert.True(t, containerAuth.DisableSSLVerification)
+	assert.Equal(t, "scope1", containerAuth.Scope)
 
 	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
@@ -104,19 +100,18 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 	authenticator, err = GetAuthenticatorFromEnvironment("service7")
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
-	assert.Equal(t, AUTHTYPE_CRAUTH, authenticator.AuthenticationType())
-	crAuthenticator, ok := authenticator.(*ComputeResourceAuthenticator)
+	assert.Equal(t, AUTHTYPE_CONTAINER, authenticator.AuthenticationType())
+	containerAuth, ok := authenticator.(*ContainerAuthenticator)
 	assert.True(t, ok)
-	assert.NotNil(t, crAuthenticator)
-	assert.Equal(t, "crtoken.txt", crAuthenticator.CRTokenFilename)
-	assert.Equal(t, "http://2.2.2.2", crAuthenticator.InstanceMetadataServiceURL)
-	assert.Equal(t, "iam-user2", crAuthenticator.IAMProfileName)
-	assert.Equal(t, "iam-id2", crAuthenticator.IAMProfileID)
-	assert.Equal(t, "https://iamhost/iam/api", crAuthenticator.URL)
-	assert.Equal(t, "iam-client2", crAuthenticator.ClientID)
-	assert.Equal(t, "iam-secret2", crAuthenticator.ClientSecret)
-	assert.False(t, crAuthenticator.DisableSSLVerification)
-	assert.Equal(t, "scope2 scope3", crAuthenticator.Scope)
+	assert.NotNil(t, containerAuth)
+	assert.Equal(t, "crtoken.txt", containerAuth.CRTokenFilename)
+	assert.Equal(t, "iam-user2", containerAuth.IAMProfileName)
+	assert.Equal(t, "iam-id2", containerAuth.IAMProfileID)
+	assert.Equal(t, "https://iamhost/iam/api", containerAuth.URL)
+	assert.Equal(t, "iam-client2", containerAuth.ClientID)
+	assert.Equal(t, "iam-secret2", containerAuth.ClientSecret)
+	assert.False(t, containerAuth.DisableSSLVerification)
+	assert.Equal(t, "scope2 scope3", containerAuth.Scope)
 	clearTestEnvironment()
 }
 
