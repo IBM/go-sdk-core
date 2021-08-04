@@ -1,3 +1,10 @@
+## [5.6.2](https://github.com/IBM/go-sdk-core/compare/v5.6.1...v5.6.2) (2021-08-04)
+
+
+### Bug Fixes
+
+* refactor container authenticator with recent design changes ([#129](https://github.com/IBM/go-sdk-core/issues/129)) ([58d4475](https://github.com/IBM/go-sdk-core/commit/58d4475f394cd5bcf1d4802534780a7815a1dc77))
+
 ## [5.6.1](https://github.com/IBM/go-sdk-core/compare/v5.6.0...v5.6.1) (2021-07-27)
 
 
