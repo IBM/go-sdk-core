@@ -92,7 +92,7 @@ type ContainerAuthenticator struct {
 }
 
 const (
-	defaultCRTokenFilename = "/var/run/secrets/tokens/vault-token"
+	defaultCRTokenFilename = "/var/run/secrets/tokens/vault-token" // #nosec G101
 	iamGrantTypeCRToken = "urn:ibm:params:oauth:grant-type:cr-token" // #nosec G101
 )
 
@@ -404,8 +404,7 @@ func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResp
 		// If the user told us to disable SSL verification, then do it now.
 		if authenticator.DisableSSLVerification {
 			transport := &http.Transport{
-				/* #nosec G402 */
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402
 			}
 			authenticator.Client.Transport = transport
 		}
@@ -442,8 +441,7 @@ func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResp
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		buff := new(bytes.Buffer)
 		_, _ = buff.ReadFrom(resp.Body)
-		resp.Body.Close()
-		/* #nosec G104 */
+		resp.Body.Close() // #nosec G104
 
 		// Create a DetailedResponse to be included in the error below.
 		detailedResponse := &DetailedResponse{
@@ -481,7 +479,7 @@ func (authenticator *ContainerAuthenticator) retrieveCRToken() (crToken string, 
 
 	// Read the entire file into a byte slice, then convert to string.
 	var bytes []byte
-	bytes, err = ioutil.ReadFile(crTokenFilename)
+	bytes, err = ioutil.ReadFile(crTokenFilename) // #nosec G304
 	if err != nil {
 		err = fmt.Errorf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN, err.Error())
 		GetLogger().Debug(err.Error())

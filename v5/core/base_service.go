@@ -241,8 +241,7 @@ func (service *BaseService) DisableSSLVerification() {
 	client := DefaultHTTPClient()
 	tr, ok := client.Transport.(*http.Transport)
 	if tr != nil && ok {
-		/* #nosec G402 */
-		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
 	}
 
 	service.SetHTTPClient(client)
