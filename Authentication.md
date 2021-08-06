@@ -3,7 +3,7 @@ The go-sdk-core project supports the following types of authentication:
 - Basic Authentication
 - Bearer Token Authentication
 - Identity and Access Management (IAM) Authentication
-- Compute Resource Authentication
+- Container Authentication
 - Cloud Pak for Data Authentication
 - No Authentication
 
