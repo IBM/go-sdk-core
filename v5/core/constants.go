@@ -75,6 +75,6 @@ const (
 	ERRORMSG_CREATE_RETRYABLE_REQ    = "An error occurred while creating a retryable http Request: %s"
 	ERRORMSG_UNEXPECTED_STATUS_CODE  = "Unexpected HTTP status code %d (%s)"
 	ERRORMSG_UNMARSHAL_AUTH_RESPONSE = "error unmarshalling authentication response: %s"
-	ERRORMSG_UNABLE_RETRIEVE_CRTOKEN = "unable to retrieve compute resource token value: %s"
+	ERRORMSG_UNABLE_RETRIEVE_CRTOKEN = "unable to retrieve compute resource token value: %s" // #nosec G101
 	ERRORMSG_IAM_GETTOKEN_ERROR      = "IAM 'get token' error, status code %d received from '%s': %s" // #nosec G101
 )
