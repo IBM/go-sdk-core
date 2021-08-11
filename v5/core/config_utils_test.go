@@ -75,7 +75,7 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 	assert.Equal(t, "https://service2/api", props[PROPNAME_SVC_URL])
 	assert.Equal(t, "false", props[PROPNAME_SVC_DISABLE_SSL])
 	assert.Equal(t, "false", props[PROPNAME_SVC_ENABLE_GZIP])
-	assert.Equal(t, strings.ToUpper(AUTHTYPE_BASIC), strings.ToUpper(props[PROPNAME_AUTH_TYPE]))
+	assert.Equal(t, strings.ToUpper(AUTHTYPE_BASIC), strings.ToUpper(props["AUTHTYPE"]))
 	assert.Equal(t, "my-user", props[PROPNAME_USERNAME])
 	assert.Equal(t, "my-password", props[PROPNAME_PASSWORD])
 
@@ -85,7 +85,7 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 	assert.Equal(t, "https://service3/api", props[PROPNAME_SVC_URL])
 	assert.Equal(t, "false", props[PROPNAME_SVC_DISABLE_SSL])
 	assert.Equal(t, "notabool", props[PROPNAME_SVC_ENABLE_GZIP])
-	assert.Equal(t, strings.ToUpper(AUTHTYPE_CP4D), strings.ToUpper(props[PROPNAME_AUTH_TYPE]))
+	assert.Equal(t, strings.ToUpper(AUTHTYPE_CP4D), strings.ToUpper(props["AUTHTYPE"]))
 	assert.Equal(t, "my-cp4d-user", props[PROPNAME_USERNAME])
 	assert.Equal(t, "my-cp4d-password", props[PROPNAME_PASSWORD])
 	assert.Equal(t, "https://cp4dhost/cp4d/api", props[PROPNAME_AUTH_URL])
