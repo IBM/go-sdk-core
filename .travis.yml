@@ -24,6 +24,7 @@ install:
   - curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.8.1
 
 script:
+  - make scan-gosec
   - make all
 
 after_success:

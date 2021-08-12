@@ -4,7 +4,7 @@ VDIR=v5
 
 COV_OPTS=-coverprofile=coverage.txt -covermode=atomic
 
-all: testcov lint scan-gosec tidy
+all: testcov lint tidy
 
 testcov:
 	cd ${VDIR} && go test -tags=all ${COV_OPTS} ./...
