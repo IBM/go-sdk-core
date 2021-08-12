@@ -17,11 +17,11 @@ package core
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
-	"io"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFileWithMetadataFields(t *testing.T) {
@@ -30,8 +30,8 @@ func TestFileWithMetadataFields(t *testing.T) {
 	contentType := "application/octet-stream"
 
 	model := FileWithMetadata{
-		Data: data,
-		Filename: &filename,
+		Data:        data,
+		Filename:    &filename,
 		ContentType: &contentType,
 	}
 
@@ -40,14 +40,12 @@ func TestFileWithMetadataFields(t *testing.T) {
 	assert.NotNil(t, model.ContentType)
 }
 
-
 func TestNewFileWithMetadata(t *testing.T) {
 	data := ioutil.NopCloser(bytes.NewReader([]byte("test")))
 	model, err := NewFileWithMetadata(data)
 
 	assert.Nil(t, err)
-	myData, ok := model.Data.(io.ReadCloser)
-	assert.True(t, ok)
+	myData := model.Data
 	assert.NotNil(t, myData)
 
 	assert.Nil(t, model.Filename)
@@ -69,7 +67,7 @@ func TestUnmarshalFileWithMetadata(t *testing.T) {
 	exampleJsonString := `{"data": "tempdir/test-file.txt", "filename": "test-file.txt", "content_type": "text/plain"}`
 
 	var mapifiedString map[string]json.RawMessage
-	err = json.Unmarshal([]byte(exampleJsonString), &mapifiedString);
+	err = json.Unmarshal([]byte(exampleJsonString), &mapifiedString)
 	assert.Nil(t, err)
 
 	var model *FileWithMetadata
@@ -77,8 +75,7 @@ func TestUnmarshalFileWithMetadata(t *testing.T) {
 	err = UnmarshalFileWithMetadata(mapifiedString, &model)
 	assert.Nil(t, err)
 
-	data, ok := model.Data.(io.ReadCloser)
-	assert.True(t, ok)
+	data := model.Data
 	assert.NotNil(t, data)
 
 	assert.NotNil(t, model.Filename)
