@@ -135,8 +135,8 @@ func TestIsNil(t *testing.T) {
 	testSliceIntf = testSlice
 
 	// As interface{} values, map and slice are NOT nil.
-	assert.False(t, testMapIntf == nil)
-	assert.False(t, testSliceIntf == nil)
+	assert.False(t, testMapIntf == nil)   //nolint:staticcheck
+	assert.False(t, testSliceIntf == nil) //nolint:staticcheck
 
 	// IsNil() looks at the interface's value so will appear as nil.
 	assert.True(t, IsNil(testMapIntf))

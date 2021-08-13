@@ -15,5 +15,8 @@ test:
 lint:
 	cd ${VDIR} && golangci-lint run --build-tags=all
 
+scan-gosec:
+	gosec ./...
+
 tidy:
 	cd ${VDIR} && go mod tidy
