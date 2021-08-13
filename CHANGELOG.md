@@ -1,3 +1,10 @@
+## [5.6.3](https://github.com/IBM/go-sdk-core/compare/v5.6.2...v5.6.3) (2021-08-13)
+
+
+### Bug Fixes
+
+* support 'AUTHTYPE' as alias for 'AUTH_TYPE' config property ([#133](https://github.com/IBM/go-sdk-core/issues/133)) ([6795484](https://github.com/IBM/go-sdk-core/commit/6795484cf8a7df70808a4342d7dba8a780ef287a))
+
 ## [5.6.2](https://github.com/IBM/go-sdk-core/compare/v5.6.1...v5.6.2) (2021-08-04)
 
 
