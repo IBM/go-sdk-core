@@ -1,3 +1,10 @@
+## [5.6.4](https://github.com/IBM/go-sdk-core/compare/v5.6.3...v5.6.4) (2021-08-31)
+
+
+### Bug Fixes
+
+* handle the error during gzip compression instead of panic ([#137](https://github.com/IBM/go-sdk-core/issues/137)) ([15bc45b](https://github.com/IBM/go-sdk-core/commit/15bc45b26efc113f3b32328cca32f4627f2d5141))
+
 ## [5.6.3](https://github.com/IBM/go-sdk-core/compare/v5.6.2...v5.6.3) (2021-08-13)
 
 
