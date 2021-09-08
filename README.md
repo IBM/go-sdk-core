@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/IBM/go-sdk-core.svg?branch=main)](https://travis-ci.com/IBM/go-sdk-core)
+[![Build Status](https://app.travis-ci.com/IBM/go-sdk-core.svg?branch=main)](https://app.travis-ci.com/IBM/go-sdk-core)
 [![Release](https://img.shields.io/github/v/release/IBM/go-sdk-core)](https://github.com/IBM/go-sdk-core/releases/latest)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/IBM/go-sdk-core?filename=v5/go.mod)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
