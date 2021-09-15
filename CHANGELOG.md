@@ -1,3 +1,10 @@
+## [5.6.5](https://github.com/IBM/go-sdk-core/compare/v5.6.4...v5.6.5) (2021-09-15)
+
+
+### Bug Fixes
+
+* recognize vendor-specific JSON mimetypes ([#138](https://github.com/IBM/go-sdk-core/issues/138)) ([fb2c14a](https://github.com/IBM/go-sdk-core/commit/fb2c14a12eed98fc1d92dc8db8b746243757eb1d))
+
 ## [5.6.4](https://github.com/IBM/go-sdk-core/compare/v5.6.3...v5.6.4) (2021-08-31)
 
 
