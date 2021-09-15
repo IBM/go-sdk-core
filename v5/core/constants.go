@@ -66,7 +66,7 @@ const (
 		"and/or use the DisableSSLVerification option of the authenticator."
 	ERRORMSG_AUTHENTICATE_ERROR      = "An error occurred while performing the 'authenticate' step: %s"
 	ERRORMSG_READ_RESPONSE_BODY      = "An error occurred while reading the response body: %s"
-	ERRORMSG_UNEXPECTED_RESPONSE     = "The response contained unexpected content"
+	ERRORMSG_UNEXPECTED_RESPONSE     = "The response contained unexpected content, Content-Type=%s, operation resultType=%s"
 	ERRORMSG_UNMARSHAL_RESPONSE_BODY = "An error occurred while unmarshalling the response body: %s"
 	ERRORMSG_NIL_SLICE               = "The 'slice' parameter cannot be nil"
 	ERRORMSG_PARAM_NOT_SLICE         = "The 'slice' parameter must be a slice"
@@ -75,6 +75,6 @@ const (
 	ERRORMSG_CREATE_RETRYABLE_REQ    = "An error occurred while creating a retryable http Request: %s"
 	ERRORMSG_UNEXPECTED_STATUS_CODE  = "Unexpected HTTP status code %d (%s)"
 	ERRORMSG_UNMARSHAL_AUTH_RESPONSE = "error unmarshalling authentication response: %s"
-	ERRORMSG_UNABLE_RETRIEVE_CRTOKEN = "unable to retrieve compute resource token value: %s" // #nosec G101
+	ERRORMSG_UNABLE_RETRIEVE_CRTOKEN = "unable to retrieve compute resource token value: %s"          // #nosec G101
 	ERRORMSG_IAM_GETTOKEN_ERROR      = "IAM 'get token' error, status code %d received from '%s': %s" // #nosec G101
 )
