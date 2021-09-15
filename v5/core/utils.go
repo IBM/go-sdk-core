@@ -40,7 +40,7 @@ func init() {
 }
 
 const (
-	jsonMimePattern      = "(?i)^application\\/((json)|(merge\\-patch\\+json))(;.*)?$"
+	jsonMimePattern      = "(?i)^application\\/((json)|(merge\\-patch\\+json)|(vnd\\..*\\+json))(;.*)?$"
 	jsonPatchMimePattern = "(?i)^application\\/json\\-patch\\+json(;.*)?$"
 )
 

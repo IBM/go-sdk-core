@@ -438,10 +438,11 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 
 	// Operation was successful and we are expecting a response, so process the response.
 	if !IsNil(result) {
+		resultType := reflect.TypeOf(result).String()
 
 		// If 'result' is a io.ReadCloser, then pass the response body back reflectively via 'result'
 		// and bypass any further unmarshalling of the response.
-		if reflect.TypeOf(result).String() == "*io.ReadCloser" {
+		if resultType == "*io.ReadCloser" {
 			rResult := reflect.ValueOf(result).Elem()
 			rResult.Set(reflect.ValueOf(httpResponse.Body))
 			detailedResponse.Result = httpResponse.Body
@@ -480,24 +481,24 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			// Check to see if the caller wanted the response body as a string.
 			// If the caller passed in 'result' as the address of *string,
 			// then we'll reflectively set result to point to it.
-			if reflect.TypeOf(result).String() == "**string" {
+			if resultType == "**string" {
 				responseString := string(responseBody)
 				rResult := reflect.ValueOf(result).Elem()
 				rResult.Set(reflect.ValueOf(&responseString))
 
 				// And set the string in the Result field.
 				detailedResponse.Result = &responseString
-			} else if reflect.TypeOf(result).String() == "*[]uint8" { // byte is an alias for uint8
+			} else if resultType == "*[]uint8" { // byte is an alias for uint8
 				rResult := reflect.ValueOf(result).Elem()
 				rResult.Set(reflect.ValueOf(responseBody))
 
 				// And set the byte slice in the Result field.
 				detailedResponse.Result = responseBody
 			} else {
-				// At this point, we don't know how to set the result field, so we have to return an error
+				// At this point, we don't know how to set the result field, so we have to return an error.
 				// But make sure we save the bytes we read in the DetailedResponse for debugging purposes
 				detailedResponse.Result = responseBody
-				err = fmt.Errorf(ERRORMSG_UNEXPECTED_RESPONSE)
+				err = fmt.Errorf(ERRORMSG_UNEXPECTED_RESPONSE, contentType, resultType)
 				return
 			}
 		}

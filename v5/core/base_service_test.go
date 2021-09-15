@@ -104,6 +104,51 @@ func TestRequestGoodResponseJSON(t *testing.T) {
 	assert.Equal(t, "wonder woman", *(result.Name))
 }
 
+// Test a normal JSON-based response using a vendor-specific Content-Type
+func TestRequestGoodResponseCustomJSONContentType(t *testing.T) {
+	customContentType := "application/vnd.sdksquad.custom.semantics+json;charset=UTF8"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", customContentType)
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{"name": "wonder woman"}`)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("POST")
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
+	assert.Nil(t, err)
+	req, _ := builder.Build()
+
+	authenticator, err := NewBasicAuthenticator("xxx", "yyy")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service.Options.Authenticator)
+	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
+
+	// Use a cloned service to verify it works ok.
+	service = service.Clone()
+
+	var foo *Foo
+	detailedResponse, err := service.Request(req, &foo)
+	assert.Nil(t, err)
+	assert.NotNil(t, detailedResponse)
+	assert.Equal(t, http.StatusCreated, detailedResponse.StatusCode)
+	assert.Equal(t, customContentType, detailedResponse.Headers.Get("Content-Type"))
+
+	result, ok := detailedResponse.Result.(*Foo)
+	assert.Equal(t, true, ok)
+	assert.NotNil(t, result)
+	assert.NotNil(t, foo)
+	assert.Equal(t, "wonder woman", *(result.Name))
+}
+
 // Test a JSON-based response that should be returned as a stream (io.ReadCloser).
 func TestRequestGoodResponseJSONStream(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
