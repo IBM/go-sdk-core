@@ -1,6 +1,6 @@
 package core
 
-// (C) Copyright IBM Corp. 2019.
+// (C) Copyright IBM Corp. 2019, 2021.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -84,7 +84,7 @@ var iamNeedsRefreshMutex sync.Mutex
 
 const (
 	// The default (prod) IAM token server base endpoint address.
-	defaultIamTokenServerEndpoint = "https://iam.cloud.ibm.com" // #nosec G101
+	defaultIamTokenServerEndpoint = "https://iam.cloud.ibm.com"              // #nosec G101
 	iamGrantTypeApiKey            = "urn:ibm:params:oauth:grant-type:apikey" // #nosec G101
 )
 
@@ -109,8 +109,7 @@ func NewIamAuthenticator(apikey string, url string, clientId string, clientSecre
 	return authenticator, nil
 }
 
-// NewIamAuthenticatorFromMap constructs a new IamAuthenticator instance from a
-// map.
+// newIamAuthenticatorFromMap constructs a new IamAuthenticator instance from a map.
 func newIamAuthenticatorFromMap(properties map[string]string) (authenticator *IamAuthenticator, err error) {
 	if properties == nil {
 		return nil, fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)

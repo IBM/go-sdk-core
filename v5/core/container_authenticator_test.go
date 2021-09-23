@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2019.
+// (C) Copyright IBM Corp. 2021.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -237,7 +237,7 @@ func TestContainerAuthCtorFromMapSuccess(t *testing.T) {
 	assert.Nil(t, auth.Headers)
 }
 
-// startMockServer will start a mock server endpoint that supports both the
+// startMockIAMServer will start a mock server endpoint that supports both the
 // Instance Metadata Service and IAM operations that we'll need to call.
 func startMockIAMServer(t *testing.T) *httptest.Server {
 	// Create the mock server.

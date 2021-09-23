@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2019.
+// (C) Copyright IBM Corp. 2019, 2021.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -491,7 +491,7 @@ func TestConvertSliceBadInput(t *testing.T) {
 	assert.Nil(t, convertedSlice)
 
 	// map[string]byte
-	myByteMap := map[string][]byte{"myByteArray": []byte{01, 02, 03, 04}}
+	myByteMap := map[string][]byte{"myByteArray": {01, 02, 03, 04}}
 	convertedSlice, err = ConvertSlice(myByteMap)
 	assert.NotNil(t, err)
 	assert.Nil(t, convertedSlice)
