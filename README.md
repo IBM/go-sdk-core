@@ -19,7 +19,7 @@ go get -u github.com/IBM/go-sdk-core/...
 ```
 
 ## Prerequisites
-- Go version 1.12 or newer
+- Go version 1.14 or newer
 
 ## Authentication
 The go-sdk-core project supports the following types of authentication:
