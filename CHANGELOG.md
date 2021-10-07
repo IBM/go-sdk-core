@@ -1,3 +1,10 @@
+# [5.7.0](https://github.com/IBM/go-sdk-core/compare/v5.6.5...v5.7.0) (2021-10-07)
+
+
+### Features
+
+* **build:** bump min go version to 1.14 ([#140](https://github.com/IBM/go-sdk-core/issues/140)) ([eb86886](https://github.com/IBM/go-sdk-core/commit/eb86886ef0385752f12f88a8aa5a09ee74afc185))
+
 ## [5.6.5](https://github.com/IBM/go-sdk-core/compare/v5.6.4...v5.6.5) (2021-09-15)
 
 
