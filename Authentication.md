@@ -82,24 +82,17 @@ export EXAMPLE_SERVICE_PASSWORD=mypassword
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Construct the authenticator from external configuration information for service "example_service".
-authenticator, err := core.GetAuthenticatorFromEnvironment("example_service")
-if err != nil {
-    panic(err)
-}
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
     ServiceName:   "example_service",
-    Authenticator: authenticator,
 }
 
 // Construct the service instance.
-service, err := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
 if err != nil {
     panic(err)
 }
@@ -161,34 +154,24 @@ export EXAMPLE_SERVICE_BEARER_TOKEN=<the bearer token value>
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Construct the authenticator from external configuration information for service "example_service".
-authenticator, err := core.GetAuthenticatorFromEnvironment("example_service")
-if err != nil {
-    panic(err)
-}
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
     ServiceName:   "example_service",
-    Authenticator: authenticator,
 }
 
 // Construct the service instance.
-service, err := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
 if err != nil {
     panic(err)
 }
 
 // 'service' can now be used to invoke operations.
-...
-// Later, if your bearer token value expires, you can set a new one like this:
-newToken := // ... obtain new bearer token value
-authenticator.BearerToken = newToken
 ```
+
 Note that the use of external configuration is not as useful with the `BearerTokenAuthenticator` as it
 is for other authenticator types because bearer tokens typically need to be obtained and refreshed
 programmatically since they normally have a relatively short lifespan before they expire.  This
@@ -266,24 +249,17 @@ export EXAMPLE_SERVICE_APIKEY=myapikey
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Construct the authenticator from external configuration information for service "example_service".
-authenticator, err := core.GetAuthenticatorFromEnvironment("example_service")
-if err != nil {
-    panic(err)
-}
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
     ServiceName:   "example_service",
-    Authenticator: authenticator,
 }
 
 // Construct the service instance.
-service, err := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
 if err != nil {
     panic(err)
 }
@@ -387,24 +363,17 @@ export EXAMPLE_SERVICE_IAM_PROFILE_NAME=iam-user123
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Construct the authenticator from external configuration information for service "example_service".
-authenticator, err := core.GetAuthenticatorFromEnvironment("example_service")
-if err != nil {
-    panic(err)
-}
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
     ServiceName:   "example_service",
-    Authenticator: authenticator,
 }
 
 // Construct the service instance.
-service, err := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
 if err != nil {
     panic(err)
 }
@@ -494,24 +463,17 @@ export EXAMPLE_SERVICE_IAM_PROFILE_CRN=crn:iam-profile-123
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Construct the authenticator from external configuration information for service "example_service".
-authenticator, err := &core.GetAuthenticatorFromEnvironment("example_service")
-if err != nil {
-    panic(err)
-}
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
     ServiceName:   "example_service",
-    Authenticator: authenticator,
 }
 
 // Construct the service instance.
-service, err := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
 if err != nil {
     panic(err)
 }
@@ -559,23 +521,16 @@ import {
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Create the authenticator using username/password.
-authenticator1 := &core.CloudPakForDataAuthenticator{
-    Username: "myuser",
-    Password: "mypassword",
-    URL: "https://mycp4dhost.com/",
+// Create the authenticator using username/apikey.
+authenticator, err := core.NewCloudPakForDataAuthenticatorUsingAPIKey(
+    "https://mycp4dhost.com/", "myuser", "myapikey", false, nil)
+if err != nil {
+    panic(err)
 }
 
-// Alternatively, create the authenticator using username/apikey.
-authenticator2 := &core.CloudPakForDataAuthenticator{
-    Username: "myuser",
-    APIKey: "myapikey",
-    URL: "https://mycp4dhost.com/",
-}
-
-// Create the service options struct using one of the authenticators above.
+// Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
-    Authenticator: authenticator1,
+    Authenticator: authenticator,
 }
 
 // Construct the service instance.
@@ -590,13 +545,7 @@ if err != nil {
 ### Configuration example
 External configuration:
 ```
-# Configure "example_service1" with username/password.
-export EXAMPLE_SERVICE1_AUTH_TYPE=cp4d
-export EXAMPLE_SERVICE1_USERNAME=myuser
-export EXAMPLE_SERVICE1_PASSWORD=mypassword
-export EXAMPLE_SERVICE1_URL=https://mycp4dhost.com/
-
-# Configure "example_service2" with username/apikey.
+# Configure "example_service" with username/apikey.
 export EXAMPLE_SERVICE2_AUTH_TYPE=cp4d
 export EXAMPLE_SERVICE2_USERNAME=myuser
 export EXAMPLE_SERVICE2_APIKEY=myapikey
@@ -605,24 +554,17 @@ export EXAMPLE_SERVICE2_URL=https://mycp4dhost.com/
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Construct the authenticator from external configuration information for service "example_service1".
-authenticator, err := core.GetAuthenticatorFromEnvironment("example_service1")
-if err != nil {
-    panic(err)
-}
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
     ServiceName:   "example_service1",
-    Authenticator: authenticator,
 }
 
 // Construct the service instance.
-service, err := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
 if err != nil {
     panic(err)
 }
@@ -669,24 +611,17 @@ export EXAMPLE_SERVICE_AUTH_TYPE=noauth
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Construct the authenticator from external configuration information for service "example_service".
-authenticator, err := core.GetAuthenticatorFromEnvironment("example_service")
-if err != nil {
-    panic(err)
-}
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
     ServiceName:   "example_service",
-    Authenticator: authenticator,
 }
 
 // Construct the service instance.
-service, err := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
 if err != nil {
     panic(err)
 }
