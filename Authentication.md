@@ -15,11 +15,12 @@ which authentication types are supported for that service.
 
 The go-sdk-core allows an authenticator to be specified in one of two ways:
 1. programmatically - the SDK user invokes the appropriate function(s) to create an instance of the 
-desired authenticator and then passes the authenticator instance when constructing an instance of the service.
+desired authenticator and then passes the authenticator instance when constructing an instance of the service client.
 2. configuration - the SDK user provides external configuration information (in the form of environment variables
-or a credentials file) to indicate the type of authenticator , along with the configuration of the necessary properties
-for that authenticator.  The SDK user then invokes the configuration-based authenticator factory to construct an instance
-of the authenticator that is described in the external configuration information.
+or a credentials file) to indicate the type of authenticator, along with the configuration of the necessary properties
+for that authenticator.
+The SDK user then invokes the configuration-based service client constructor method
+to construct an instance of the authenticator and service client that reflect the external configuration information.
 
 The sections below will provide detailed information for each authenticator
 which will include the following:
@@ -194,8 +195,9 @@ form:
 
 - ApiKey: (required) the IAM api key
 
-- URL: (optional) The URL representing the IAM token service endpoint.  If not specified, a suitable
-default value is used.
+- URL: (optional) The base endpoint URL of the IAM token service.
+The default value of this property is the "prod" IAM token service endpoint
+(`https://iam.cloud.ibm.com`).
 
 - ClientId/ClientSecret: (optional) The `ClientId` and `ClientSecret` fields are used to form a 
 "basic auth" Authorization header for interactions with the IAM token server. If neither field 
@@ -408,7 +410,7 @@ The IAM access token is added to each outbound request in the `Authorization` he
 
 - IAMProfileID: (optional) the id of the linked trusted IAM profile to be used when obtaining the IAM access token.
 
-- URL: (optional) The VPC Instance Metadata Service's base URL.  
+- URL: (optional) The base endpoint URL of the VPC Instance Metadata Service.  
 The default value of this property is `http://169.254.169.254`, and should not need to be specified in normal situations.
 
 - Client: (optional) The `http.Client` object used to interact with the VPC Instance Metadata Service.
@@ -509,7 +511,7 @@ This value should not include the `/v1/authorize` path portion.
 certificate should be disabled or not. The default value is `false`.
 
 - Headers: (optional) A set of key/value pairs that will be sent as HTTP headers in requests
-made to the IAM token service.
+made to the Cloud Pak for Data token service.
 
 - Client: (Optional) The `http.Client` object used to invoke token servive requests. If not specified
 by the user, a suitable default Client will be constructed.
@@ -523,7 +525,7 @@ import {
 ...
 // Create the authenticator using username/apikey.
 authenticator, err := core.NewCloudPakForDataAuthenticatorUsingAPIKey(
-    "https://mycp4dhost.com/", "myuser", "myapikey", false, nil)
+    "https://mycp4dhost.com", "myuser", "myapikey", false, nil)
 if err != nil {
     panic(err)
 }
@@ -546,10 +548,10 @@ if err != nil {
 External configuration:
 ```
 # Configure "example_service" with username/apikey.
-export EXAMPLE_SERVICE2_AUTH_TYPE=cp4d
-export EXAMPLE_SERVICE2_USERNAME=myuser
-export EXAMPLE_SERVICE2_APIKEY=myapikey
-export EXAMPLE_SERVICE2_URL=https://mycp4dhost.com/
+export EXAMPLE_SERVICE_AUTH_TYPE=cp4d
+export EXAMPLE_SERVICE_USERNAME=myuser
+export EXAMPLE_SERVICE_APIKEY=myapikey
+export EXAMPLE_SERVICE_URL=https://mycp4dhost.com
 ```
 Application code:
 ```go
@@ -574,7 +576,9 @@ if err != nil {
 
 
 ## No Auth Authentication
-The `NoAuthAuthenticator` is a placeholder authenticator which performs no actual authentication function.   It can be used in situations where authentication needs to be bypassed, perhaps while developing or debugging an application or service.
+The `NoAuthAuthenticator` is a placeholder authenticator which performs no actual authentication function.
+It can be used in situations where authentication needs to be bypassed, perhaps while developing
+or debugging an application or service.
 
 ### Properties
 None
