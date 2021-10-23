@@ -30,6 +30,9 @@ import (
 )
 
 const (
+	// To enable debug logging during test execution, set this to "LevelDebug"
+	cp4dAuthTestLogLevel LogLevel = LevelError
+
 	// These access tokens were obtained by running curl to invoke the POST /v1/authorize against a CP4D environment.
 
 	// Username/password
@@ -121,6 +124,8 @@ func TestCp4dConfigErrorsAPIKey(t *testing.T) {
 }
 
 func TestCp4dAuthenticateFailure(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		_, _ = w.Write([]byte("Sorry you are not authorized"))
@@ -166,6 +171,8 @@ func verifyAuthRequest(t *testing.T, r *http.Request,
 }
 
 func TestCp4dGetTokenSuccessPW(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -200,6 +207,8 @@ func TestCp4dGetTokenSuccessPW(t *testing.T) {
 }
 
 func TestCp4dGetTokenSuccessAPIKey(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -234,6 +243,8 @@ func TestCp4dGetTokenSuccessAPIKey(t *testing.T) {
 }
 
 func TestCp4dGetCachedTokenSuccessPW(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -271,6 +282,8 @@ func TestCp4dGetCachedTokenSuccessPW(t *testing.T) {
 }
 
 func TestCp4dGetCachedTokenAPIKey(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -308,6 +321,8 @@ func TestCp4dGetCachedTokenAPIKey(t *testing.T) {
 }
 
 func TestCp4dGetTokenAuthFailure(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		_, _ = w.Write([]byte("Forbidden!"))
@@ -340,6 +355,8 @@ func TestCp4dGetTokenAuthFailure(t *testing.T) {
 }
 
 func TestCp4dGetTokenDeserFailure(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("Bad access token response!"))
@@ -363,6 +380,8 @@ func TestCp4dGetTokenDeserFailure(t *testing.T) {
 }
 
 func TestCp4dBackgroundTokenRefreshSuccess(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -410,6 +429,8 @@ func TestCp4dBackgroundTokenRefreshSuccess(t *testing.T) {
 }
 
 func TestCp4dBackgroundTokenRefreshAuthFailure(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -462,6 +483,8 @@ func TestCp4dBackgroundTokenRefreshAuthFailure(t *testing.T) {
 }
 
 func TestCp4dBackgroundTokenRefreshIdle(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -523,6 +546,8 @@ func TestCp4dBackgroundTokenRefreshIdle(t *testing.T) {
 }
 
 func TestCp4dDisableSSL(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		verifyAuthRequest(t, r, "mookie", "betts", "")
 
@@ -550,6 +575,8 @@ func TestCp4dDisableSSL(t *testing.T) {
 }
 
 func TestCp4dUserHeaders(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		verifyAuthRequest(t, r, "mookie", "", "King of the North")
 		assert.Equal(t, "Value1", r.Header.Get("Header1"))
@@ -641,6 +668,8 @@ func TestNewCloudPakForDataAuthenticatorFromMap(t *testing.T) {
 }
 
 func TestCp4dGetTokenTimeoutError(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -683,6 +712,8 @@ func TestCp4dGetTokenTimeoutError(t *testing.T) {
 }
 
 func TestCp4dGetTokenServerError(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -751,6 +782,8 @@ func TestCp4dGetTokenServerError(t *testing.T) {
 //
 
 // func TestCp4dLiveTokenServer(t *testing.T) {
+//	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+//
 // 	var request *http.Request
 // 	var err error
 // 	var authHeader string
