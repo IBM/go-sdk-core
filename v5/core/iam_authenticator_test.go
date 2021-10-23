@@ -27,6 +27,9 @@ import (
 )
 
 var (
+	// To enable debug logging during test execution, set this to "LevelDebug"
+	iamAuthTestLogLevel LogLevel = LevelError
+
 	AccessToken1 string = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
 	AccessToken2 string = "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
 	RefreshToken string = "Xj7Gle500MachEOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
@@ -53,6 +56,8 @@ func TestIamConfigErrors(t *testing.T) {
 }
 
 func TestIamAuthenticateFail(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		_, _ = w.Write([]byte("Sorry you are not authorized"))
@@ -84,6 +89,8 @@ func TestIamAuthenticateFail(t *testing.T) {
 }
 
 func TestIamGetTokenSuccess(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
@@ -149,6 +156,8 @@ func TestIamGetTokenSuccess(t *testing.T) {
 }
 
 func TestIamGetTokenSuccessWithScope(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
@@ -209,6 +218,8 @@ func TestIamGetTokenSuccessWithScope(t *testing.T) {
 	assert.Equal(t, AccessToken2, authenticator.getTokenData().AccessToken)
 }
 func TestIamGetCachedToken(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -256,6 +267,8 @@ func TestIamGetCachedToken(t *testing.T) {
 }
 
 func TestIamBackgroundTokenRefresh(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		expiration := GetCurrentTime() + 3600
@@ -315,6 +328,8 @@ func TestIamBackgroundTokenRefresh(t *testing.T) {
 }
 
 func TestIamBackgroundTokenRefreshFailure(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		expiration := GetCurrentTime() + 3600
@@ -367,6 +382,8 @@ func TestIamBackgroundTokenRefreshFailure(t *testing.T) {
 }
 
 func TestIamBackgroundTokenRefreshIdle(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// CurrentTime + 1 hour
@@ -440,10 +457,11 @@ func TestIamBackgroundTokenRefreshIdle(t *testing.T) {
 	assert.Equal(t, AccessToken2, token)
 	assert.NotNil(t, authenticator.getTokenData())
 	assert.NotEqual(t, newRefreshTime, authenticator.getTokenData().RefreshTime)
-
 }
 
 func TestIamClientIdAndSecret(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
 	expiration := GetCurrentTime() + 3600
 	accessToken := "oAeisG8yqPY7sFR_x66Z15"
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -474,6 +492,8 @@ func TestIamClientIdAndSecret(t *testing.T) {
 }
 
 func TestIamRefreshTimeCalculation(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
 	const timeToLive int64 = 3600
 	const expireTime int64 = 1563911183
 	const expected int64 = expireTime - 720 // 720 is 20% of 3600
@@ -491,6 +511,8 @@ func TestIamRefreshTimeCalculation(t *testing.T) {
 }
 
 func TestIamDisableSSL(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
 	expiration := GetCurrentTime() + 3600
 	accessToken := "oAeisG8yqPY7sFR_x66Z15"
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -521,6 +543,8 @@ func TestIamDisableSSL(t *testing.T) {
 }
 
 func TestIamUserHeaders(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
 	expiration := GetCurrentTime() + 3600
 	accessToken := "oAeisG8yqPY7sFR_x66Z15"
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -553,6 +577,8 @@ func TestIamUserHeaders(t *testing.T) {
 }
 
 func TestIamGetTokenFailure(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		_, _ = w.Write([]byte("Sorry you are forbidden"))
@@ -584,6 +610,8 @@ func TestIamGetTokenFailure(t *testing.T) {
 }
 
 func TestIamGetTokenTimeoutError(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -637,6 +665,8 @@ func TestIamGetTokenTimeoutError(t *testing.T) {
 }
 
 func TestIamGetTokenServerError(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
 	firstCall := true
 	expiration := GetCurrentTime() + 3600
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -746,6 +776,8 @@ func TestNewIamAuthenticatorFromMap(t *testing.T) {
 //
 //
 // func TestIamLiveTokenServer(t *testing.T) {
+//	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+//
 // 	var request *http.Request
 // 	var err error
 // 	var authHeader string

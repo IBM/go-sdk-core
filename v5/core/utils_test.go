@@ -491,7 +491,7 @@ func TestConvertSliceBadInput(t *testing.T) {
 	assert.Nil(t, convertedSlice)
 
 	// map[string]byte
-	myByteMap := map[string][]byte{"myByteArray": []byte{01, 02, 03, 04}}
+	myByteMap := map[string][]byte{"myByteArray": {01, 02, 03, 04}}
 	convertedSlice, err = ConvertSlice(myByteMap)
 	assert.NotNil(t, err)
 	assert.Nil(t, convertedSlice)
@@ -588,4 +588,18 @@ func TestGetQueryParam(t *testing.T) {
 	next, err = GetQueryParam(&dupParamURL, "start")
 	assert.Nil(t, err)
 	assert.Equal(t, "foo", *next)
+}
+
+func TestRedactSecrets(t *testing.T) {
+	assert.NotContains(t, RedactSecrets("Authorization: Bearer secret"), "secret")
+	assert.NotContains(t, RedactSecrets("Authorization: Basic secret"), "secret")
+	assert.NotContains(t, RedactSecrets("X-Authorization: secret"), "secret")
+
+	assert.NotContains(t, RedactSecrets("PASSword=secret"), "secret")
+	assert.NotContains(t, RedactSecrets("ApIKey=secret"), "secret")
+	assert.NotContains(t, RedactSecrets("toKen=secret"), "secret")
+	assert.NotContains(t, RedactSecrets("passCode=secret"), "secret")
+
+	assert.NotContains(t, RedactSecrets(`"token": "secret",`), "secret")
+	assert.NotContains(t, RedactSecrets(`xxx "apIKEy":    "secret",xxx`), "secret")
 }

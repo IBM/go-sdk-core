@@ -342,7 +342,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	if GetLogger().IsLogLevelEnabled(LevelDebug) {
 		buf, dumpErr := httputil.DumpRequestOut(req, req.Body != nil)
 		if dumpErr == nil {
-			GetLogger().Debug("Request:\n%s\n", string(buf))
+			GetLogger().Debug("Request:\n%s\n", RedactSecrets(string(buf)))
 		} else {
 			GetLogger().Debug("error while attempting to log outbound request: %s", dumpErr.Error())
 		}
@@ -378,7 +378,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	if GetLogger().IsLogLevelEnabled(LevelDebug) {
 		buf, dumpErr := httputil.DumpResponse(httpResponse, httpResponse.Body != nil)
 		if err == nil {
-			GetLogger().Debug("Response:\n%s\n", string(buf))
+			GetLogger().Debug("Response:\n%s\n", RedactSecrets(string(buf)))
 		} else {
 			GetLogger().Debug("error while attempting to log inbound response: %s", dumpErr.Error())
 		}
@@ -609,7 +609,10 @@ type httpLogger struct {
 }
 
 func (l *httpLogger) Printf(format string, inserts ...interface{}) {
-	GetLogger().Log(LevelDebug, format, inserts...)
+	if GetLogger().IsLogLevelEnabled(LevelDebug) {
+		msg := fmt.Sprintf(format, inserts...)
+		GetLogger().Log(LevelDebug, RedactSecrets(msg))
+	}
 }
 
 // NewRetryableHTTPClient returns a new instance of go-retryablehttp.Client
