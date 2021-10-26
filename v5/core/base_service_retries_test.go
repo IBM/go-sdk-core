@@ -88,6 +88,23 @@ var _ = Describe(`Retry scenarios`, func() {
 			AfterEach(func() {
 				server.Close()
 			})
+			It(`Timeout with retries disabled`, func() {
+				service, builder := clientInit("GET", server.URL, 0, 0)
+				ctx, cancelFunc := context.WithTimeout(context.Background(), 500*time.Millisecond)
+				defer cancelFunc()
+				builder.WithContext(ctx)
+				req, _ := builder.Build()
+
+				var foo *Foo
+				resp, err := service.Request(req, &foo)
+				Expect(err).ToNot(BeNil())
+				fmt.Fprintf(GinkgoWriter, "Expected error: %s\n", err.Error())
+				Expect(err.Error()).To(ContainSubstring("context deadline exceeded"))
+				Expect(resp).To(BeNil())
+				requestCountMutex.Lock()
+				Expect(requestCount).To(Equal(0))
+				requestCountMutex.Unlock()
+			})
 			It(`Timeout on initial request`, func() {
 				service, builder := clientInit("GET", server.URL, 2, 0)
 				ctx, cancelFunc := context.WithTimeout(context.Background(), 500*time.Millisecond)
@@ -105,7 +122,7 @@ var _ = Describe(`Retry scenarios`, func() {
 				Expect(requestCount).To(Equal(0))
 				requestCountMutex.Unlock()
 			})
-			It(`Timeout on while doing retries`, func() {
+			It(`Timeout while doing retries`, func() {
 				service, builder := clientInit("GET", server.URL, 2, 0)
 				ctx, cancelFunc := context.WithTimeout(context.Background(), 3500*time.Millisecond)
 				defer cancelFunc()
@@ -217,8 +234,63 @@ var _ = Describe(`Retry scenarios`, func() {
 				Expect(requestCount).To(Equal(0))
 			})
 		})
-	})
+		Describe(`Gateway errors`, func() {
+			var requestCount int
+			BeforeEach(func() {
+				requestCount = 0
+				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					defer GinkgoRecover()
 
+					requestCount++
+					w.Header().Set("Retry-After", "1")
+					w.Header().Set("Content-type", "application/json")
+					w.WriteHeader(http.StatusBadGateway)
+					fmt.Fprintf(w,
+						`{"status_code": %d, "message": "Bad gateway error", "details": {"error":"BadRequest","description":"invalid request"}}`,
+						http.StatusBadGateway)
+				}))
+			})
+			AfterEach(func() {
+				server.Close()
+			})
+			It(`Retries not enabled`, func() {
+				service, builder := clientInit("GET", server.URL, 0, 0)
+				req, _ := builder.Build()
+
+				var foo *Foo
+				resp, err := service.Request(req, &foo)
+				Expect(err).ToNot(BeNil())
+				fmt.Fprintf(GinkgoWriter, "Expected error: %s\n", err.Error())
+				Expect(err.Error()).To(ContainSubstring("Bad gateway error"))
+				assertResponse(resp, http.StatusBadGateway, "application/json")
+				Expect(requestCount).To(Equal(1))
+			})
+			It(`Max retries exhausted`, func() {
+				service, builder := clientInit("GET", server.URL, 3, 5)
+				req, _ := builder.Build()
+
+				var foo *Foo
+				resp, err := service.Request(req, &foo)
+				Expect(err).ToNot(BeNil())
+				fmt.Fprintf(GinkgoWriter, "Expected error: %s\n", err.Error())
+				Expect(err.Error()).To(ContainSubstring("Bad gateway error"))
+				assertResponse(resp, http.StatusBadGateway, "application/json")
+				Expect(requestCount).To(Equal(4))
+			})
+			It(`Invalid URL scheme`, func() {
+				service, builder := clientInit("GET", strings.Replace(server.URL, "http", "badscheme", 1), 1, 5)
+				req, _ := builder.Build()
+
+				var foo *Foo
+				resp, err := service.Request(req, &foo)
+				Expect(err).ToNot(BeNil())
+				Expect(resp).To(BeNil())
+				fmt.Fprintf(GinkgoWriter, "Expected error: %s\n", err.Error())
+				Expect(err.Error()).To(ContainSubstring("unsupported protocol scheme"))
+				Expect(requestCount).To(Equal(0))
+			})
+		})
+	})
 	Describe(`Successful scenarios`, func() {
 
 		Describe(`GET`, func() {
