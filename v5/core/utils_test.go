@@ -589,3 +589,17 @@ func TestGetQueryParam(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "foo", *next)
 }
+
+func TestRedactSecrets(t *testing.T) {
+	assert.NotContains(t, RedactSecrets("Authorization: Bearer secret"), "secret")
+	assert.NotContains(t, RedactSecrets("Authorization: Basic secret"), "secret")
+	assert.NotContains(t, RedactSecrets("X-Authorization: secret"), "secret")
+
+	assert.NotContains(t, RedactSecrets("PASSword=secret"), "secret")
+	assert.NotContains(t, RedactSecrets("ApIKey=secret"), "secret")
+	assert.NotContains(t, RedactSecrets("toKen=secret"), "secret")
+	assert.NotContains(t, RedactSecrets("passCode=secret"), "secret")
+
+	assert.NotContains(t, RedactSecrets(`"token": "secret",`), "secret")
+	assert.NotContains(t, RedactSecrets(`xxx "apIKEy":    "secret",xxx`), "secret")
+}

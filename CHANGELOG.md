@@ -1,3 +1,17 @@
+## [5.7.2](https://github.com/IBM/go-sdk-core/compare/v5.7.1...v5.7.2) (2021-10-26)
+
+
+### Bug Fixes
+
+* use consistent retry behavior for 5xx status codes ([ee5f62d](https://github.com/IBM/go-sdk-core/commit/ee5f62d58fd7da52380b3bc7c1a7155bb93b833a))
+
+## [5.7.1](https://github.com/IBM/go-sdk-core/compare/v5.7.0...v5.7.1) (2021-10-25)
+
+
+### Bug Fixes
+
+* redact secrets when logging requests/responses ([8693f6a](https://github.com/IBM/go-sdk-core/commit/8693f6a484c4a45634d11a7b5992034a7de0612c))
+
 # [5.7.0](https://github.com/IBM/go-sdk-core/compare/v5.6.5...v5.7.0) (2021-10-07)
 
 
