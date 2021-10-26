@@ -1,3 +1,10 @@
+## [5.7.2](https://github.com/IBM/go-sdk-core/compare/v5.7.1...v5.7.2) (2021-10-26)
+
+
+### Bug Fixes
+
+* use consistent retry behavior for 5xx status codes ([ee5f62d](https://github.com/IBM/go-sdk-core/commit/ee5f62d58fd7da52380b3bc7c1a7155bb93b833a))
+
 ## [5.7.1](https://github.com/IBM/go-sdk-core/compare/v5.7.0...v5.7.1) (2021-10-25)
 
 
