@@ -72,6 +72,42 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	assert.True(t, containerAuth.DisableSSLVerification)
 	assert.Equal(t, "scope1", containerAuth.Scope)
 
+	// VPC Authenticator with default config.
+	authenticator, err = GetAuthenticatorFromEnvironment("service8a")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_VPC, authenticator.AuthenticationType())
+	vpcAuth, ok := authenticator.(*VpcInstanceAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, vpcAuth)
+	assert.Empty(t, vpcAuth.IAMProfileCRN)
+	assert.Empty(t, vpcAuth.IAMProfileID)
+	assert.Empty(t, vpcAuth.URL)
+
+	// VPC Authenticator with profile crn and url configured.
+	authenticator, err = GetAuthenticatorFromEnvironment("service8b")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_VPC, authenticator.AuthenticationType())
+	vpcAuth, ok = authenticator.(*VpcInstanceAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, vpcAuth)
+	assert.Equal(t, "crn:iam-profile1", vpcAuth.IAMProfileCRN)
+	assert.Empty(t, vpcAuth.IAMProfileID)
+	assert.Equal(t, "http://vpc.imds.com/api", vpcAuth.URL)
+
+	// VPC Authenticator with profile id configured.
+	authenticator, err = GetAuthenticatorFromEnvironment("service8c")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_VPC, authenticator.AuthenticationType())
+	vpcAuth, ok = authenticator.(*VpcInstanceAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, vpcAuth)
+	assert.Empty(t, vpcAuth.IAMProfileCRN)
+	assert.Equal(t, "iam-profile1-id", vpcAuth.IAMProfileID)
+	assert.Empty(t, vpcAuth.URL)
+
 	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
 
@@ -112,6 +148,17 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 	assert.Equal(t, "iam-secret2", containerAuth.ClientSecret)
 	assert.False(t, containerAuth.DisableSSLVerification)
 	assert.Equal(t, "scope2 scope3", containerAuth.Scope)
+
+	authenticator, err = GetAuthenticatorFromEnvironment("service8")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_VPC, authenticator.AuthenticationType())
+	vpcAuth, ok := authenticator.(*VpcInstanceAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, vpcAuth)
+	assert.Equal(t, "crn:iam-profile1", vpcAuth.IAMProfileCRN)
+	assert.Equal(t, "http://vpc.imds.com/api", vpcAuth.URL)
+
 	clearTestEnvironment()
 }
 

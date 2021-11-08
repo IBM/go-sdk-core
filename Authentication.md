@@ -4,15 +4,23 @@ The go-sdk-core project supports the following types of authentication:
 - Bearer Token Authentication
 - Identity and Access Management (IAM) Authentication
 - Container Authentication
+- VPC Instance Authentication
 - Cloud Pak for Data Authentication
 - No Authentication
 
 The SDK user configures the appropriate type of authentication for use with service instances.  
-The authentication types that are appropriate for a particular service may vary from service to service, so it is important for the SDK user to consult with the appropriate service documentation to understand which authenticators are supported for that service.
+The authentication types that are appropriate for a particular service may vary from service to service,
+so it is important for the SDK user to consult with the appropriate service documentation to understand
+which authentication types are supported for that service.
 
 The go-sdk-core allows an authenticator to be specified in one of two ways:
-1. programmatically - the SDK user invokes the appropriate function(s) to create an instance of the desired authenticator and then passes the authenticator instance when constructing an instance of the service.
-2. configuration - the SDK user provides external configuration information (in the form of environment variables or a credentials file) to indicate the type of authenticator along with the configuration of the necessary properties for that authenticator.  The SDK user then invokes the configuration-based authenticator factory to construct an instance of the authenticator that is described in the external configuration information.
+1. programmatically - the SDK user invokes the appropriate function(s) to create an instance of the 
+desired authenticator and then passes the authenticator instance when constructing an instance of the service client.
+2. configuration - the SDK user provides external configuration information (in the form of environment variables
+or a credentials file) to indicate the type of authenticator, along with the configuration of the necessary properties
+for that authenticator.
+The SDK user then invokes the configuration-based service client constructor method
+to construct an instance of the authenticator and service client that reflect the external configuration information.
 
 The sections below will provide detailed information for each authenticator
 which will include the following:
@@ -46,9 +54,9 @@ import {
 }
 ...
 // Create the authenticator.
-authenticator := &core.BasicAuthenticator{
-    Username: "myuser",
-    Password: "mypassword",
+authenticator, err := core.NewBasicAuthenticator("myuser", "mypassword")
+if err != nil {
+    panic(err)
 }
 
 // Create the service options struct.
@@ -57,7 +65,10 @@ options := &exampleservicev1.ExampleServiceV1Options{
 }
 
 // Construct the service instance.
-service := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1(options)
+if err != nil {
+    panic(err)
+}
 
 // 'service' can now be used to invoke operations.
 ```
@@ -72,21 +83,20 @@ export EXAMPLE_SERVICE_PASSWORD=mypassword
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Construct the authenticator from external configuration information for service "example_service".
-authenticator := &core.GetAuthenticatorFromEnvironment("example_service")
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
     ServiceName:   "example_service",
-    Authenticator: authenticator,
 }
 
 // Construct the service instance.
-service := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
+if err != nil {
+    panic(err)
+}
 
 // 'service' can now be used to invoke operations.
 ```
@@ -112,9 +122,11 @@ import {
 ...
 // Create the authenticator.
 bearerToken := // ... obtain bearer token value ...
-authenticator := &core.BearerTokenAuthenticator{
-    BearerToken: bearerToken,
+authenticator := core.NewBearerTokenAuthenticator(bearerToken)
+if err != nil {
+    panic(err)
 }
+
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
@@ -122,7 +134,10 @@ options := &exampleservicev1.ExampleServiceV1Options{
 }
 
 // Construct the service instance.
-service := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1(options)
+if err != nil {
+    panic(err)
+}
 
 // 'service' can now be used to invoke operations.
 ...
@@ -140,28 +155,24 @@ export EXAMPLE_SERVICE_BEARER_TOKEN=<the bearer token value>
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Construct the authenticator from external configuration information for service "example_service".
-authenticator := &core.GetAuthenticatorFromEnvironment("example_service")
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
     ServiceName:   "example_service",
-    Authenticator: authenticator,
 }
 
 // Construct the service instance.
-service := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
+if err != nil {
+    panic(err)
+}
 
 // 'service' can now be used to invoke operations.
-...
-// Later, if your bearer token value expires, you can set a new one like this:
-newToken := // ... obtain new bearer token value
-authenticator.BearerToken = newToken
 ```
+
 Note that the use of external configuration is not as useful with the `BearerTokenAuthenticator` as it
 is for other authenticator types because bearer tokens typically need to be obtained and refreshed
 programmatically since they normally have a relatively short lifespan before they expire.  This
@@ -184,8 +195,18 @@ form:
 
 - ApiKey: (required) the IAM api key
 
-- URL: (optional) The URL representing the IAM token service endpoint.  If not specified, a suitable
-default value is used.
+- URL: (optional) The base endpoint URL of the IAM token service.
+The default value of this property is the "prod" IAM token service endpoint
+(`https://iam.cloud.ibm.com`).
+Make sure that you use an IAM token service endpoint that is appropriate for the
+location of the service being used by your application.
+For example, if you are using an instance of a service in the "production" environment
+(e.g. `https://resource-controller.cloud.ibm.com`),
+then the default "prod" IAM token service endpoint should suffice.
+However, if your application is using an instance of a service in the "staging" environment
+(e.g. `https://resource-controller.test.cloud.ibm.com`),
+then you would also need to configure the authenticator to use the IAM token service "staging"
+endpoint as well (`https://iam.test.cloud.ibm.com`).
 
 - ClientId/ClientSecret: (optional) The `ClientId` and `ClientSecret` fields are used to form a 
 "basic auth" Authorization header for interactions with the IAM token server. If neither field 
@@ -222,7 +243,10 @@ options := &exampleservicev1.ExampleServiceV1Options{
 }
 
 // Construct the service instance.
-service := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1(options)
+if err != nil {
+    panic(err)
+}
 
 // 'service' can now be used to invoke operations.
 ```
@@ -236,21 +260,20 @@ export EXAMPLE_SERVICE_APIKEY=myapikey
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Construct the authenticator from external configuration information for service "example_service".
-authenticator := &core.GetAuthenticatorFromEnvironment("example_service")
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
     ServiceName:   "example_service",
-    Authenticator: authenticator,
 }
 
 // Construct the service instance.
-service := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
+if err != nil {
+    panic(err)
+}
 
 // 'service' can now be used to invoke operations.
 ```
@@ -295,6 +318,15 @@ One of `IAMProfileName` or `IAMProfileID` must be specified.
 - URL: (optional) The base endpoint URL of the IAM token service.
 The default value of this property is the "prod" IAM token service endpoint
 (`https://iam.cloud.ibm.com`).
+Make sure that you use an IAM token service endpoint that is appropriate for the
+location of the service being used by your application.
+For example, if you are using an instance of a service in the "production" environment
+(e.g. `https://resource-controller.cloud.ibm.com`),
+then the default "prod" IAM token service endpoint should suffice.
+However, if your application is using an instance of a service in the "staging" environment
+(e.g. `https://resource-controller.test.cloud.ibm.com`),
+then you would also need to configure the authenticator to use the IAM token service "staging"
+endpoint as well (`https://iam.test.cloud.ibm.com`).
 
 - ClientId/ClientSecret: (optional) The `ClientId` and `ClientSecret` fields are used to form a 
 "basic auth" Authorization header for interactions with the IAM token service. If neither field 
@@ -310,7 +342,7 @@ certificate should be disabled or not. The default value is `false`.
 - Headers: (optional) A set of key/value pairs that will be sent as HTTP headers in requests
 made to the IAM token service.
 
-- Client: (Optional) The `http.Client` object used to invoke token servive requests. If not specified
+- Client: (optional) The `http.Client` object used to invoke token servive requests. If not specified
 by the user, a suitable default Client will be constructed.
 
 ### Programming example
@@ -321,9 +353,12 @@ import {
 }
 ...
 // Create the authenticator.
-authenticator := core.NewContainerAuthenticatorBuilder().
+authenticator, err := core.NewContainerAuthenticatorBuilder().
 	SetIAMProfileName("iam-user123").
 	Build()
+if err != nil {
+    panic(err)
+}
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
@@ -331,7 +366,10 @@ options := &exampleservicev1.ExampleServiceV1Options{
 }
 
 // Construct the service instance.
-service := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1(options)
+if err != nil {
+    panic(err)
+}
 
 // 'service' can now be used to invoke operations.
 ```
@@ -345,21 +383,120 @@ export EXAMPLE_SERVICE_IAM_PROFILE_NAME=iam-user123
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Construct the authenticator from external configuration information for service "example_service".
-authenticator := &core.GetAuthenticatorFromEnvironment("example_service")
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
     ServiceName:   "example_service",
+}
+
+// Construct the service instance.
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
+if err != nil {
+    panic(err)
+}
+
+// 'service' can now be used to invoke operations.
+```
+
+
+## VPC Instance Authentication
+The `VpcInstanceAuthenticator` is intended to be used by application code
+running inside a VPC-managed compute resource (virtual server instance) that has been configured
+to use the "compute resource identity" feature.
+The compute resource identity feature allows you to assign a trusted IAM profile to the compute resource as its "identity".
+This, in turn, allows applications running within the compute resource to take on this identity when interacting with
+IAM-secured IBM Cloud services.
+This results in a simplified security model that allows the application developer to:
+- avoid storing credentials in application code, configuraton files or a password vault
+- avoid managing or rotating credentials
+
+The `VpcInstanceAuthenticator` will invoke the appropriate operations on the compute resource's locally-available
+VPC Instance Metadata Service to (1) retrieve an instance identity token
+and then (2) exchange that instance identity token for an IAM access token.
+The authenticator will repeat these steps to obtain a new IAM access token whenever the current access token expires.
+The IAM access token is added to each outbound request in the `Authorization` header in the form:
+```
+   Authorization: Bearer <IAM-access-token>
+```
+
+### Properties
+
+- IAMProfileCRN: (optional) the crn of the linked trusted IAM profile to be used when obtaining the IAM access token. 
+
+- IAMProfileID: (optional) the id of the linked trusted IAM profile to be used when obtaining the IAM access token.
+
+- URL: (optional) The base endpoint URL of the VPC Instance Metadata Service.  
+The default value of this property is `http://169.254.169.254`, and should not need to be specified in normal situations.
+
+- Client: (optional) The `http.Client` object used to interact with the VPC Instance Metadata Service.
+If not specified by the user, a suitable default Client will be constructed.
+
+Usage Notes:
+1. At most one of `IAMProfileCRN` or `IAMProfileID` may be specified.  The specified value must map
+to a trusted IAM profile that has been linked to the compute resource (virtual server instance).
+
+2. If both `IAMProfileCRN` and `IAMProfileID` are specified, then an error occurs.
+
+3. If neither `IAMProfileCRN` nor `IAMProfileID` are specified, then the default trusted profile linked to the 
+compute resource will be used to perform the IAM token exchange.
+If no default trusted profile is defined for the compute resource, then an error occurs.
+
+
+### Programming example
+```go
+import {
+    "github.com/IBM/go-sdk-core/v5/core"
+    "<appropriate-git-repo-url>/exampleservicev1"
+}
+...
+// Create the authenticator.
+authenticator, err := core.NewVpcInstanceAuthenticatorBuilder().
+	SetIAMProfileCRN("crn:iam-profile-123").
+	Build()
+if err != nil {
+    panic(err)
+}
+
+// Create the service options struct.
+options := &exampleservicev1.ExampleServiceV1Options{
     Authenticator: authenticator,
 }
 
 // Construct the service instance.
-service := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1(options)
+if err != nil {
+    panic(err)
+}
+
+// 'service' can now be used to invoke operations.
+```
+
+### Configuration example
+External configuration:
+```
+export EXAMPLE_SERVICE_AUTH_TYPE=vpc
+export EXAMPLE_SERVICE_IAM_PROFILE_CRN=crn:iam-profile-123
+```
+Application code:
+```go
+import {
+    "<appropriate-git-repo-url>/exampleservicev1"
+}
+...
+
+// Create the service options struct.
+options := &exampleservicev1.ExampleServiceV1Options{
+    ServiceName:   "example_service",
+}
+
+// Construct the service instance.
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
+if err != nil {
+    panic(err)
+}
 
 // 'service' can now be used to invoke operations.
 ```
@@ -392,7 +529,7 @@ This value should not include the `/v1/authorize` path portion.
 certificate should be disabled or not. The default value is `false`.
 
 - Headers: (optional) A set of key/value pairs that will be sent as HTTP headers in requests
-made to the IAM token service.
+made to the Cloud Pak for Data token service.
 
 - Client: (Optional) The `http.Client` object used to invoke token servive requests. If not specified
 by the user, a suitable default Client will be constructed.
@@ -404,27 +541,23 @@ import {
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Create the authenticator using username/password.
-authenticator1 := &core.CloudPakForDataAuthenticator{
-    Username: "myuser",
-    Password: "mypassword",
-    URL: "https://mycp4dhost.com/",
+// Create the authenticator using username/apikey.
+authenticator, err := core.NewCloudPakForDataAuthenticatorUsingAPIKey(
+    "https://mycp4dhost.com", "myuser", "myapikey", false, nil)
+if err != nil {
+    panic(err)
 }
 
-// Alternatively, create the authenticator using username/apikey.
-authenticator2 := &core.CloudPakForDataAuthenticator{
-    Username: "myuser",
-    APIKey: "myapikey",
-    URL: "https://mycp4dhost.com/",
-}
-
-// Create the service options struct using one of the authenticators above.
+// Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
-    Authenticator: authenticator1,
+    Authenticator: authenticator,
 }
 
 // Construct the service instance.
-service := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1(options)
+if err != nil {
+    panic(err)
+}
 
 // 'service' can now be used to invoke operations.
 ```
@@ -432,43 +565,38 @@ service := exampleservicev1.NewExampleServiceV1(options)
 ### Configuration example
 External configuration:
 ```
-# Configure "example_service1" with username/password.
-export EXAMPLE_SERVICE1_AUTH_TYPE=cp4d
-export EXAMPLE_SERVICE1_USERNAME=myuser
-export EXAMPLE_SERVICE1_PASSWORD=mypassword
-export EXAMPLE_SERVICE1_URL=https://mycp4dhost.com/
-
-# Configure "example_service2" with username/apikey.
-export EXAMPLE_SERVICE2_AUTH_TYPE=cp4d
-export EXAMPLE_SERVICE2_USERNAME=myuser
-export EXAMPLE_SERVICE2_APIKEY=myapikey
-export EXAMPLE_SERVICE2_URL=https://mycp4dhost.com/
+# Configure "example_service" with username/apikey.
+export EXAMPLE_SERVICE_AUTH_TYPE=cp4d
+export EXAMPLE_SERVICE_USERNAME=myuser
+export EXAMPLE_SERVICE_APIKEY=myapikey
+export EXAMPLE_SERVICE_URL=https://mycp4dhost.com
 ```
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Construct the authenticator from external configuration information for service "example_service1".
-authenticator := &core.GetAuthenticatorFromEnvironment("example_service1")
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
     ServiceName:   "example_service1",
-    Authenticator: authenticator,
 }
 
 // Construct the service instance.
-service := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
+if err != nil {
+    panic(err)
+}
 
 // 'service' can now be used to invoke operations.
 ```
 
 
 ## No Auth Authentication
-The `NoAuthAuthenticator` is a placeholder authenticator which performs no actual authentication function.   It can be used in situations where authentication needs to be bypassed, perhaps while developing or debugging an application or service.
+The `NoAuthAuthenticator` is a placeholder authenticator which performs no actual authentication function.
+It can be used in situations where authentication needs to be bypassed, perhaps while developing
+or debugging an application or service.
 
 ### Properties
 None
@@ -489,7 +617,10 @@ options := &exampleservicev1.ExampleServiceV1Options{
 }
 
 // Construct the service instance.
-service := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1(options)
+if err != nil {
+    panic(err)
+}
 
 // 'service' can now be used to invoke operations.
 ```
@@ -502,21 +633,20 @@ export EXAMPLE_SERVICE_AUTH_TYPE=noauth
 Application code:
 ```go
 import {
-    "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
 }
 ...
-// Construct the authenticator from external configuration information for service "example_service".
-authenticator := &core.GetAuthenticatorFromEnvironment("example_service")
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
     ServiceName:   "example_service",
-    Authenticator: authenticator,
 }
 
 // Construct the service instance.
-service := exampleservicev1.NewExampleServiceV1(options)
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
+if err != nil {
+    panic(err)
+}
 
 // 'service' can now be used to invoke operations.
 ```
