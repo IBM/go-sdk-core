@@ -1,3 +1,10 @@
+# [5.8.0](https://github.com/IBM/go-sdk-core/compare/v5.7.2...v5.8.0) (2021-11-08)
+
+
+### Features
+
+* **VpcInstanceAuthenticator:** add support for new VPC authentication flow ([#139](https://github.com/IBM/go-sdk-core/issues/139)) ([9906ab3](https://github.com/IBM/go-sdk-core/commit/9906ab382ea206312498f636777c43205c9b1be8))
+
 ## [5.7.2](https://github.com/IBM/go-sdk-core/compare/v5.7.1...v5.7.2) (2021-10-26)
 
 
