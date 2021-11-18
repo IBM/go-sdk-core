@@ -1,0 +1,6 @@
+[
+    {
+        "cve": "SNYK-GOLANG-GITHUBCOMGOBUFFALOPACKRV2-1920670",
+        "alwaysOmit": true
+    }
+]
