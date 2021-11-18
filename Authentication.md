@@ -181,9 +181,9 @@ token itself in terms of initial acquisition and refreshing as needed.
 
 
 ## Identity and Access Management Authentication (IAM)
-The `IamAuthenticator` will accept a user-supplied api key and will perform
+The `IamAuthenticator` will accept a user-supplied apikey or refresh token and will perform
 the necessary interactions with the IAM token service to obtain a suitable
-bearer token for the specified api key.  The authenticator will also obtain 
+bearer token for the specified apikey or refresh token.  The authenticator will also obtain 
 a new bearer token when the current token expires.  The bearer token is 
 then added to each outbound request in the `Authorization` header in the
 form:
@@ -193,7 +193,13 @@ form:
 
 ### Properties
 
-- ApiKey: (required) the IAM api key
+- ApiKey: (optional) the IAM apikey to be used to obtain an IAM access token.
+One of ApiKey or RefreshToken must be specified.
+
+- RefreshToken: (optional) a refresh token to be used to obtain an IAM access token.
+One of ApiKey or RefreshToken must be specified. If RefreshToken is specified, then
+the ClientId and ClientSecret properties must also be specified, using the same values that were
+used to obtain the refresh token value.
 
 - URL: (optional) The base endpoint URL of the IAM token service.
 The default value of this property is the "prod" IAM token service endpoint
@@ -225,6 +231,21 @@ made to the IAM token service.
 - Client: (Optional) The `http.Client` object used to invoke token servive requests. If not specified
 by the user, a suitable default Client will be constructed.
 
+### Usage Notes
+- The IamAuthenticator is used to obtain an access token (a bearer token) from the IAM token service.
+
+- When constructing an IamAuthenticator instance, you must specify exactly one of ApiKey or RefreshToken.
+
+- If you specify the ApiKey property, the authenticator will use the 
+IAM token service's `POST /identity/token` operation
+with grant_type `urn:ibm:params:oauth:grant-type:apikey` to exchange the apikey value for an access token.
+
+- If you specify the RefreshToken property, the authenticator will use the 
+IAM token service's `POST /identity/token` operation
+with grant_type `refresh_token` to exchange the refresh token value for an access token.
+In this scenario, you must also specify the ClientId and ClientSecret properties, using the same values
+that were used when initially obtaining the refresh token value from the IAM token service.
+
 ### Programming example
 ```go
 import {
@@ -233,8 +254,11 @@ import {
 }
 ...
 // Create the authenticator.
-authenticator := &core.IamAuthenticator{
-    ApiKey: "myapikey",
+authenticator, err := core.NewIamAuthenticatorBuilder().
+    SetApiKey("myapikey").
+    Build()
+if err != nil {
+    panic(err)
 }
 
 // Create the service options struct.

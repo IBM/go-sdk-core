@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2019.
+// (C) Copyright IBM Corp. 2019, 2021.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -28,13 +30,221 @@ import (
 
 var (
 	// To enable debug logging during test execution, set this to "LevelDebug"
-	iamAuthTestLogLevel LogLevel = LevelError
+	iamAuthTestLogLevel     LogLevel = LevelError
+	iamAuthMockApiKey                = "mock-apikey"
+	iamAuthMockRefreshToken          = "mock-refresh-token"
+	iamAuthMockClientID              = "bx"
+	iamAuthMockClientSecret          = "bx"
+	iamAuthMockURL                   = "https://mock.iam.com"
+	iamAuthMockScope                 = "scope1,scope2"
 
-	AccessToken1 string = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
-	AccessToken2 string = "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
-	RefreshToken string = "Xj7Gle500MachEOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
+	iamAuthTestAccessToken1 string = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
+	iamAuthTestAccessToken2 string = "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
+	iamAuthTestRefreshToken string = "Xj7Gle500MachEOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
 )
 
+//
+// Tests involving the Builder
+//
+func TestIamAuthBuilderErrors(t *testing.T) {
+	var err error
+	var auth *IamAuthenticator
+
+	// Error: no apikey or refresh token
+	auth, err = NewIamAuthenticatorBuilder().
+		SetApiKey("").
+		SetRefreshToken("").
+		Build()
+	assert.NotNil(t, err)
+	assert.Nil(t, auth)
+	t.Logf("Expected error: %s", err.Error())
+
+	// Error: specify both apikey and refresh token
+	auth, err = NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetRefreshToken(iamAuthMockRefreshToken).
+		Build()
+	assert.NotNil(t, err)
+	assert.Nil(t, auth)
+	t.Logf("Expected error: %s", err.Error())
+
+	// Error: invalid apikey
+	auth, err = NewIamAuthenticatorBuilder().
+		SetApiKey("{invalid-apikey}").
+		Build()
+	assert.NotNil(t, err)
+	assert.Nil(t, auth)
+	t.Logf("Expected error: %s", err.Error())
+
+	// Error: refresh token without client id
+	auth, err = NewIamAuthenticatorBuilder().
+		SetRefreshToken(iamAuthMockRefreshToken).
+		Build()
+	assert.NotNil(t, err)
+	assert.Nil(t, auth)
+	t.Logf("Expected error: %s", err.Error())
+
+	// Error: refresh token without client secret
+	auth, err = NewIamAuthenticatorBuilder().
+		SetRefreshToken(iamAuthMockRefreshToken).
+		SetClientIDSecret(iamAuthMockClientID, "").
+		Build()
+	assert.NotNil(t, err)
+	assert.Nil(t, auth)
+	t.Logf("Expected error: %s", err.Error())
+}
+
+func TestIamAuthBuilderSuccess(t *testing.T) {
+	var err error
+	var auth *IamAuthenticator
+	var expectedHeaders = map[string]string{
+		"header1": "value1",
+	}
+
+	// Specify apikey.
+	auth, err = NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, auth)
+	assert.Equal(t, iamAuthMockApiKey, auth.ApiKey)
+	assert.Empty(t, auth.RefreshToken)
+	assert.Empty(t, auth.URL)
+	assert.Empty(t, auth.ClientId)
+	assert.Empty(t, auth.ClientSecret)
+	assert.False(t, auth.DisableSSLVerification)
+	assert.Empty(t, auth.Scope)
+	assert.Nil(t, auth.Headers)
+	assert.Equal(t, AUTHTYPE_IAM, auth.AuthenticationType())
+
+	// Specify refresh token along with client id/secret.
+	auth, err = NewIamAuthenticatorBuilder().
+		SetRefreshToken(iamAuthMockRefreshToken).
+		SetClientIDSecret(iamAuthMockClientID, iamAuthMockClientSecret).
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, auth)
+	assert.Empty(t, auth.ApiKey)
+	assert.Empty(t, auth.URL)
+	assert.Equal(t, iamAuthMockRefreshToken, auth.RefreshToken)
+	assert.Equal(t, iamAuthMockClientID, auth.ClientId)
+	assert.Equal(t, iamAuthMockClientSecret, auth.ClientSecret)
+	assert.False(t, auth.DisableSSLVerification)
+	assert.Empty(t, auth.Scope)
+	assert.Nil(t, auth.Headers)
+	assert.Equal(t, AUTHTYPE_IAM, auth.AuthenticationType())
+
+	// Specify apikey with other properties.
+	auth, err = NewIamAuthenticatorBuilder().
+		SetURL(iamAuthMockURL).
+		SetApiKey(iamAuthMockApiKey).
+		SetClientIDSecret(iamAuthMockClientID, iamAuthMockClientSecret).
+		SetDisableSSLVerification(true).
+		SetScope(iamAuthMockScope).
+		SetHeaders(expectedHeaders).
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, auth)
+	assert.Equal(t, iamAuthMockApiKey, auth.ApiKey)
+	assert.Empty(t, auth.RefreshToken)
+	assert.Equal(t, iamAuthMockURL, auth.URL)
+	assert.Equal(t, iamAuthMockClientID, auth.ClientId)
+	assert.Equal(t, iamAuthMockClientSecret, auth.ClientSecret)
+	assert.True(t, auth.DisableSSLVerification)
+	assert.Equal(t, iamAuthMockScope, auth.Scope)
+	assert.Equal(t, expectedHeaders, auth.Headers)
+	assert.Equal(t, AUTHTYPE_IAM, auth.AuthenticationType())
+
+	// Specify refresh token with other properties.
+	auth, err = NewIamAuthenticatorBuilder().
+		SetURL(iamAuthMockURL).
+		SetRefreshToken(iamAuthMockRefreshToken).
+		SetClientIDSecret(iamAuthMockClientID, iamAuthMockClientSecret).
+		SetDisableSSLVerification(true).
+		SetScope(iamAuthMockScope).
+		SetHeaders(expectedHeaders).
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, auth)
+	assert.Empty(t, auth.ApiKey)
+	assert.Equal(t, iamAuthMockRefreshToken, auth.RefreshToken)
+	assert.Equal(t, iamAuthMockURL, auth.URL)
+	assert.Equal(t, iamAuthMockClientID, auth.ClientId)
+	assert.Equal(t, iamAuthMockClientSecret, auth.ClientSecret)
+	assert.True(t, auth.DisableSSLVerification)
+	assert.Equal(t, iamAuthMockScope, auth.Scope)
+	assert.Equal(t, expectedHeaders, auth.Headers)
+	assert.Equal(t, AUTHTYPE_IAM, auth.AuthenticationType())
+}
+
+//
+// Tests that construct an authenticator via map properties.
+//
+func TestNewIamAuthenticatorFromMap(t *testing.T) {
+	_, err := newIamAuthenticatorFromMap(nil)
+	assert.NotNil(t, err)
+
+	var props = map[string]string{
+		PROPNAME_AUTH_URL: iamAuthMockURL,
+	}
+	_, err = newIamAuthenticatorFromMap(props)
+	assert.NotNil(t, err)
+
+	props = map[string]string{
+		PROPNAME_APIKEY: "",
+	}
+	_, err = newIamAuthenticatorFromMap(props)
+	assert.NotNil(t, err)
+
+	props = map[string]string{
+		PROPNAME_APIKEY: iamAuthMockApiKey,
+	}
+	authenticator, err := newIamAuthenticatorFromMap(props)
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, iamAuthMockApiKey, authenticator.ApiKey)
+	assert.Equal(t, AUTHTYPE_IAM, authenticator.AuthenticationType())
+
+	props = map[string]string{
+		PROPNAME_APIKEY:           iamAuthMockApiKey,
+		PROPNAME_AUTH_DISABLE_SSL: "false",
+		PROPNAME_CLIENT_ID:        iamAuthMockClientID,
+		PROPNAME_CLIENT_SECRET:    iamAuthMockClientSecret,
+		PROPNAME_SCOPE:            iamAuthMockScope,
+	}
+	authenticator, err = newIamAuthenticatorFromMap(props)
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, iamAuthMockApiKey, authenticator.ApiKey)
+	assert.Empty(t, authenticator.RefreshToken)
+	assert.False(t, authenticator.DisableSSLVerification)
+	assert.Equal(t, iamAuthMockClientID, authenticator.ClientId)
+	assert.Equal(t, iamAuthMockClientSecret, authenticator.ClientSecret)
+	assert.Equal(t, iamAuthMockScope, authenticator.Scope)
+	assert.Equal(t, AUTHTYPE_IAM, authenticator.AuthenticationType())
+
+	props = map[string]string{
+		PROPNAME_REFRESH_TOKEN:    iamAuthMockRefreshToken,
+		PROPNAME_AUTH_DISABLE_SSL: "false",
+		PROPNAME_CLIENT_ID:        iamAuthMockClientID,
+		PROPNAME_CLIENT_SECRET:    iamAuthMockClientSecret,
+		PROPNAME_SCOPE:            iamAuthMockScope,
+	}
+	authenticator, err = newIamAuthenticatorFromMap(props)
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Empty(t, authenticator.ApiKey)
+	assert.Equal(t, iamAuthMockRefreshToken, authenticator.RefreshToken)
+	assert.False(t, authenticator.DisableSSLVerification)
+	assert.Equal(t, iamAuthMockClientID, authenticator.ClientId)
+	assert.Equal(t, iamAuthMockClientSecret, authenticator.ClientSecret)
+	assert.Equal(t, iamAuthMockScope, authenticator.Scope)
+	assert.Equal(t, AUTHTYPE_IAM, authenticator.AuthenticationType())
+}
+
+//
+// Tests involving the legacy ctor
+//
 func TestIamConfigErrors(t *testing.T) {
 	var err error
 
@@ -47,11 +257,11 @@ func TestIamConfigErrors(t *testing.T) {
 	assert.NotNil(t, err)
 
 	// Missing ClientId.
-	_, err = NewIamAuthenticator("my-apikey", "", "", "bar", false, nil)
+	_, err = NewIamAuthenticator(iamAuthMockApiKey, "", "", "bar", false, nil)
 	assert.NotNil(t, err)
 
 	// Missing ClientSecret.
-	_, err = NewIamAuthenticator("my-apikey", "", "foo", "", false, nil)
+	_, err = NewIamAuthenticator(iamAuthMockApiKey, "", "foo", "", false, nil)
 	assert.NotNil(t, err)
 }
 
@@ -64,10 +274,12 @@ func TestIamAuthenticateFail(t *testing.T) {
 	}))
 	defer server.Close()
 
-	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		Build()
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
-	assert.Equal(t, AUTHTYPE_IAM, authenticator.AuthenticationType())
 
 	// Create a new Request object.
 	builder, err := NewRequestBuilder("GET").ConstructHTTPURL("https://localhost/placeholder/url", nil, nil)
@@ -78,7 +290,6 @@ func TestIamAuthenticateFail(t *testing.T) {
 	assert.NotNil(t, request)
 
 	err = authenticator.Authenticate(request)
-	// Validate the resulting error is a valid
 	assert.NotNil(t, err)
 	authErr, ok := err.(*AuthenticationError)
 	assert.True(t, ok)
@@ -109,7 +320,7 @@ func TestIamGetTokenSuccess(t *testing.T) {
 				"expires_in": 3600,
 				"expiration": %d,
 				"refresh_token": "%s"
-			}`, AccessToken1, expiration, RefreshToken)
+			}`, iamAuthTestAccessToken1, expiration, iamAuthTestRefreshToken)
 			firstCall = false
 			_, _, ok := r.BasicAuth()
 			assert.False(t, ok)
@@ -120,39 +331,115 @@ func TestIamGetTokenSuccess(t *testing.T) {
 				"expires_in": 3600,
 				"expiration": %d,
 				"refresh_token": "%s"
-			}`, AccessToken2, expiration, RefreshToken)
+			}`, iamAuthTestAccessToken2, expiration, iamAuthTestRefreshToken)
 			username, password, ok := r.BasicAuth()
 			assert.True(t, ok)
-			assert.Equal(t, "mookie", username)
-			assert.Equal(t, "betts", password)
+			assert.Equal(t, iamAuthMockClientID, username)
+			assert.Equal(t, iamAuthMockClientSecret, password)
 		}
 	}))
 	defer server.Close()
 
-	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		Build()
 	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken1, token)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Force expiration and verify that we got the second access token.
 	authenticator.getTokenData().Expiration = GetCurrentTime() - 3600
-	authenticator.ClientId = "mookie"
-	authenticator.ClientSecret = "betts"
+	authenticator.ClientId = iamAuthMockClientID
+	authenticator.ClientSecret = iamAuthMockClientSecret
 	_, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator.getTokenData())
-	assert.Equal(t, AccessToken2, authenticator.getTokenData().AccessToken)
+	assert.Equal(t, iamAuthTestAccessToken2, authenticator.getTokenData().AccessToken)
 
-	// Test the RequestToken() method to make sure we can get a RefreshToken.
+	// Test the RequestToken() method to make sure we can get a refresh token.
 	tokenResponse, err := authenticator.RequestToken()
 	assert.Nil(t, err)
 	assert.NotNil(t, tokenResponse)
-	assert.Equal(t, RefreshToken, tokenResponse.RefreshToken)
+	assert.Equal(t, iamAuthTestRefreshToken, tokenResponse.RefreshToken)
+}
+
+func TestIamGetTokenSuccessRT(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
+	var newRefreshToken string = "new-refresh-token"
+
+	firstCall := true
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		assert.Nil(t, err)
+		assert.Len(t, r.Form["refresh_token"], 1)
+		assert.Len(t, r.Form["grant_type"], 1)
+		assert.Equal(t, "refresh_token", r.Form["grant_type"][0])
+		assert.Len(t, r.Form["response_type"], 1)
+		assert.Len(t, r.Form["scope"], 1)
+
+		username, password, ok := r.BasicAuth()
+		assert.True(t, ok)
+		assert.Equal(t, iamAuthMockClientID, username)
+		assert.Equal(t, iamAuthMockClientSecret, password)
+
+		w.WriteHeader(http.StatusOK)
+		expiration := GetCurrentTime() + 3600
+		if firstCall {
+			fmt.Fprintf(w, `{
+				"access_token": "%s",
+				"token_type": "Bearer",
+				"expires_in": 3600,
+				"expiration": %d,
+				"refresh_token": "%s"
+			}`, iamAuthTestAccessToken1, expiration, iamAuthTestRefreshToken)
+			firstCall = false
+		} else {
+			fmt.Fprintf(w, `{
+				"access_token": "%s",
+				"token_type": "Bearer",
+				"expires_in": 3600,
+				"expiration": %d,
+				"refresh_token": "%s"
+			}`, iamAuthTestAccessToken2, expiration, newRefreshToken)
+		}
+	}))
+	defer server.Close()
+
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetRefreshToken(iamAuthMockRefreshToken).
+		SetClientIDSecret(iamAuthMockClientID, iamAuthMockClientSecret).
+		SetURL(server.URL).
+		SetScope(iamAuthMockScope).
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Nil(t, authenticator.getTokenData())
+	assert.Equal(t, iamAuthMockRefreshToken, authenticator.RefreshToken)
+
+	// Force the first fetch and verify we got the first access token.
+	// From this first fetch, we should also the first refresh token saved to the authenticator.
+	token, err := authenticator.GetToken()
+	assert.Nil(t, err)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
+	assert.NotNil(t, authenticator.getTokenData())
+	assert.Equal(t, iamAuthTestRefreshToken, authenticator.RefreshToken)
+
+	// Force expiration and verify that we got the second access token.
+	// At this point, we should also have a second refresh token saved in the authenticator.
+	authenticator.getTokenData().Expiration = GetCurrentTime() - 3600
+	_, err = authenticator.GetToken()
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator.getTokenData())
+	assert.Equal(t, iamAuthTestAccessToken2, authenticator.getTokenData().AccessToken)
+	assert.Equal(t, newRefreshToken, authenticator.RefreshToken)
 }
 
 func TestIamGetTokenSuccessWithScope(t *testing.T) {
@@ -166,7 +453,7 @@ func TestIamGetTokenSuccessWithScope(t *testing.T) {
 		assert.Len(t, r.Form["grant_type"], 1)
 		assert.Len(t, r.Form["response_type"], 1)
 		assert.Len(t, r.Form["scope"], 1)
-		assert.Equal(t, "scope1 scope2", r.Form["scope"][0])
+		assert.Equal(t, iamAuthMockScope, r.Form["scope"][0])
 
 		w.WriteHeader(http.StatusOK)
 		expiration := GetCurrentTime() + 3600
@@ -177,7 +464,7 @@ func TestIamGetTokenSuccessWithScope(t *testing.T) {
 				"expires_in": 3600,
 				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
-			}`, AccessToken1, expiration)
+			}`, iamAuthTestAccessToken1, expiration)
 			firstCall = false
 			_, _, ok := r.BasicAuth()
 			assert.False(t, ok)
@@ -188,34 +475,37 @@ func TestIamGetTokenSuccessWithScope(t *testing.T) {
 				"expires_in": 3600,
 				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
-			}`, AccessToken2, expiration)
+			}`, iamAuthTestAccessToken2, expiration)
 			username, password, ok := r.BasicAuth()
 			assert.True(t, ok)
-			assert.Equal(t, "mookie", username)
-			assert.Equal(t, "betts", password)
+			assert.Equal(t, iamAuthMockClientID, username)
+			assert.Equal(t, iamAuthMockClientSecret, password)
 		}
 	}))
 	defer server.Close()
 
-	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		SetScope(iamAuthMockScope).
+		Build()
 	assert.Nil(t, err)
 	assert.Nil(t, authenticator.getTokenData())
-	authenticator.Scope = "scope1 scope2"
 
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken1, token)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Force expiration and verify that we got the second access token.
 	authenticator.getTokenData().Expiration = GetCurrentTime() - 3600
-	authenticator.ClientId = "mookie"
-	authenticator.ClientSecret = "betts"
+	authenticator.ClientId = iamAuthMockClientID
+	authenticator.ClientSecret = iamAuthMockClientSecret
 	_, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator.getTokenData())
-	assert.Equal(t, AccessToken2, authenticator.getTokenData().AccessToken)
+	assert.Equal(t, iamAuthTestAccessToken2, authenticator.getTokenData().AccessToken)
 }
 func TestIamGetCachedToken(t *testing.T) {
 	GetLogger().SetLogLevel(iamAuthTestLogLevel)
@@ -231,7 +521,7 @@ func TestIamGetCachedToken(t *testing.T) {
 				"expires_in": 3600,
 				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
-			}`, AccessToken1, expiration)
+			}`, iamAuthTestAccessToken1, expiration)
 			firstCall = false
 			_, _, ok := r.BasicAuth()
 			assert.False(t, ok)
@@ -242,27 +532,30 @@ func TestIamGetCachedToken(t *testing.T) {
 				"expires_in": 3600,
 				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
-			}`, AccessToken2, expiration)
+			}`, iamAuthTestAccessToken2, expiration)
 			_, _, ok := r.BasicAuth()
 			assert.True(t, ok)
 		}
 	}))
 	defer server.Close()
 
-	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		Build()
 	assert.Nil(t, err)
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken1, token)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Subsequent fetch should still return first access token.
 	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken1, token)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 }
 
@@ -280,7 +573,7 @@ func TestIamBackgroundTokenRefresh(t *testing.T) {
 				"expires_in": 3600,
 				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
-			}`, AccessToken1, expiration)
+			}`, iamAuthTestAccessToken1, expiration)
 			firstCall = false
 			_, _, ok := r.BasicAuth()
 			assert.False(t, ok)
@@ -291,21 +584,24 @@ func TestIamBackgroundTokenRefresh(t *testing.T) {
 				"expires_in": 3600,
 				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
-			}`, AccessToken2, expiration)
+			}`, iamAuthTestAccessToken2, expiration)
 			_, _, ok := r.BasicAuth()
 			assert.False(t, ok)
 		}
 	}))
 	defer server.Close()
 
-	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		Build()
 	assert.Nil(t, err)
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken1, token)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Now put the test in the "refresh window" where the token is not expired but still needs to be refreshed.
@@ -316,14 +612,14 @@ func TestIamBackgroundTokenRefresh(t *testing.T) {
 	// expired.
 	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken1, token)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Wait for the background thread to finish
 	time.Sleep(5 * time.Second)
 	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken2, token)
+	assert.Equal(t, iamAuthTestAccessToken2, token)
 	assert.NotNil(t, authenticator.getTokenData())
 }
 
@@ -341,7 +637,7 @@ func TestIamBackgroundTokenRefreshFailure(t *testing.T) {
 				"expires_in": 3600,
 				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
-			}`, AccessToken1, expiration)
+			}`, iamAuthTestAccessToken1, expiration)
 			firstCall = false
 			_, _, ok := r.BasicAuth()
 			assert.False(t, ok)
@@ -351,14 +647,17 @@ func TestIamBackgroundTokenRefreshFailure(t *testing.T) {
 	}))
 	defer server.Close()
 
-	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		Build()
 	assert.Nil(t, err)
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Successfully fetch the first token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken1, token)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Now put the test in the "refresh window" where the token is not expired but still needs to be refreshed.
@@ -368,7 +667,7 @@ func TestIamBackgroundTokenRefreshFailure(t *testing.T) {
 	// expired.
 	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken1, token)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 	// Wait for the background thread to finish
 	time.Sleep(5 * time.Second)
@@ -396,7 +695,7 @@ func TestIamBackgroundTokenRefreshIdle(t *testing.T) {
 				"expires_in": 3600,
 				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
-			}`, AccessToken1, expiration)
+			}`, iamAuthTestAccessToken1, expiration)
 			firstCall = false
 			_, _, ok := r.BasicAuth()
 			assert.False(t, ok)
@@ -407,21 +706,24 @@ func TestIamBackgroundTokenRefreshIdle(t *testing.T) {
 				"expires_in": 3600,
 				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
-			}`, AccessToken2, expiration)
+			}`, iamAuthTestAccessToken2, expiration)
 			_, _, ok := r.BasicAuth()
 			assert.False(t, ok)
 		}
 	}))
 	defer server.Close()
 
-	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		Build()
 	assert.Nil(t, err)
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken1, token)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Now simulate the client being idle for 10 minutes into the refresh time
@@ -433,7 +735,7 @@ func TestIamBackgroundTokenRefreshIdle(t *testing.T) {
 	// expired.
 	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken1, token)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// RefreshTime should have advanced by 1 minute from the current time
@@ -445,7 +747,7 @@ func TestIamBackgroundTokenRefreshIdle(t *testing.T) {
 	// a goroutine & refreshed the token.
 	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken1, token)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
 
 	assert.NotNil(t, authenticator.getTokenData())
 	assert.Equal(t, newRefreshTime, authenticator.getTokenData().RefreshTime)
@@ -454,7 +756,7 @@ func TestIamBackgroundTokenRefreshIdle(t *testing.T) {
 	time.Sleep(5 * time.Second)
 	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken2, token)
+	assert.Equal(t, iamAuthTestAccessToken2, token)
 	assert.NotNil(t, authenticator.getTokenData())
 	assert.NotEqual(t, newRefreshTime, authenticator.getTokenData().RefreshTime)
 }
@@ -474,17 +776,18 @@ func TestIamClientIdAndSecret(t *testing.T) {
 		}`, accessToken, expiration)
 		username, password, ok := r.BasicAuth()
 		assert.True(t, ok)
-		assert.Equal(t, "mookie", username)
-		assert.Equal(t, "betts", password)
+		assert.Equal(t, iamAuthMockClientID, username)
+		assert.Equal(t, iamAuthMockClientSecret, password)
 	}))
 	defer server.Close()
 
-	authenticator := &IamAuthenticator{
-		ApiKey:       "bogus-apikey",
-		URL:          server.URL,
-		ClientId:     "mookie",
-		ClientSecret: "betts",
-	}
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		SetClientIDSecret(iamAuthMockClientID, iamAuthMockClientSecret).
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
 
 	token, err := authenticator.GetToken()
 	assert.Equal(t, accessToken, token)
@@ -528,7 +831,11 @@ func TestIamDisableSSL(t *testing.T) {
 	}))
 	defer server.Close()
 
-	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", true, nil)
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		SetDisableSSLVerification(true).
+		Build()
 	assert.Nil(t, err)
 
 	token, err := authenticator.GetToken()
@@ -563,12 +870,17 @@ func TestIamUserHeaders(t *testing.T) {
 	}))
 	defer server.Close()
 
-	headers := make(map[string]string)
-	headers["Header1"] = "Value1"
-	headers["Header2"] = "Value2"
-	headers["Host"] = "iam.cloud.ibm.com"
+	var headers = map[string]string{
+		"Header1": "Value1",
+		"Header2": "Value2",
+		"Host":    "iam.cloud.ibm.com",
+	}
 
-	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, headers)
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		SetHeaders(headers).
+		Build()
 	assert.Nil(t, err)
 
 	token, err := authenticator.GetToken()
@@ -585,14 +897,15 @@ func TestIamGetTokenFailure(t *testing.T) {
 	}))
 	defer server.Close()
 
-	authenticator := &IamAuthenticator{
-		ApiKey: "bogus-apikey",
-		URL:    server.URL,
-	}
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		Build()
+	assert.Nil(t, err)
 
 	var expectedResponse = []byte("Sorry you are forbidden")
 
-	_, err := authenticator.GetToken()
+	_, err = authenticator.GetToken()
 	assert.NotNil(t, err)
 	assert.Equal(t, "Sorry you are forbidden", err.Error())
 	// We expect an AuthenticationError to be returned, so cast the returned error
@@ -623,7 +936,7 @@ func TestIamGetTokenTimeoutError(t *testing.T) {
 				"expires_in": 3600,
 				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
-			}`, AccessToken1, expiration)
+			}`, iamAuthTestAccessToken1, expiration)
 			firstCall = false
 			_, _, ok := r.BasicAuth()
 			assert.False(t, ok)
@@ -635,19 +948,22 @@ func TestIamGetTokenTimeoutError(t *testing.T) {
 				"expires_in": 3600,
 				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
-			}`, AccessToken2, expiration)
+			}`, iamAuthTestAccessToken2, expiration)
 		}
 	}))
 	defer server.Close()
 
-	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		Build()
 	assert.Nil(t, err)
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken1, token)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Force expiration and verify that we got a timeout error
@@ -678,7 +994,7 @@ func TestIamGetTokenServerError(t *testing.T) {
 				"expires_in": 3600,
 				"expiration": %d,
 				"refresh_token": "jy4gl91BQ"
-			}`, AccessToken1, expiration)
+			}`, iamAuthTestAccessToken1, expiration)
 			firstCall = false
 			_, _, ok := r.BasicAuth()
 			assert.False(t, ok)
@@ -689,14 +1005,17 @@ func TestIamGetTokenServerError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	authenticator, err := NewIamAuthenticator("bogus-apikey", server.URL, "", "", false, nil)
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		Build()
 	assert.Nil(t, err)
 	assert.Nil(t, authenticator.getTokenData())
 
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, AccessToken1, token)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	var expectedResponse = []byte("Gateway Timeout")
@@ -720,111 +1039,125 @@ func TestIamGetTokenServerError(t *testing.T) {
 	assert.Empty(t, token)
 }
 
-func TestNewIamAuthenticatorFromMap(t *testing.T) {
-	_, err := newIamAuthenticatorFromMap(nil)
-	assert.NotNil(t, err)
+func TestIamRequestTokenError(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
 
-	var props = map[string]string{
-		PROPNAME_AUTH_URL: "iam-url",
-	}
-	_, err = newIamAuthenticatorFromMap(props)
-	assert.NotNil(t, err)
-
-	props = map[string]string{
-		PROPNAME_APIKEY: "",
-	}
-	_, err = newIamAuthenticatorFromMap(props)
-	assert.NotNil(t, err)
-
-	props = map[string]string{
-		PROPNAME_APIKEY: "my-apikey",
-	}
-	authenticator, err := newIamAuthenticatorFromMap(props)
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		Build()
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
-	assert.Equal(t, "my-apikey", authenticator.ApiKey)
 
-	props = map[string]string{
-		PROPNAME_APIKEY:           "my-apikey",
-		PROPNAME_AUTH_DISABLE_SSL: "huh???",
-		PROPNAME_CLIENT_ID:        "mookie",
-		PROPNAME_CLIENT_SECRET:    "betts",
-		PROPNAME_SCOPE:            "scope1 scope2",
-	}
-	authenticator, err = newIamAuthenticatorFromMap(props)
-	assert.Nil(t, err)
-	assert.NotNil(t, authenticator)
-	assert.Equal(t, "my-apikey", authenticator.ApiKey)
-	assert.False(t, authenticator.DisableSSLVerification)
-	assert.Equal(t, "mookie", authenticator.ClientId)
-	assert.Equal(t, "betts", authenticator.ClientSecret)
-	assert.Equal(t, "scope1 scope2", authenticator.Scope)
+	// Now forcibly clear the ApiKey field so we can test an error condition.
+	authenticator.ApiKey = ""
+
+	_, err = authenticator.RequestToken()
+	assert.NotNil(t, err)
+	t.Logf("Expected error: %s", err.Error())
 }
 
 //
 // In order to test with a live IAM server, create file "iamtest.env" in the project root.
 // It should look like this:
+//     IAMTEST1_AUTH_URL=<url>   e.g. https://iam.cloud.ibm.com
+//     IAMTEST1_AUTH_TYPE=iam
+//     IAMTEST1_APIKEY=<apikey>
 //
-// IAMTEST1_AUTH_URL=<url>   e.g. https://iam.test.cloud.ibm.com
-// IAMTEST1_AUTH_TYPE=iam
-// IAMTEST1_APIKEY=<apikey>
+// Then comment out the "t.Skip()" line below, then run these commands:
+//     cd v<major-version>/core
+//     go test -v -tags=auth -run=TestIamLiveTokenServer -v
 //
-// Then uncomment the function below, then add "os" and "strings" to the import list,
-// then run these commands:
-// cd v<major-version>/core
-// go test -v -tags=auth -run=TestIamLiveTokenServer
+// To trace request/response messages, change "iamAuthTestLogLevel" above to be "LevelDebug".
 //
 //
-// func TestIamLiveTokenServer(t *testing.T) {
-//	GetLogger().SetLogLevel(iamAuthTestLogLevel)
-//
-// 	var request *http.Request
-// 	var err error
-// 	var authHeader string
-// 	var tokenServerResponse *IamTokenServerResponse
+func TestIamLiveTokenServer(t *testing.T) {
+	t.Skip("Skipping IAM integration test...")
 
-// 	// Get an iam authenticator from the environment.
-// 	os.Setenv("IBM_CREDENTIALS_FILE", "../../iamtest.env")
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
 
-// 	auth, err := GetAuthenticatorFromEnvironment("iamtest1")
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, auth)
+	var request *http.Request
+	var err error
+	var authHeader string
+	var tokenServerResponse *IamTokenServerResponse
 
-// 	iamAuth, ok := auth.(*IamAuthenticator)
-// 	assert.Equal(t, true, ok)
+	// Get an iam authenticator from the environment.
+	os.Setenv("IBM_CREDENTIALS_FILE", "../../iamtest.env")
 
-// 	tokenServerResponse, err = iamAuth.RequestToken()
-// 	if err != nil {
-// 		authError := err.(*AuthenticationError)
-// 		iamError := authError.Err
-// 		iamResponse := authError.Response
-// 		t.Logf("Unexpected authentication error: %s\n", iamError.Error())
-// 		t.Logf("Authentication response: %v+\n", iamResponse)
+	auth, err := GetAuthenticatorFromEnvironment("iamtest1")
+	assert.Nil(t, err)
+	assert.NotNil(t, auth)
 
-// 	}
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, tokenServerResponse)
+	iamAuth, ok := auth.(*IamAuthenticator)
+	assert.Equal(t, true, ok)
 
-// 	accessToken := tokenServerResponse.AccessToken
-// 	assert.NotNil(t, accessToken)
-// 	t.Logf("Access token: %s\n", accessToken)
+	tokenServerResponse, err = iamAuth.RequestToken()
+	if err != nil {
+		authError := err.(*AuthenticationError)
+		iamError := authError.Err
+		iamResponse := authError.Response
+		t.Logf("Unexpected authentication error: %s\n", iamError.Error())
+		t.Logf("Authentication response: %v+\n", iamResponse)
 
-// 	refreshToken := tokenServerResponse.RefreshToken
-// 	assert.NotNil(t, refreshToken)
-// 	t.Logf("Refresh token: %s\n", refreshToken)
+	}
+	assert.Nil(t, err)
+	assert.NotNil(t, tokenServerResponse)
 
-// 	// Create a new Request object.
-// 	builder, err := NewRequestBuilder("GET").ResolveRequestURL("https://localhost/placeholder/url", "", nil)
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, builder)
+	accessToken := tokenServerResponse.AccessToken
+	assert.NotEmpty(t, accessToken)
+	t.Logf("Access token: %s\n", accessToken)
 
-// 	request, _ = builder.Build()
-// 	assert.NotNil(t, request)
-// 	err = auth.Authenticate(request)
-// 	assert.Nil(t, err)
+	refreshToken := tokenServerResponse.RefreshToken
+	assert.NotEmpty(t, refreshToken)
+	t.Logf("Refresh token: %s\n", refreshToken)
 
-// 	authHeader = request.Header.Get("Authorization")
-// 	assert.NotEmpty(t, authHeader)
-// 	assert.True(t, strings.HasPrefix(authHeader, "Bearer "))
-// 	t.Logf("Authorization: %s\n", authHeader)
-// }
+	// Create a new Request object.
+	builder, err := NewRequestBuilder("GET").ResolveRequestURL("https://localhost/placeholder/url", "", nil)
+	assert.Nil(t, err)
+	assert.NotNil(t, builder)
+
+	request, _ = builder.Build()
+	assert.NotNil(t, request)
+	err = auth.Authenticate(request)
+	assert.Nil(t, err)
+
+	authHeader = request.Header.Get("Authorization")
+	assert.NotEmpty(t, authHeader)
+	assert.True(t, strings.HasPrefix(authHeader, "Bearer "))
+	t.Logf("Authorization: %s\n", authHeader)
+
+	// Now create a new IamAuthenticator using bx:bx so that we can retrieve
+	// the refresh token value and then do some testing with that.
+	// We'll use the URL and ApiKey from the original authenticator above.
+	newAuth, err := NewIamAuthenticatorBuilder().
+		SetURL(iamAuth.URL).
+		SetApiKey(iamAuth.ApiKey).
+		SetClientIDSecret("bx", "bx").
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, newAuth)
+
+	tokenServerResponse, err = newAuth.RequestToken()
+	assert.Nil(t, err)
+	assert.NotNil(t, tokenServerResponse)
+
+	refreshToken = tokenServerResponse.RefreshToken
+	assert.NotEmpty(t, refreshToken)
+
+	// Create a new IamAuthenticator configured with the refresh token.
+	refreshAuth, err := NewIamAuthenticatorBuilder().
+		SetURL(newAuth.URL).
+		SetRefreshToken(refreshToken).
+		SetClientIDSecret("bx", "bx").
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, refreshAuth)
+	assert.Equal(t, refreshToken, refreshAuth.RefreshToken)
+
+	// Trigger the authenticator to invoke the "get token" operation.
+	// and make sure that we got back an access token and that we
+	// saved a different refresh token in the authenticator.
+	accessToken, err = refreshAuth.GetToken()
+	assert.Nil(t, err)
+	assert.NotEmpty(t, accessToken)
+	assert.NotEqual(t, refreshToken, refreshAuth.RefreshToken)
+}
