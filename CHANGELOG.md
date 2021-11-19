@@ -1,3 +1,10 @@
+## [5.8.1](https://github.com/IBM/go-sdk-core/compare/v5.8.0...v5.8.1) (2021-11-19)
+
+
+### Bug Fixes
+
+* add .cveignore ([#144](https://github.com/IBM/go-sdk-core/issues/144)) ([e903a2f](https://github.com/IBM/go-sdk-core/commit/e903a2fdd101db700fe0e6ac96e7d1f5301a49a9))
+
 # [5.8.0](https://github.com/IBM/go-sdk-core/compare/v5.7.2...v5.8.0) (2021-11-08)
 
 
