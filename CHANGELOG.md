@@ -1,3 +1,10 @@
+## [5.8.2](https://github.com/IBM/go-sdk-core/compare/v5.8.1...v5.8.2) (2021-11-25)
+
+
+### Bug Fixes
+
+* bump go-openapi/strfmt to avoid vulnerability alert ([#147](https://github.com/IBM/go-sdk-core/issues/147)) ([7d61715](https://github.com/IBM/go-sdk-core/commit/7d61715a7f0b3eea82ca07e3eb814a5429e3d623))
+
 ## [5.8.1](https://github.com/IBM/go-sdk-core/compare/v5.8.0...v5.8.1) (2021-11-19)
 
 
