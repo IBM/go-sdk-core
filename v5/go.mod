@@ -3,7 +3,7 @@ module github.com/IBM/go-sdk-core/v5
 go 1.14
 
 require (
-	github.com/go-openapi/strfmt v0.20.2
+	github.com/go-openapi/strfmt v0.21.1
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-retryablehttp v0.7.0
