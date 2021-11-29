@@ -1,3 +1,10 @@
+# [5.9.0](https://github.com/IBM/go-sdk-core/compare/v5.8.2...v5.9.0) (2021-11-29)
+
+
+### Features
+
+* **IamAuthenticator:** support refresh token flow in IamAuthenticator ([#146](https://github.com/IBM/go-sdk-core/issues/146)) ([97f89dd](https://github.com/IBM/go-sdk-core/commit/97f89dd9a1e8dd268993c03151bac7e8e5db00f3))
+
 ## [5.8.2](https://github.com/IBM/go-sdk-core/compare/v5.8.1...v5.8.2) (2021-11-25)
 
 
