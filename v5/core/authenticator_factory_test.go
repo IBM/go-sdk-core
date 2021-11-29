@@ -108,6 +108,20 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	assert.Equal(t, "iam-profile1-id", vpcAuth.IAMProfileID)
 	assert.Empty(t, vpcAuth.URL)
 
+	// IAM Authenticator using refresh token.
+	authenticator, err = GetAuthenticatorFromEnvironment("service9")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_IAM, authenticator.AuthenticationType())
+	iamAuth, ok := authenticator.(*IamAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, iamAuth)
+	assert.Empty(t, iamAuth.ApiKey)
+	assert.Equal(t, "refresh-token", iamAuth.RefreshToken)
+	assert.Equal(t, "user1", iamAuth.ClientId)
+	assert.Equal(t, "secret1", iamAuth.ClientSecret)
+	assert.Equal(t, "https://iam.refresh-token.com", iamAuth.URL)
+
 	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
 
