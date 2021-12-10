@@ -1,3 +1,10 @@
+## [5.9.1](https://github.com/IBM/go-sdk-core/compare/v5.9.0...v5.9.1) (2021-12-10)
+
+
+### Bug Fixes
+
+* avoid false positive gosec errors ([#149](https://github.com/IBM/go-sdk-core/issues/149)) ([b3da5ed](https://github.com/IBM/go-sdk-core/commit/b3da5ed4d2ceaf703c77a553d28dfd9726b1a44d))
+
 # [5.9.0](https://github.com/IBM/go-sdk-core/compare/v5.8.2...v5.9.0) (2021-11-29)
 
 
