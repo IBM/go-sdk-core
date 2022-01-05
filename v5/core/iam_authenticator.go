@@ -249,7 +249,8 @@ func (authenticator *IamAuthenticator) setTokenData(tokenData *iamTokenData) {
 	// This was recommended by the IAM team to avoid problems in the future
 	// if the token service is changed to invalidate an existing refresh token
 	// when a new one is generated and returned in the response.
-	if tokenData != nil {
+	// Ignore if the refresh token is not_supported.
+	if tokenData != nil && tokenData.RefreshToken != "not_supported" {
 		authenticator.RefreshToken = tokenData.RefreshToken
 	}
 }
