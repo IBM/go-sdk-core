@@ -278,7 +278,7 @@ func (service *BaseService) buildUserAgent() string {
 // SetUserAgent sets the user agent value.
 func (service *BaseService) SetUserAgent(userAgentString string) {
 	if userAgentString == "" {
-		service.UserAgent = service.buildUserAgent()
+		userAgentString = service.buildUserAgent()
 	}
 	service.UserAgent = userAgentString
 }

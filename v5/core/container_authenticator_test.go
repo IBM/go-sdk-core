@@ -31,6 +31,7 @@ const (
 	// To enable debug logging during test execution, set this to "LevelDebug"
 	containerAuthTestLogLevel       LogLevel = LevelError
 	containerAuthMockCRTokenFile    string   = "../resources/cr-token.txt"
+	containerAuthEmptyCRTokenFile   string   = "../resources/empty-cr-token.txt"
 	containerAuthMockIAMProfileName string   = "iam-user-123"
 	containerAuthMockIAMProfileID   string   = "iam-id-123"
 	containerAuthMockClientID       string   = "client-id-1"
@@ -55,6 +56,7 @@ func TestContainerAuthCtorErrors(t *testing.T) {
 	auth, err = NewContainerAuthenticatorBuilder().
 		SetIAMProfileName(containerAuthMockIAMProfileName).
 		SetClientIDSecret("", containerAuthMockClientSecret).
+		SetClient(nil).
 		Build()
 	assert.NotNil(t, err)
 	assert.Nil(t, auth)
@@ -236,6 +238,12 @@ func TestContainerAuthCtorFromMapSuccess(t *testing.T) {
 	assert.Equal(t, true, auth.DisableSSLVerification)
 	assert.Nil(t, auth.Headers)
 }
+func TestContainerAuthDefaultURL(t *testing.T) {
+	auth := &ContainerAuthenticator{}
+	s := auth.url()
+	assert.Equal(t, s, defaultIamTokenServerEndpoint)
+	assert.Equal(t, auth.URL, defaultIamTokenServerEndpoint)
+}
 
 // startMockIAMServer will start a mock server endpoint that supports both the
 // Instance Metadata Service and IAM operations that we'll need to call.
@@ -362,6 +370,9 @@ func TestContainerAuthGetTokenSuccess(t *testing.T) {
 	assert.Equal(t, containerAuthTestAccessToken1, accessToken)
 	assert.Equal(t, containerAuthTestAccessToken1, auth.getTokenData().AccessToken)
 
+	// We should also get back a nil error from synchronizedRequestToken()
+	assert.Nil(t, auth.synchronizedRequestToken())
+
 	// Call GetToken() again and verify that we get the cached value.
 	// Note: we'll Set Scope so that if the IAM operation is actually called again,
 	// we'll receive the second access token.  We don't want the IAM operation called again yet.
@@ -400,6 +411,37 @@ func TestContainerAuthRequestTokenSuccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, tokenResponse)
 	assert.Equal(t, containerAuthTestRefreshToken, tokenResponse.RefreshToken)
+}
+
+func TestContainerAuthRequestTokenError1(t *testing.T) {
+	GetLogger().SetLogLevel(containerAuthTestLogLevel)
+
+	// Force an error while resolving the service URL.
+	auth := &ContainerAuthenticator{
+		CRTokenFilename: containerAuthMockCRTokenFile,
+		IAMProfileName:  containerAuthMockIAMProfileName,
+		URL:             "123:badpath",
+	}
+
+	iamToken, err := auth.RequestToken()
+	assert.NotNil(t, err)
+	assert.Nil(t, iamToken)
+	t.Logf("Expected error: %s\n", err.Error())
+}
+
+func TestContainerAuthRequestTokenError2(t *testing.T) {
+	GetLogger().SetLogLevel(containerAuthTestLogLevel)
+
+	// Force an error due to an empty CR token.
+	auth := &ContainerAuthenticator{
+		CRTokenFilename: containerAuthEmptyCRTokenFile,
+		IAMProfileName:  containerAuthMockIAMProfileName,
+	}
+
+	iamToken, err := auth.RequestToken()
+	assert.NotNil(t, err)
+	assert.Nil(t, iamToken)
+	t.Logf("Expected error: %s\n", err.Error())
 }
 
 func TestContainerAuthAuthenticateSuccess(t *testing.T) {

@@ -54,6 +54,20 @@ func TestParseJWT(t *testing.T) {
 	assert.Equal(t, int64(1610548248), claims.IssuedAt)
 }
 
+func TestParseJWTFail(t *testing.T) {
+	_, err := parseJWT("segment1.segment2")
+	assert.NotNil(t, err)
+	t.Logf("Expected error: %s\n", err.Error())
+
+	_, err = parseJWT("====.====.====")
+	assert.NotNil(t, err)
+	t.Logf("Expected error: %s\n", err.Error())
+
+	_, err = parseJWT("segment1.segment2.segment3")
+	assert.NotNil(t, err)
+	t.Logf("Expected error: %s\n", err.Error())
+}
+
 func TestDecodeSegment(t *testing.T) {
 	testStringDecoded := "testString\n"
 	testStringEncoded := "dGVzdFN0cmluZwo="

@@ -204,6 +204,13 @@ func TestVpcAuthCtorFromMapSuccess(t *testing.T) {
 	assert.Equal(t, vpcauthMockURL, auth.URL)
 }
 
+func TestVpcAuthDefaultURL(t *testing.T) {
+	auth := &VpcInstanceAuthenticator{}
+	s := auth.url()
+	assert.Equal(t, s, vpcauthDefaultIMSEndpoint)
+	assert.Equal(t, auth.URL, vpcauthDefaultIMSEndpoint)
+}
+
 //
 // startMockVPCServer will start a mock server endpoint that supports both of the
 // VPC Instance Metadata Service operations that the authenticator will need to invoke
@@ -418,7 +425,7 @@ func assertAuthError(t *testing.T, err error) {
 	assert.Equal(t, err.Error(), authErr.Error())
 }
 
-func TestVpcAuthRetrieveVpcTokenFail(t *testing.T) {
+func TestVpcAuthRetrieveVpcTokenFail1(t *testing.T) {
 	GetLogger().SetLogLevel(vpcauthTestLogLevel)
 
 	server := startMockVPCServer(t, "vpc-token-fail")
@@ -429,6 +436,21 @@ func TestVpcAuthRetrieveVpcTokenFail(t *testing.T) {
 	}
 	err := auth.Validate()
 	assert.Nil(t, err)
+
+	vpcToken, err := auth.retrieveInstanceIdentityToken()
+	assert.Empty(t, vpcToken)
+	assert.NotNil(t, err)
+	t.Logf("Expected error: %s\n", err.Error())
+	assertAuthError(t, err)
+}
+
+func TestVpcAuthRetrieveVpcTokenFail2(t *testing.T) {
+	GetLogger().SetLogLevel(vpcauthTestLogLevel)
+
+	// Force an error while resolving the service URL.
+	auth := &VpcInstanceAuthenticator{
+		URL: "123:badpath",
+	}
 
 	vpcToken, err := auth.retrieveInstanceIdentityToken()
 	assert.Empty(t, vpcToken)
@@ -525,7 +547,7 @@ func TestVpcAuthRetrieveIamTokenSuccessProfileID(t *testing.T) {
 	assert.Equal(t, vpcauthTestAccessToken2, iamTokenServerResponse.AccessToken)
 }
 
-func TestVpcAuthRetrieveIamTokenFail(t *testing.T) {
+func TestVpcAuthRetrieveIamTokenFail1(t *testing.T) {
 	GetLogger().SetLogLevel(vpcauthTestLogLevel)
 
 	server := startMockVPCServer(t, "iam-token1-fail")
@@ -536,6 +558,21 @@ func TestVpcAuthRetrieveIamTokenFail(t *testing.T) {
 	}
 	err := auth.Validate()
 	assert.Nil(t, err)
+
+	iamTokenServerResponse, err := auth.retrieveIamAccessToken(vpcauthTestInstanceIdentityToken)
+	assert.Nil(t, iamTokenServerResponse)
+	assert.NotNil(t, err)
+	t.Logf("Expected error: %s\n", err.Error())
+	assertAuthError(t, err)
+}
+
+func TestVpcAuthRetrieveIamTokenFail2(t *testing.T) {
+	GetLogger().SetLogLevel(vpcauthTestLogLevel)
+
+	// Force an error while resolving the service URL.
+	auth := &VpcInstanceAuthenticator{
+		URL: "123:badpath",
+	}
 
 	iamTokenServerResponse, err := auth.retrieveIamAccessToken(vpcauthTestInstanceIdentityToken)
 	assert.Nil(t, iamTokenServerResponse)
@@ -598,6 +635,11 @@ func TestVpcAuthGetTokenSuccess(t *testing.T) {
 	assert.NotNil(t, auth.getTokenData())
 	assert.Equal(t, vpcauthTestAccessToken1, accessToken)
 	assert.Equal(t, vpcauthTestAccessToken1, auth.getTokenData().AccessToken)
+
+	// Call synchronizedRequestToken() to make sure we get back a nil error response.
+	assert.True(t, auth.getTokenData().isTokenValid())
+	err = auth.synchronizedRequestToken()
+	assert.Nil(t, err)
 
 	// Call GetToken() again and verify that we get the cached value.
 	accessToken, err = auth.GetToken()

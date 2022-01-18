@@ -27,7 +27,7 @@ type TestStructure struct {
 	Name string `json:"name"`
 }
 
-func TestDetailedResponseJson(t *testing.T) {
+func TestDetailedResponseJsonSuccess(t *testing.T) {
 	testStructure := TestStructure{
 		Name: "wonder woman",
 	}
@@ -47,6 +47,10 @@ func TestDetailedResponseJson(t *testing.T) {
 	m, ok := response.GetResultAsMap()
 	assert.Equal(t, false, ok)
 	assert.Nil(t, m)
+
+	s := response.String()
+	assert.NotEmpty(t, s)
+	t.Logf("detailed response:\n%s", s)
 }
 
 func TestDetailedResponseNonJson(t *testing.T) {

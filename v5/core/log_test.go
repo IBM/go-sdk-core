@@ -28,6 +28,12 @@ func TestSetLogLevel(t *testing.T) {
 	l := NewLogger(LevelNone, nil, nil)
 	assert.NotNil(t, l)
 
+	errorLogger := l.errorLog()
+	assert.NotNil(t, errorLogger)
+
+	infoLogger := l.infoLog()
+	assert.NotNil(t, infoLogger)
+
 	l.SetLogLevel(LevelError)
 	assert.Equal(t, LevelError, l.GetLogLevel())
 	assert.True(t, l.IsLogLevelEnabled(LevelError))

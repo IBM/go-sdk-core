@@ -80,6 +80,12 @@ var testEnvironment = map[string]string{
 	"SERVICE8_AUTH_TYPE":         "VPC",
 	"SERVICE8_IAM_PROFILE_CRN":   "crn:iam-profile1",
 	"SERVICE8_AUTH_URL":          "http://vpc.imds.com/api",
+	"SERVICE9_AUTH_TYPE":         "bearerToken",
+	"SERVICE9_BEARER_TOKEN":      "my-token",
+	"SERVICE10_AUTH_TYPE":        "noauth",
+	"SERVICE11_AUTH_TYPE":        "bad_auth_type",
+	"SERVICE12_APIKEY":           "my-apikey",
+	"SERVICE13_IAM_PROFILE_NAME": "iam-user2",
 }
 
 // Set the environment variables described in our map.
