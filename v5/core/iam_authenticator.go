@@ -48,7 +48,8 @@ type IamAuthenticator struct {
 
 	// The URL representing the IAM token server's endpoint; If not specified,
 	// a suitable default value will be used [optional].
-	URL string
+	URL     string
+	urlInit sync.Once
 
 	// The ClientId and ClientSecret fields are used to form a "basic auth"
 	// Authorization header for interactions with the IAM token server.
@@ -226,6 +227,20 @@ func (authenticator *IamAuthenticator) Authenticate(request *http.Request) error
 	return nil
 }
 
+// url returns the authenticator's URL property after potentially initializing it.
+func (authenticator *IamAuthenticator) url() string {
+	authenticator.urlInit.Do(func() {
+		if authenticator.URL == "" {
+			// If URL was not specified, then use the default IAM endpoint.
+			authenticator.URL = defaultIamTokenServerEndpoint
+		} else {
+			// Canonicalize the URL by removing the operation path if it was specified by the user.
+			authenticator.URL = strings.TrimSuffix(authenticator.URL, iamAuthOperationPathGetToken)
+		}
+	})
+	return authenticator.URL
+}
+
 // getTokenData returns the tokenData field from the authenticator.
 func (authenticator *IamAuthenticator) getTokenData() *iamTokenData {
 	authenticator.tokenDataMutex.Lock()
@@ -348,17 +363,8 @@ func (authenticator *IamAuthenticator) invokeRequestTokenData() error {
 // RequestToken fetches a new access token from the token server.
 func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, error) {
 
-	// Use the default IAM URL if one was not specified by the user.
-	url := authenticator.URL
-	if url == "" {
-		url = defaultIamTokenServerEndpoint
-	} else {
-		// Canonicalize the URL by removing the operation path if it was specified by the user.
-		url = strings.TrimSuffix(url, iamAuthOperationPathGetToken)
-	}
-
 	builder := NewRequestBuilder(POST)
-	_, err := builder.ResolveRequestURL(url, iamAuthOperationPathGetToken, nil)
+	_, err := builder.ResolveRequestURL(authenticator.url(), iamAuthOperationPathGetToken, nil)
 	if err != nil {
 		return nil, err
 	}

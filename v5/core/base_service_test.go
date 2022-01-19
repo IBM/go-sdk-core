@@ -491,6 +491,26 @@ func TestRequestGoodResponseJSONDeserFailure(t *testing.T) {
 	// t.Log("Decode error:\n", err.Error())
 }
 
+func TestRequestNoAuthenticatorFailure(t *testing.T) {
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ResolveRequestURL("https://myservice.ibm.com/api", "", nil)
+	assert.Nil(t, err)
+	req, _ := builder.Build()
+
+	options := &ServiceOptions{
+		URL:           "https://myservice.ibm.com/api",
+		Authenticator: &NoAuthAuthenticator{},
+	}
+	service, _ := NewBaseService(options)
+
+	// Now force the authenticator to be nil.
+	service.Options.Authenticator = nil
+
+	_, err = service.Request(req, nil)
+	assert.NotNil(t, err)
+	t.Logf("Expected error: %s\n", err.Error())
+}
+
 // Test a good response with no response body.
 func TestRequestGoodResponseNoBody(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -1596,6 +1616,41 @@ func TestSetServiceURL(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "https://myserver.com/api/baseurl", service.Options.URL)
 	assert.Equal(t, "https://myserver.com/api/baseurl", service.GetServiceURL())
+}
+
+func TestSetUserAgent(t *testing.T) {
+	service, err := NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+		})
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.NotEmpty(t, service.UserAgent)
+
+	service.SetUserAgent("")
+	assert.NotEmpty(t, service.UserAgent)
+
+	service.SetUserAgent("my-user-agent")
+	assert.Equal(t, "my-user-agent", service.UserAgent)
+}
+
+func TestEnableRetries(t *testing.T) {
+	service, err := NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+		})
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+
+	assert.NotNil(t, service.Client)
+
+	service.EnableRetries(5, 30*time.Second)
+	assert.NotNil(t, service.Client)
+	assert.NotNil(t, service.Client.Transport)
+
+	service.DisableRetries()
+	assert.NotNil(t, service.Client)
+	assert.NotNil(t, service.Client.Transport)
 }
 
 func TestSetEnableGzipCompression(t *testing.T) {

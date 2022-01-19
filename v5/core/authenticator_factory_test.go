@@ -173,6 +173,45 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 	assert.Equal(t, "crn:iam-profile1", vpcAuth.IAMProfileCRN)
 	assert.Equal(t, "http://vpc.imds.com/api", vpcAuth.URL)
 
+	authenticator, err = GetAuthenticatorFromEnvironment("service9")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_BEARER_TOKEN, authenticator.AuthenticationType())
+	btAuth, ok := authenticator.(*BearerTokenAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, btAuth)
+	assert.Equal(t, "my-token", btAuth.BearerToken)
+
+	authenticator, err = GetAuthenticatorFromEnvironment("service10")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_NOAUTH, authenticator.AuthenticationType())
+	noAuth, ok := authenticator.(*NoAuthAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, noAuth)
+
+	authenticator, err = GetAuthenticatorFromEnvironment("service11")
+	assert.NotNil(t, err)
+	assert.Nil(t, authenticator)
+
+	authenticator, err = GetAuthenticatorFromEnvironment("service12")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_IAM, authenticator.AuthenticationType())
+	iamAuth, ok := authenticator.(*IamAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, iamAuth)
+	assert.Equal(t, "my-apikey", iamAuth.ApiKey)
+
+	authenticator, err = GetAuthenticatorFromEnvironment("service13")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_CONTAINER, authenticator.AuthenticationType())
+	containerAuth, ok = authenticator.(*ContainerAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, containerAuth)
+	assert.Equal(t, "iam-user2", containerAuth.IAMProfileName)
+
 	clearTestEnvironment()
 }
 

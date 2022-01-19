@@ -198,6 +198,9 @@ func TestCp4dGetTokenSuccessPW(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, cp4dUsernamePwd1, accessToken)
 
+	// Also make sure we get back a nil error from synchronizedRequestToken().
+	assert.Nil(t, authenticator.synchronizedRequestToken())
+
 	// Force an expiration and verify we get back the second access token.
 	authenticator.setTokenData(nil)
 	accessToken, err = authenticator.GetToken()

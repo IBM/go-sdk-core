@@ -104,6 +104,7 @@ func TestIamAuthBuilderSuccess(t *testing.T) {
 	// Specify apikey.
 	auth, err = NewIamAuthenticatorBuilder().
 		SetApiKey(iamAuthMockApiKey).
+		SetClient(nil).
 		Build()
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
@@ -242,6 +243,13 @@ func TestNewIamAuthenticatorFromMap(t *testing.T) {
 	assert.Equal(t, AUTHTYPE_IAM, authenticator.AuthenticationType())
 }
 
+func TestIamAuthDefaultURL(t *testing.T) {
+	auth := &IamAuthenticator{}
+	s := auth.url()
+	assert.Equal(t, s, defaultIamTokenServerEndpoint)
+	assert.Equal(t, auth.URL, defaultIamTokenServerEndpoint)
+}
+
 //
 // Tests involving the legacy ctor
 //
@@ -353,6 +361,9 @@ func TestIamGetTokenSuccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, iamAuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
+
+	// Also make sure we get back a nil error from synchronizedRequestToken().
+	assert.Nil(t, authenticator.synchronizedRequestToken())
 
 	// Force expiration and verify that we got the second access token.
 	authenticator.getTokenData().Expiration = GetCurrentTime() - 3600
@@ -1039,7 +1050,7 @@ func TestIamGetTokenServerError(t *testing.T) {
 	assert.Empty(t, token)
 }
 
-func TestIamRequestTokenError(t *testing.T) {
+func TestIamRequestTokenError1(t *testing.T) {
 	GetLogger().SetLogLevel(iamAuthTestLogLevel)
 
 	authenticator, err := NewIamAuthenticatorBuilder().
@@ -1054,6 +1065,27 @@ func TestIamRequestTokenError(t *testing.T) {
 	_, err = authenticator.RequestToken()
 	assert.NotNil(t, err)
 	t.Logf("Expected error: %s", err.Error())
+}
+
+func TestIamRequestTokenError2(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
+	// Force an error while resolving the service URL.
+	auth := &IamAuthenticator{
+		URL: "123:badpath",
+	}
+
+	iamToken, err := auth.RequestToken()
+	assert.NotNil(t, err)
+	assert.Nil(t, iamToken)
+	t.Logf("Expected error: %s\n", err.Error())
+}
+
+func TestIamNewTokenDataError1(t *testing.T) {
+	tokenData, err := newIamTokenData(nil)
+	assert.NotNil(t, err)
+	assert.Nil(t, tokenData)
+	t.Logf("Expected error: %s\n", err.Error())
 }
 
 //
