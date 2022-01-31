@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2019, 2021.
+// (C) Copyright IBM Corp. 2019, 2022.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,8 +30,24 @@ import (
 	"testing"
 	"time"
 
+	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	"github.com/stretchr/testify/assert"
 )
+
+// getRetryableHTTPClient returns the "retryable" Client hidden inside the specified http.Client instance
+// or nil if "client" is not hiding a retryable Client instance.
+func getRetryableHTTPClient(client *http.Client) *retryablehttp.Client {
+	if client != nil {
+		if client.Transport != nil {
+			// A retryable client will have its Transport field set to an
+			// instance of retryablehttp.RoundTripper.
+			if rt, ok := client.Transport.(*retryablehttp.RoundTripper); ok {
+				return rt.Client
+			}
+		}
+	}
+	return nil
+}
 
 func TestClone(t *testing.T) {
 	var service *BaseService = nil
@@ -1088,6 +1104,33 @@ func TestDisableSSLVerification(t *testing.T) {
 	service, _ := NewBaseService(options)
 	assert.False(t, service.IsSSLDisabled())
 	service.DisableSSLVerification()
+	assert.True(t, service.IsSSLDisabled())
+}
+
+func TestDisableSSLVerificationWithRetries(t *testing.T) {
+	options := &ServiceOptions{
+		URL:           "test.com",
+		Authenticator: &NoAuthAuthenticator{},
+	}
+	service, _ := NewBaseService(options)
+
+	// Verify that we can first enable retries, then disable SSL
+	assert.False(t, service.IsSSLDisabled())
+	service.EnableRetries(3, 30*time.Second)
+	assert.False(t, service.IsSSLDisabled())
+	service.DisableSSLVerification()
+	assert.True(t, service.IsSSLDisabled())
+	service.DisableRetries()
+	assert.True(t, service.IsSSLDisabled())
+
+	// Verify that we can first disable SSL, then enable retries, etc.
+	service, _ = NewBaseService(options)
+	assert.False(t, service.IsSSLDisabled())
+	service.DisableSSLVerification()
+	assert.True(t, service.IsSSLDisabled())
+	service.EnableRetries(0, 0)
+	assert.True(t, service.IsSSLDisabled())
+	service.DisableRetries()
 	assert.True(t, service.IsSSLDisabled())
 }
 

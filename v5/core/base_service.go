@@ -1,6 +1,6 @@
 package core
 
-// (C) Copyright IBM Corp. 2019, 2021.
+// (C) Copyright IBM Corp. 2019, 2022.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -238,26 +238,69 @@ func (service *BaseService) SetHTTPClient(client *http.Client) {
 // and host names, making the client susceptible to "man-in-the-middle"
 // attacks.  This should be used only for testing.
 func (service *BaseService) DisableSSLVerification() {
-	client := DefaultHTTPClient()
-	tr, ok := client.Transport.(*http.Transport)
-	if tr != nil && ok {
-		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402
+	// Make sure we have a non-nil client hanging off the BaseService.
+	if service.Client == nil {
+		service.SetHTTPClient(DefaultHTTPClient())
 	}
 
-	service.SetHTTPClient(client)
+	// Grab the Transport instance used to invoke requests and set it
+	// to skip server ssl certificate verification.
+	tr := getClientTransportForSSL(service.Client)
+	if tr != nil {
+
+		// If no TLS config, then create a new one.
+		if tr.TLSClientConfig == nil {
+			tr.TLSClientConfig = &tls.Config{} // #nosec G402
+		}
+
+		// Disable server ssl cert & hostname verification.
+		tr.TLSClientConfig.InsecureSkipVerify = true // #nosec G402
+	}
 }
 
 // IsSSLDisabled returns true if and only if the service's http.Client instance
 // is configured to skip verification of server SSL certificates.
 func (service *BaseService) IsSSLDisabled() bool {
 	if service.Client != nil {
-		if tr, ok := service.Client.Transport.(*http.Transport); tr != nil && ok {
+		tr := getClientTransportForSSL(service.Client)
+		if tr != nil {
 			if tr.TLSClientConfig != nil {
 				return tr.TLSClientConfig.InsecureSkipVerify
 			}
 		}
 	}
 	return false
+}
+
+// getTransportForSSL() will return the http.Transport instance
+// that needs to be modified to disable SSL.  This is a bit tricky
+// because we have to account for the retries-enabled scenario.
+func getClientTransportForSSL(client *http.Client) *http.Transport {
+	// "client" will be passed in as the client instance that is hanging off
+	// the BaseService.   This could be either a "normal" http.Client instance
+	// to be used when retries are not enabled, or it could be a "shim" http.Client
+	// instance that's used when retries are enabled.
+	// We determine which it is by checking the client's Transport field.
+	// If it is a "shim" client instance then the Transport field will be an
+	// instance of the retryablehttp.RoundTripper struct, otherwise the Transport
+	// field will be an instance of http.Transport.
+
+	// if "client" is a shim http.Client instance to support retries, then just
+	// change "client" to point to the real http.Client instance that is embedded inside
+	// the retryablehttp.Client instance, since this is the one used to invoke
+	// individual requests when retries are enabled.
+	if tr, ok := client.Transport.(*retryablehttp.RoundTripper); tr != nil && ok {
+		client = tr.Client.HTTPClient
+	}
+
+	// Next,
+	if client != nil {
+		if tr, ok := client.Transport.(*http.Transport); tr != nil && ok {
+			return tr
+		}
+	}
+
+	return nil
 }
 
 // SetEnableGzipCompression sets the service's EnableGzipCompression field
@@ -348,25 +391,9 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		}
 	}
 
+	// Invoke the request, then check for errors during the invocation.
 	var httpResponse *http.Response
-
-	// Try to get the retryable Client hidden inside service.Client
-	retryableClient := getRetryableHTTPClient(service.Client)
-	if retryableClient != nil {
-		retryableRequest, retryableErr := retryablehttp.FromRequest(req)
-		if retryableErr != nil {
-			err = fmt.Errorf(ERRORMSG_CREATE_RETRYABLE_REQ, retryableErr.Error())
-			return
-		}
-
-		// Invoke the retryable request.
-		httpResponse, err = retryableClient.Do(retryableRequest)
-	} else {
-		// Invoke the normal (non-retryable) request.
-		httpResponse, err = service.Client.Do(req)
-	}
-
-	// Check for errors during the invocation.
+	httpResponse, err = service.Client.Do(req)
 	if err != nil {
 		if strings.Contains(err.Error(), SSL_CERTIFICATION_ERROR) {
 			err = fmt.Errorf(ERRORMSG_SSL_VERIFICATION_FAILED + "\n" + err.Error())
@@ -581,7 +608,35 @@ func getErrorMessage(responseMap map[string]interface{}, statusCode int) string 
 // configuration, and then set it on the service instance.
 // If maxRetries and/or maxRetryInterval are specified as 0, then default values
 // are used instead.
+//
+// In a scenario where retries ARE NOT enabled:
+// - BaseService.Client will be a "normal" http.Client instance used to invoke requests
+// - BaseService.Client.Transport will be an instance of the default http.RoundTripper
+// - BaseService.Client.Do() calls http.RoundTripper.RoundTrip() to invoke the request
+// - Only one http.Client instance needed/used (BaseService.Client) in this scenario
+// - Result: "normal" request processing without any automatic retries being performed
+//
+// In a scenario where retries ARE enabled:
+// - BaseService.Client will be a "shim" http.Client instance
+// - BaseService.Client.Transport will be an instance of retryablehttp.RoundTripper
+// - BaseService.Client.Do() calls retryablehttp.RoundTripper.RoundTrip() (via the shim)
+//   to invoke the request
+// - The retryablehttp.RoundTripper instance is configured with the retryablehttp.Client
+//   instance which holds the various retry config properties (max retries, max interval, etc.)
+// - The retryablehttp.RoundTripper.RoundTrip() method triggers the retry logic in the retryablehttp.Client
+// - The retryablehttp.Client instance's HTTPClient field holds a "normal" http.Client instance,
+//   which is used to invoke individual requests within the retry loop.
+// - To summarize, there are three client instances used for request processing in this scenario:
+//   - The "shim" http.Client instance (BaseService.Client)
+//   - The retryablehttp.Client instance that implements the retry logic
+//   - The "normal" http.Client instance embedded in the retryablehttp.Client which is used to invoke
+//     individual requests within the retry logic
+// - Result: Each request is invoked such that the automatic retry logic is employed
 func (service *BaseService) EnableRetries(maxRetries int, maxRetryInterval time.Duration) {
+	// Remember whether or not SSL verification has been disabled.
+	isSSLDisabled := service.IsSSLDisabled()
+
+	// Create and configure the retryable client, then set it on the service.
 	client := NewRetryableHTTPClient()
 	if maxRetries > 0 {
 		client.RetryMax = maxRetries
@@ -589,14 +644,27 @@ func (service *BaseService) EnableRetries(maxRetries int, maxRetryInterval time.
 	if maxRetryInterval > 0 {
 		client.RetryWaitMax = maxRetryInterval
 	}
-
 	service.SetHTTPClient(client.StandardClient())
+
+	// If SSL verification was previously disabled, then disable it now on the new client.
+	if isSSLDisabled {
+		service.DisableSSLVerification()
+	}
 }
 
 // DisableRetries will disable automatic retries by constructing a new
 // default (non-retryable) HTTP Client instance and setting it on the service.
 func (service *BaseService) DisableRetries() {
+	// Remember whether or not SSL verification has been disabled.
+	isSSLDisabled := service.IsSSLDisabled()
+
+	// Set a new standard client on the service.
 	service.SetHTTPClient(DefaultHTTPClient())
+
+	// If SSL verification was previously disabled, then disable it now on the new client.
+	if isSSLDisabled {
+		service.DisableSSLVerification()
+	}
 }
 
 // DefaultHTTPClient returns a non-retryable http client with default configuration.
@@ -624,21 +692,6 @@ func NewRetryableHTTPClient() *retryablehttp.Client {
 	client.Backoff = IBMCloudSDKBackoffPolicy
 	client.ErrorHandler = retryablehttp.PassthroughErrorHandler
 	return client
-}
-
-// getRetryableHTTPClient returns the "retryable" Client hidden inside the specified http.Client instance
-// or nil if "client" is not hiding a retryable Client instance.
-func getRetryableHTTPClient(client *http.Client) *retryablehttp.Client {
-	if client != nil {
-		if client.Transport != nil {
-			// A retryable client will have its Transport field set to an
-			// instance of retryablehttp.RoundTripper.
-			if rt, ok := client.Transport.(*retryablehttp.RoundTripper); ok {
-				return rt.Client
-			}
-		}
-	}
-	return nil
 }
 
 var (

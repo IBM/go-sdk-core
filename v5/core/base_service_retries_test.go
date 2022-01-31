@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2020, 2021.
+// (C) Copyright IBM Corp. 2020, 2022.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -482,6 +482,9 @@ var _ = Describe(`Retry scenarios`, func() {
 				_, _ = builder.SetBodyContentString(expectedRequestBody)
 				builder.AddHeader("Content-Type", "text/plain")
 				req, _ := builder.Build()
+
+				service.DisableSSLVerification()
+				Expect(service.IsSSLDisabled()).To(BeTrue())
 
 				var foo *Foo
 				resp, err := service.Request(req, &foo)
