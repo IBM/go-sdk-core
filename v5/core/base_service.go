@@ -272,7 +272,7 @@ func (service *BaseService) IsSSLDisabled() bool {
 	return false
 }
 
-// getTransportForSSL() will return the http.Transport instance
+// getClientTransportForSSL() will return the http.Transport instance
 // that needs to be modified to disable SSL.  This is a bit tricky
 // because we have to account for the retries-enabled scenario.
 func getClientTransportForSSL(client *http.Client) *http.Transport {
