@@ -1,3 +1,10 @@
+## [5.9.2](https://github.com/IBM/go-sdk-core/compare/v5.9.1...v5.9.2) (2022-02-02)
+
+
+### Bug Fixes
+
+* allow retries and disable ssl to co-exist ([#154](https://github.com/IBM/go-sdk-core/issues/154)) ([b16fe8d](https://github.com/IBM/go-sdk-core/commit/b16fe8df7e6f90a794c4ecdebf6a48c7949cb2a7))
+
 ## [5.9.1](https://github.com/IBM/go-sdk-core/compare/v5.9.0...v5.9.1) (2021-12-10)
 
 
