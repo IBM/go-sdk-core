@@ -229,6 +229,7 @@ func (service *BaseService) SetDefaultHeaders(headers http.Header) {
 
 // SetHTTPClient updates the client handling the requests.
 func (service *BaseService) SetHTTPClient(client *http.Client) {
+	setMinimumTLSVersion(client)
 	service.Client = client
 }
 
@@ -301,6 +302,18 @@ func getClientTransportForSSL(client *http.Client) *http.Transport {
 	}
 
 	return nil
+}
+
+// setMinimumTLSVersion sets the minimum TLS version required by the client to TLS v1.2
+func setMinimumTLSVersion(client *http.Client) {
+	tr := getClientTransportForSSL(client)
+	if tr != nil {
+		if tr.TLSClientConfig == nil {
+			tr.TLSClientConfig = &tls.Config{} // #nosec G402
+		}
+
+		tr.TLSClientConfig.MinVersion = tls.VersionTLS12
+	}
 }
 
 // SetEnableGzipCompression sets the service's EnableGzipCompression field
@@ -669,7 +682,9 @@ func (service *BaseService) DisableRetries() {
 
 // DefaultHTTPClient returns a non-retryable http client with default configuration.
 func DefaultHTTPClient() *http.Client {
-	return cleanhttp.DefaultPooledClient()
+	client := cleanhttp.DefaultPooledClient()
+	setMinimumTLSVersion(client)
+	return client
 }
 
 // httpLogger is a shim layer used to allow the Go core's logger to be used with the retryablehttp interfaces.
@@ -691,6 +706,7 @@ func NewRetryableHTTPClient() *retryablehttp.Client {
 	client.CheckRetry = IBMCloudSDKRetryPolicy
 	client.Backoff = IBMCloudSDKBackoffPolicy
 	client.ErrorHandler = retryablehttp.PassthroughErrorHandler
+	setMinimumTLSVersion(client.HTTPClient)
 	return client
 }
 
