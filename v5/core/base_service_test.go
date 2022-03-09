@@ -1992,4 +1992,9 @@ func TestMinSSLVersion(t *testing.T) {
 	service.SetHTTPClient(insecureClient)
 	minTLS = int(getClientTransportForSSL(service.Client).TLSClientConfig.MinVersion)
 	assert.Equal(t, minTLS, tls.VersionTLS12)
+
+	// Check retryable client config.
+	service.EnableRetries(3, 30*time.Second)
+	minTLS = int(getClientTransportForSSL(service.Client).TLSClientConfig.MinVersion)
+	assert.Equal(t, minTLS, tls.VersionTLS12)
 }
