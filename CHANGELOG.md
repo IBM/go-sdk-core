@@ -1,3 +1,10 @@
+## [5.9.3](https://github.com/IBM/go-sdk-core/compare/v5.9.2...v5.9.3) (2022-03-16)
+
+
+### Bug Fixes
+
+* set the minimum TLS version in the client to v1.2 ([#156](https://github.com/IBM/go-sdk-core/issues/156)) ([0188990](https://github.com/IBM/go-sdk-core/commit/01889905767f6d8315e27fea539a134620806120))
+
 ## [5.9.2](https://github.com/IBM/go-sdk-core/compare/v5.9.1...v5.9.2) (2022-02-02)
 
 
