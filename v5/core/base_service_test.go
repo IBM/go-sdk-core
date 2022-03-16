@@ -1,3 +1,4 @@
+//go:build all || fast || basesvc
 // +build all fast basesvc
 
 package core
@@ -18,6 +19,7 @@ package core
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -1965,4 +1967,34 @@ func TestErrorMessage(t *testing.T) {
 	testGetErrorMessage(t, http.StatusInternalServerError,
 		`{"errorMessage":{"statusCode":500,"message":"Internal Server Error"}}`,
 		"Internal Server Error")
+}
+
+func TestMinSSLVersion(t *testing.T) {
+	service, err := NewBaseService(
+		&ServiceOptions{
+			Authenticator: &NoAuthAuthenticator{},
+		})
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.NotNil(t, service.Client)
+
+	// Check the default config.
+	minTLS := int(getClientTransportForSSL(service.Client).TLSClientConfig.MinVersion)
+	assert.Equal(t, minTLS, tls.VersionTLS12)
+
+	// Set a insecureClient with different value.
+	insecureClient := &http.Client{}
+	insecureClient.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{
+			MinVersion: tls.VersionTLS10,
+		},
+	}
+	service.SetHTTPClient(insecureClient)
+	minTLS = int(getClientTransportForSSL(service.Client).TLSClientConfig.MinVersion)
+	assert.Equal(t, minTLS, tls.VersionTLS12)
+
+	// Check retryable client config.
+	service.EnableRetries(3, 30*time.Second)
+	minTLS = int(getClientTransportForSSL(service.Client).TLSClientConfig.MinVersion)
+	assert.Equal(t, minTLS, tls.VersionTLS12)
 }
