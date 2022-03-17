@@ -1107,6 +1107,14 @@ func TestDisableSSLVerification(t *testing.T) {
 	assert.False(t, service.IsSSLDisabled())
 	service.DisableSSLVerification()
 	assert.True(t, service.IsSSLDisabled())
+
+	// Try another test while setting the service client to nil
+	service, _ = NewBaseService(options)
+	service.Client = nil
+	assert.False(t, service.IsSSLDisabled())
+	service.DisableSSLVerification()
+	assert.NotNil(t, service.Client)
+	assert.True(t, service.IsSSLDisabled())
 }
 
 func TestDisableSSLVerificationWithRetries(t *testing.T) {
@@ -1134,6 +1142,23 @@ func TestDisableSSLVerificationWithRetries(t *testing.T) {
 	assert.True(t, service.IsSSLDisabled())
 	service.DisableRetries()
 	assert.True(t, service.IsSSLDisabled())
+
+	// Verify that we can first enable retries, then disable SSL, etc.
+	service, _ = NewBaseService(options)
+	assert.False(t, service.IsSSLDisabled())
+	assert.False(t, isRetryableClient(service.Client))
+
+	service.EnableRetries(0, 0)
+	assert.False(t, service.IsSSLDisabled())
+	assert.True(t, isRetryableClient(service.Client))
+
+	service.DisableSSLVerification()
+	assert.True(t, service.IsSSLDisabled())
+	assert.True(t, service.IsSSLDisabled())
+
+	service.DisableRetries()
+	assert.True(t, service.IsSSLDisabled())
+	assert.False(t, isRetryableClient(service.Client))
 }
 
 func TestRequestBasicAuth1(t *testing.T) {
@@ -1679,23 +1704,108 @@ func TestSetUserAgent(t *testing.T) {
 	assert.Equal(t, "my-user-agent", service.UserAgent)
 }
 
+func getRetriesConfig(service *BaseService) (int, time.Duration) {
+	if isRetryableClient(service.Client) {
+		tr := service.Client.Transport.(*retryablehttp.RoundTripper)
+		return tr.Client.RetryMax, tr.Client.RetryWaitMax
+	}
+
+	return -1, -1 * time.Second
+}
+
 func TestEnableRetries(t *testing.T) {
-	service, err := NewBaseService(
-		&ServiceOptions{
-			Authenticator: &NoAuthAuthenticator{},
-		})
+	options := &ServiceOptions{
+		Authenticator: &NoAuthAuthenticator{},
+	}
+	service, err := NewBaseService(options)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
-
 	assert.NotNil(t, service.Client)
 
+	// Save the existing client for comparisons below.
+	client := service.Client
+
+	// Enable retries, then verify the config
+	// and make sure our client survived.
 	service.EnableRetries(5, 30*time.Second)
-	assert.NotNil(t, service.Client)
-	assert.NotNil(t, service.Client.Transport)
+	assert.True(t, isRetryableClient(service.Client))
+	maxRetries, maxInterval := getRetriesConfig(service)
+	assert.Equal(t, 5, maxRetries)
+	assert.Equal(t, 30*time.Second, maxInterval)
+	assert.Equal(t, client, service.GetHTTPClient())
 
+	// Enable retries with a different config and verify.
+	service.EnableRetries(6, 60*time.Second)
+	assert.True(t, isRetryableClient(service.Client))
+	maxRetries, maxInterval = getRetriesConfig(service)
+	assert.Equal(t, 6, maxRetries)
+	assert.Equal(t, 60*time.Second, maxInterval)
+	assert.Equal(t, client, service.GetHTTPClient())
+
+	// Disable retries and make sure the original client is still there.
 	service.DisableRetries()
+	assert.False(t, isRetryableClient(service.Client))
+	assert.Equal(t, client, service.GetHTTPClient())
+}
+
+func TestClientWithRetries(t *testing.T) {
+	options := &ServiceOptions{
+		Authenticator: &NoAuthAuthenticator{},
+	}
+	service, err := NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
 	assert.NotNil(t, service.Client)
-	assert.NotNil(t, service.Client.Transport)
+
+	// Create a customized client and set it on the service
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				MinVersion:         tls.VersionTLS13,
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
+	service.SetHTTPClient(client)
+	actualClient := service.GetHTTPClient()
+	assert.Equal(t, client, actualClient)
+	assert.Equal(t, *client, *actualClient)
+	assert.Equal(t, client, service.Client)
+
+	// Next, enable retries and make sure the client survived.
+	service.EnableRetries(4, 90*time.Second)
+	assert.True(t, isRetryableClient(service.Client))
+	actualClient = service.GetHTTPClient()
+	assert.Equal(t, client, actualClient)
+	assert.Equal(t, *client, *actualClient)
+
+	// Finally, disable retries and make sure
+	// we're left with the same client instance.
+	service.DisableRetries()
+	assert.False(t, isRetryableClient(service.Client))
+	actualClient = service.GetHTTPClient()
+	assert.Equal(t, client, actualClient)
+	assert.Equal(t, *client, *actualClient)
+	assert.Equal(t, client, service.Client)
+
+	// Create a new service and perform the steps in a different order.
+	service, err = NewBaseService(options)
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+	assert.NotNil(t, service.Client)
+	assert.NotEqual(t, client, service.Client)
+
+	// Enable retries.
+	service.EnableRetries(0, 0)
+	assert.True(t, isRetryableClient(service.Client))
+
+	// Next, set our customized client on the service
+	service.SetHTTPClient(client)
+	assert.True(t, isRetryableClient(service.Client))
+	actualClient = service.GetHTTPClient()
+	assert.Equal(t, client, actualClient)
+	assert.Equal(t, *client, *actualClient)
 }
 
 func TestSetEnableGzipCompression(t *testing.T) {
@@ -1969,6 +2079,16 @@ func TestErrorMessage(t *testing.T) {
 		"Internal Server Error")
 }
 
+func getTLSVersion(service *BaseService) int {
+	var tlsVersion int = -1
+	client := service.GetHTTPClient()
+	if client != nil {
+		tr := client.Transport.(*http.Transport)
+		tlsVersion = int(tr.TLSClientConfig.MinVersion)
+	}
+	return tlsVersion
+}
+
 func TestMinSSLVersion(t *testing.T) {
 	service, err := NewBaseService(
 		&ServiceOptions{
@@ -1979,8 +2099,7 @@ func TestMinSSLVersion(t *testing.T) {
 	assert.NotNil(t, service.Client)
 
 	// Check the default config.
-	minTLS := int(getClientTransportForSSL(service.Client).TLSClientConfig.MinVersion)
-	assert.Equal(t, minTLS, tls.VersionTLS12)
+	assert.Equal(t, getTLSVersion(service), tls.VersionTLS12)
 
 	// Set a insecureClient with different value.
 	insecureClient := &http.Client{}
@@ -1990,11 +2109,9 @@ func TestMinSSLVersion(t *testing.T) {
 		},
 	}
 	service.SetHTTPClient(insecureClient)
-	minTLS = int(getClientTransportForSSL(service.Client).TLSClientConfig.MinVersion)
-	assert.Equal(t, minTLS, tls.VersionTLS12)
+	assert.Equal(t, getTLSVersion(service), tls.VersionTLS12)
 
 	// Check retryable client config.
 	service.EnableRetries(3, 30*time.Second)
-	minTLS = int(getClientTransportForSSL(service.Client).TLSClientConfig.MinVersion)
-	assert.Equal(t, minTLS, tls.VersionTLS12)
+	assert.Equal(t, getTLSVersion(service), tls.VersionTLS12)
 }
