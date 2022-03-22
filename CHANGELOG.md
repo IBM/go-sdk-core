@@ -1,3 +1,10 @@
+## [5.9.4](https://github.com/IBM/go-sdk-core/compare/v5.9.3...v5.9.4) (2022-03-22)
+
+
+### Bug Fixes
+
+* retain http.Client config when retries are enabled ([#157](https://github.com/IBM/go-sdk-core/issues/157)) ([fe093da](https://github.com/IBM/go-sdk-core/commit/fe093da7e039a0fc0cfcf5d2ae9d642323561dd4))
+
 ## [5.9.3](https://github.com/IBM/go-sdk-core/compare/v5.9.2...v5.9.3) (2022-03-16)
 
 
