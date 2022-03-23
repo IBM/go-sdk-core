@@ -275,9 +275,24 @@ func (authenticator *IamAuthenticator) setTokenData(tokenData *iamTokenData) {
 // and that the ClientId and ClientSecret properties are mutually inclusive.
 func (this *IamAuthenticator) Validate() error {
 
-	// The user should specify exactly one of ApiKey or RefreshToken.
-	if this.ApiKey == "" && this.RefreshToken == "" ||
-		this.ApiKey != "" && this.RefreshToken != "" {
+	// The user should specify at least one of ApiKey or RefreshToken.
+	// Note: We'll allow both ApiKey and RefreshToken to be specified,
+	// in which case we'd use ApiKey in the RequestToken() method.
+	// Consider this scenario...
+	// - An IamAuthenticator instance is configured with an apikey and is initially
+	//   declared to be "valid" by the Validate() method.
+	// - The authenticator is used to construct a service, then an operation is
+	//   invoked which then triggers the very first call to RequestToken().
+	// - The authenticator invokes the IAM get_token operation and then receives
+	//   the response.  The authenticator copies the refresh_token value from the response
+	//   to the authenticator's RefreshToken field.
+	// - At this point, the authenticator would have non-empty values in both the
+	//   ApiKey and RefreshToken fields.
+	// This all means that we must try to make sure that a previously-validated
+	// instance of the authenticator doesn't become invalidated simply through
+	// normal use.
+	//
+	if this.ApiKey == "" && this.RefreshToken == "" {
 		return fmt.Errorf(ERRORMSG_EXCLUSIVE_PROPS_ERROR, "ApiKey", "RefreshToken")
 	}
 
@@ -286,10 +301,9 @@ func (this *IamAuthenticator) Validate() error {
 	}
 
 	// Validate ClientId and ClientSecret.
-	// If RefreshToken is not specified, then both or neither should be specified.
-	// If RefreshToken is specified, then both must be specified.
-	if this.ClientId == "" && this.ClientSecret == "" && this.RefreshToken == "" {
-		// Do nothing as this is the valid scenario
+	// Either both or neither should be specified.
+	if this.ClientId == "" && this.ClientSecret == "" {
+		// Do nothing as this is the valid scenario.
 	} else {
 		// Since it is NOT the case that both properties are empty, make sure BOTH are specified.
 		if this.ClientId == "" {

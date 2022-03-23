@@ -59,15 +59,6 @@ func TestIamAuthBuilderErrors(t *testing.T) {
 	assert.Nil(t, auth)
 	t.Logf("Expected error: %s", err.Error())
 
-	// Error: specify both apikey and refresh token
-	auth, err = NewIamAuthenticatorBuilder().
-		SetApiKey(iamAuthMockApiKey).
-		SetRefreshToken(iamAuthMockRefreshToken).
-		Build()
-	assert.NotNil(t, err)
-	assert.Nil(t, auth)
-	t.Logf("Expected error: %s", err.Error())
-
 	// Error: invalid apikey
 	auth, err = NewIamAuthenticatorBuilder().
 		SetApiKey("{invalid-apikey}").
@@ -76,22 +67,24 @@ func TestIamAuthBuilderErrors(t *testing.T) {
 	assert.Nil(t, auth)
 	t.Logf("Expected error: %s", err.Error())
 
-	// Error: refresh token without client id
+	// Error: apikey and client-id set, but no client-secret
 	auth, err = NewIamAuthenticatorBuilder().
-		SetRefreshToken(iamAuthMockRefreshToken).
-		Build()
-	assert.NotNil(t, err)
-	assert.Nil(t, auth)
-	t.Logf("Expected error: %s", err.Error())
-
-	// Error: refresh token without client secret
-	auth, err = NewIamAuthenticatorBuilder().
-		SetRefreshToken(iamAuthMockRefreshToken).
+		SetApiKey(iamAuthMockApiKey).
 		SetClientIDSecret(iamAuthMockClientID, "").
 		Build()
 	assert.NotNil(t, err)
 	assert.Nil(t, auth)
 	t.Logf("Expected error: %s", err.Error())
+
+	// Error: apikey and client-secret set, but no client-id
+	auth, err = NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetClientIDSecret("", iamAuthMockClientSecret).
+		Build()
+	assert.NotNil(t, err)
+	assert.Nil(t, auth)
+	t.Logf("Expected error: %s", err.Error())
+
 }
 
 func TestIamAuthBuilderSuccess(t *testing.T) {
@@ -135,6 +128,14 @@ func TestIamAuthBuilderSuccess(t *testing.T) {
 	assert.Nil(t, auth.Headers)
 	assert.Equal(t, AUTHTYPE_IAM, auth.AuthenticationType())
 
+	// Success: specify both apikey and refresh token
+	auth, err = NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetRefreshToken(iamAuthMockRefreshToken).
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, auth)
+
 	// Specify apikey with other properties.
 	auth, err = NewIamAuthenticatorBuilder().
 		SetURL(iamAuthMockURL).
@@ -176,6 +177,34 @@ func TestIamAuthBuilderSuccess(t *testing.T) {
 	assert.Equal(t, iamAuthMockScope, auth.Scope)
 	assert.Equal(t, expectedHeaders, auth.Headers)
 	assert.Equal(t, AUTHTYPE_IAM, auth.AuthenticationType())
+}
+
+func TestIamAuthReuseAuthenticator(t *testing.T) {
+	auth, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, auth)
+
+	// Use the authenticator to construct a service.
+	service, err := NewBaseService(&ServiceOptions{
+		URL:           "don't care",
+		Authenticator: auth,
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
+
+	// Simulate use of the authenticator by setting the RefreshToken
+	// field (this will be set when processing an IAM get-token response).
+	auth.RefreshToken = iamAuthMockRefreshToken
+
+	// Now re-use the authenticator with a new service.
+	service, err = NewBaseService(&ServiceOptions{
+		URL:           "don't care",
+		Authenticator: auth,
+	})
+	assert.Nil(t, err)
+	assert.NotNil(t, service)
 }
 
 //
