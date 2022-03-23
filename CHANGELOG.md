@@ -1,3 +1,10 @@
+## [5.9.5](https://github.com/IBM/go-sdk-core/compare/v5.9.4...v5.9.5) (2022-03-23)
+
+
+### Bug Fixes
+
+* **IamAuthenticator:** tweak Validate() method to be more lenient ([#158](https://github.com/IBM/go-sdk-core/issues/158)) ([8f002d6](https://github.com/IBM/go-sdk-core/commit/8f002d6102a2f8d0eeed6d73eb59a2cd98ad8f65))
+
 ## [5.9.4](https://github.com/IBM/go-sdk-core/compare/v5.9.3...v5.9.4) (2022-03-22)
 
 
