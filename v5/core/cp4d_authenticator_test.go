@@ -1,3 +1,4 @@
+//go:build all || slow || auth
 // +build all slow auth
 
 package core
@@ -19,7 +20,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -55,7 +56,7 @@ const (
 // getJSONRequestBody unmarshals the body contained in 'req' into 'result'
 func getJSONRequestBody(req *http.Request, result interface{}) error {
 	defer req.Body.Close()
-	buf, err := ioutil.ReadAll(req.Body)
+	buf, err := io.ReadAll(req.Body)
 	if err != nil {
 		return err
 	}
