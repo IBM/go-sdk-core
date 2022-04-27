@@ -21,7 +21,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -436,7 +436,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			var readErr error
 
 			defer httpResponse.Body.Close()
-			responseBody, readErr = io.ReadAll(httpResponse.Body)
+			responseBody, readErr = ioutil.ReadAll(httpResponse.Body)
 			if readErr != nil {
 				err = fmt.Errorf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error())
 				return
@@ -483,7 +483,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 
 			// First, read the response body into a byte array.
 			defer httpResponse.Body.Close()
-			responseBody, readErr := io.ReadAll(httpResponse.Body)
+			responseBody, readErr := ioutil.ReadAll(httpResponse.Body)
 			if readErr != nil {
 				err = fmt.Errorf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error())
 				return

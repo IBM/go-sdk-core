@@ -19,9 +19,9 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -490,7 +490,7 @@ func (authenticator *ContainerAuthenticator) retrieveCRToken() (crToken string, 
 
 	// Read the entire file into a byte slice, then convert to string.
 	var bytes []byte
-	bytes, err = os.ReadFile(crTokenFilename) // #nosec G304
+	bytes, err = ioutil.ReadFile(crTokenFilename) // #nosec G304
 	if err != nil {
 		err = fmt.Errorf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN, err.Error())
 		GetLogger().Debug(err.Error())

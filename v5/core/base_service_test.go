@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -207,7 +208,7 @@ func TestRequestGoodResponseJSONStream(t *testing.T) {
 	assert.NotNil(t, result)
 
 	// Read the bytes from the response body and decode as JSON to verify.
-	responseBytes, err := io.ReadAll(result)
+	responseBytes, err := ioutil.ReadAll(result)
 	assert.Nil(t, err)
 	assert.NotNil(t, responseBytes)
 
@@ -284,7 +285,7 @@ func TestRequestGoodResponseStream(t *testing.T) {
 	assert.NotNil(t, result)
 
 	// Read the bytes from the response body and verify.
-	actualResponse, err := io.ReadAll(result)
+	actualResponse, err := ioutil.ReadAll(result)
 	assert.Nil(t, err)
 	assert.NotNil(t, actualResponse)
 	assert.Equal(t, expectedResponse, actualResponse)
@@ -403,7 +404,7 @@ func TestRequestGoodResponseNonJSONNoContentType(t *testing.T) {
 	assert.NotNil(t, result)
 
 	// Read the bytes from the response body and verify.
-	actualResponse, err := io.ReadAll(result)
+	actualResponse, err := ioutil.ReadAll(result)
 	assert.Nil(t, err)
 	assert.NotNil(t, actualResponse)
 	assert.Equal(t, expectedResponse, actualResponse)
@@ -1323,7 +1324,7 @@ func TestRequestIAMAuth(t *testing.T) {
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		body, _ := io.ReadAll(r.Body)
+		body, _ := ioutil.ReadAll(r.Body)
 		if strings.Contains(string(body), "grant_type") {
 			assert.Equal(t, true, firstCall)
 			firstCall = false
@@ -1453,7 +1454,7 @@ func TestRequestIAMFailureRetryAfter(t *testing.T) {
 func TestRequestIAMWithIdSecret(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		body, _ := io.ReadAll(r.Body)
+		body, _ := ioutil.ReadAll(r.Body)
 		if strings.Contains(string(body), "grant_type") {
 			fmt.Fprint(w, `{
                 "access_token": "captain marvel",
