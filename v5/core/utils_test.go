@@ -590,6 +590,64 @@ func TestGetQueryParam(t *testing.T) {
 	assert.Equal(t, "foo", *next)
 }
 
+func TestGetQueryParamAsInt(t *testing.T) {
+	nextURL := "/api/v1/offerings?offset=3&limit=10"
+	next, err := GetQueryParamAsInt(&nextURL, "offset")
+	assert.Nil(t, err)
+	assert.Equal(t, int64(3), *next)
+
+	fqNextURL := "https://acme.com/api/v1/offerings?next_offset=38&limit=10"
+	next, err = GetQueryParamAsInt(&fqNextURL, "next_offset")
+	assert.Nil(t, err)
+	assert.Equal(t, int64(38), *next)
+
+	// No query parameter
+	next, err = GetQueryParamAsInt(&nextURL, "token")
+	assert.Nil(t, err)
+	assert.Nil(t, next)
+
+	// nil URL
+	next, err = GetQueryParamAsInt(nil, "offset")
+	assert.Nil(t, err)
+	assert.Nil(t, next)
+
+	// empty URL
+	var emptyURL string
+	next, err = GetQueryParamAsInt(&emptyURL, "offset")
+	assert.Nil(t, err)
+	assert.Nil(t, next)
+
+	// Not a URL (parse fails)
+	badURL := "https://foo.bar:baz/api/v1/offerings?start=foo"
+	next, err = GetQueryParamAsInt(&badURL, "offset")
+	assert.NotNil(t, err)
+	assert.Nil(t, next)
+
+	// No query string
+	noQueryStringURL := "/api/v1/offerings"
+	next, err = GetQueryParamAsInt(&noQueryStringURL, "offset")
+	assert.Nil(t, err)
+	assert.Nil(t, next)
+
+	// Bad query string
+	badQueryURL := "/api/v1/offerings?offset%XXfoo"
+	next, err = GetQueryParamAsInt(&badQueryURL, "offset")
+	assert.NotNil(t, err)
+	assert.Nil(t, next)
+
+	// Bad query string
+	badIntURL := "/api/v1/offerings?offset=foo"
+	next, err = GetQueryParamAsInt(&badIntURL, "offset")
+	assert.NotNil(t, err)
+	assert.Nil(t, next)
+
+	// Duplicate param
+	dupParamURL := "/api/v1/offerings?offset=38&offset=26&limit=10"
+	next, err = GetQueryParamAsInt(&dupParamURL, "offset")
+	assert.Nil(t, err)
+	assert.Equal(t, int64(38), *next)
+}
+
 func TestRedactSecrets(t *testing.T) {
 	assert.NotContains(t, RedactSecrets("Authorization: Bearer secret"), "secret")
 	assert.NotContains(t, RedactSecrets("Authorization: Basic secret"), "secret")
