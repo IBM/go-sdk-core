@@ -1,3 +1,10 @@
+# [5.10.0](https://github.com/IBM/go-sdk-core/compare/v5.9.5...v5.10.0) (2022-05-09)
+
+
+### Features
+
+* add function GetQueryParamAsInt ([#162](https://github.com/IBM/go-sdk-core/issues/162)) ([2b4d018](https://github.com/IBM/go-sdk-core/commit/2b4d018c6dfd50d340958f6152ff1c17181fe8dd))
+
 ## [5.9.5](https://github.com/IBM/go-sdk-core/compare/v5.9.4...v5.9.5) (2022-03-23)
 
 
