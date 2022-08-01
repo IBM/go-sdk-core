@@ -1,3 +1,10 @@
+## [5.10.2](https://github.com/IBM/go-sdk-core/compare/v5.10.1...v5.10.2) (2022-08-01)
+
+
+### Bug Fixes
+
+* bump deps to avoid yaml.v3 vulnerability ([#164](https://github.com/IBM/go-sdk-core/issues/164)) ([2885864](https://github.com/IBM/go-sdk-core/commit/28858640bba89ee8d706ddb87533928481afaa5c))
+
 ## [5.10.1](https://github.com/IBM/go-sdk-core/compare/v5.10.0...v5.10.1) (2022-05-27)
 
 
