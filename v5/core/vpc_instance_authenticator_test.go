@@ -1,3 +1,4 @@
+//go:build all || auth
 // +build all auth
 
 package core
@@ -211,13 +212,11 @@ func TestVpcAuthDefaultURL(t *testing.T) {
 	assert.Equal(t, auth.URL, vpcauthDefaultIMSEndpoint)
 }
 
-//
 // startMockVPCServer will start a mock server endpoint that supports both of the
 // VPC Instance Metadata Service operations that the authenticator will need to invoke
 // (create_access_token and create_iam_token).
 // The "scenario" input parameter is simply a string passed in by individual testcases to
 // indicate the specific behavior that is needed by that testcase.
-//
 func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 	// In our handler function below, we keep a count of the number of invocations of
 	// the "create_iam_token" operation so we can simulate the use of different

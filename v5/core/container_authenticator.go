@@ -33,8 +33,8 @@ import (
 // and uses that to obtain an IAM access token by invoking the IAM "get token" operation with grant-type=cr-token.
 // The resulting IAM access token is then added to outbound requests in an Authorization header
 // of the form:
-// 		Authorization: Bearer <access-token>
 //
+//	Authorization: Bearer <access-token>
 type ContainerAuthenticator struct {
 
 	// [optional] The name of the file containing the injected CR token value (applies to
@@ -233,8 +233,7 @@ func (*ContainerAuthenticator) AuthenticationType() string {
 //
 // The IAM access token will be added to the request's headers in the form:
 //
-// 		Authorization: Bearer <access-token>
-//
+//	Authorization: Bearer <access-token>
 func (authenticator *ContainerAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.GetToken()
 	if err != nil {

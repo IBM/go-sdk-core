@@ -1,3 +1,4 @@
+//go:build all || fast || auth
 // +build all fast auth
 
 package core

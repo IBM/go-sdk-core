@@ -1,3 +1,4 @@
+//go:build all || fast
 // +build all fast
 
 package core
