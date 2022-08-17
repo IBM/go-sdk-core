@@ -17,7 +17,7 @@ package core
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 
@@ -25,7 +25,7 @@ import (
 )
 
 func TestFileWithMetadataFields(t *testing.T) {
-	data := ioutil.NopCloser(bytes.NewReader([]byte("test")))
+	data := io.NopCloser(bytes.NewReader([]byte("test")))
 	filename := "test.txt"
 	contentType := "application/octet-stream"
 
@@ -41,7 +41,7 @@ func TestFileWithMetadataFields(t *testing.T) {
 }
 
 func TestNewFileWithMetadata(t *testing.T) {
-	data := ioutil.NopCloser(bytes.NewReader([]byte("test")))
+	data := io.NopCloser(bytes.NewReader([]byte("test")))
 	model, err := NewFileWithMetadata(data)
 
 	assert.Nil(t, err)
@@ -60,7 +60,7 @@ func TestUnmarshalFileWithMetadata(t *testing.T) {
 	assert.Nil(t, err)
 
 	message := []byte("test")
-	err = ioutil.WriteFile("tempdir/test-file.txt", message, 0644)
+	err = os.WriteFile("tempdir/test-file.txt", message, 0644)
 	assert.Nil(t, err)
 
 	// mock what user input would look like - a map converted from a JSON string

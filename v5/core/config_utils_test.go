@@ -1,3 +1,4 @@
+//go:build all || fast || basesvc
 // +build all fast basesvc
 
 package core
@@ -17,7 +18,6 @@ package core
 // limitations under the License.
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -30,7 +30,7 @@ const vcapServicesKey = "VCAP_SERVICES"
 
 // Sets a test VCAP_SERVICES value in the environment for testing.
 func setTestVCAP(t *testing.T) {
-	data, err := ioutil.ReadFile("../resources/vcap_services.json")
+	data, err := os.ReadFile("../resources/vcap_services.json")
 	if assert.Nil(t, err) {
 		os.Setenv(vcapServicesKey, string(data))
 	}
