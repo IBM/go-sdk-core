@@ -1,3 +1,4 @@
+//go:build all || fast || basesvc
 // +build all fast basesvc
 
 package core

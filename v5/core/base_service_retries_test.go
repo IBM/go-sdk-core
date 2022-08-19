@@ -1,3 +1,4 @@
+//go:build all || slow || basesvc || retries
 // +build all slow basesvc retries
 
 package core

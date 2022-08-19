@@ -130,7 +130,6 @@ func (requestBuilder *RequestBuilder) ConstructHTTPURL(serviceURL string, pathSe
 	return requestBuilder, nil
 }
 
-//
 // ResolveRequestURL creates a properly-encoded URL with path params.
 // This function returns an error if the serviceURL is "" or is an
 // invalid URL string (e.g. ":<badscheme>").
@@ -140,7 +139,6 @@ func (requestBuilder *RequestBuilder) ConstructHTTPURL(serviceURL string, pathSe
 // pathParams - a map containing the path params, keyed by the path param base name
 // (e.g. {"type_id": "type-1", "resource_id": "res-123-456-789-abc"})
 // The resulting request URL: "https://myservice.cloud.ibm.com/resource/res-123-456-789-abc/type/type-1"
-//
 func (requestBuilder *RequestBuilder) ResolveRequestURL(serviceURL string, path string, pathParams map[string]string) (*RequestBuilder, error) {
 	if serviceURL == "" {
 		return requestBuilder, fmt.Errorf(ERRORMSG_SERVICE_URL_MISSING)

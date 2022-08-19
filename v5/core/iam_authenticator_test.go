@@ -1,3 +1,4 @@
+//go:build all || slow || auth
 // +build all slow auth
 
 package core
@@ -43,9 +44,7 @@ var (
 	iamAuthTestRefreshToken string = "Xj7Gle500MachEOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"
 )
 
-//
 // Tests involving the Builder
-//
 func TestIamAuthBuilderErrors(t *testing.T) {
 	var err error
 	var auth *IamAuthenticator
@@ -207,9 +206,7 @@ func TestIamAuthReuseAuthenticator(t *testing.T) {
 	assert.NotNil(t, service)
 }
 
-//
 // Tests that construct an authenticator via map properties.
-//
 func TestNewIamAuthenticatorFromMap(t *testing.T) {
 	_, err := newIamAuthenticatorFromMap(nil)
 	assert.NotNil(t, err)
@@ -279,9 +276,7 @@ func TestIamAuthDefaultURL(t *testing.T) {
 	assert.Equal(t, auth.URL, defaultIamTokenServerEndpoint)
 }
 
-//
 // Tests involving the legacy ctor
-//
 func TestIamConfigErrors(t *testing.T) {
 	var err error
 
@@ -1117,20 +1112,19 @@ func TestIamNewTokenDataError1(t *testing.T) {
 	t.Logf("Expected error: %s\n", err.Error())
 }
 
-//
 // In order to test with a live IAM server, create file "iamtest.env" in the project root.
 // It should look like this:
-//     IAMTEST1_AUTH_URL=<url>   e.g. https://iam.cloud.ibm.com
-//     IAMTEST1_AUTH_TYPE=iam
-//     IAMTEST1_APIKEY=<apikey>
+//
+//	IAMTEST1_AUTH_URL=<url>   e.g. https://iam.cloud.ibm.com
+//	IAMTEST1_AUTH_TYPE=iam
+//	IAMTEST1_APIKEY=<apikey>
 //
 // Then comment out the "t.Skip()" line below, then run these commands:
-//     cd v<major-version>/core
-//     go test -v -tags=auth -run=TestIamLiveTokenServer -v
+//
+//	cd v<major-version>/core
+//	go test -v -tags=auth -run=TestIamLiveTokenServer -v
 //
 // To trace request/response messages, change "iamAuthTestLogLevel" above to be "LevelDebug".
-//
-//
 func TestIamLiveTokenServer(t *testing.T) {
 	t.Skip("Skipping IAM integration test...")
 

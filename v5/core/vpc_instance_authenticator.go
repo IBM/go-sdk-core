@@ -33,8 +33,8 @@ import (
 // automatically by the compute resource provider (VPC).
 // The resulting IAM access token is then added to outbound requests in an Authorization header
 // of the form:
-// 		Authorization: Bearer <access-token>
 //
+//	Authorization: Bearer <access-token>
 type VpcInstanceAuthenticator struct {
 
 	// [optional] The CRN of the linked trusted IAM profile to be used as the identity of the compute resource.
@@ -169,8 +169,7 @@ func (*VpcInstanceAuthenticator) AuthenticationType() string {
 //
 // The IAM access token will be added to the request's headers in the form:
 //
-// 		Authorization: Bearer <access-token>
-//
+//	Authorization: Bearer <access-token>
 func (authenticator *VpcInstanceAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.GetToken()
 	if err != nil {
