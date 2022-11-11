@@ -1,3 +1,10 @@
+## [5.10.3](https://github.com/padamstx/go-sdk-core/compare/v5.10.2...v5.10.3) (2022-11-11)
+
+
+### Bug Fixes
+
+* add commit to trigger new version ([4bf36d5](https://github.com/padamstx/go-sdk-core/commit/4bf36d56cb458771f18c239bfb9f75a80a208f92))
+
 ## [5.10.2](https://github.com/IBM/go-sdk-core/compare/v5.10.1...v5.10.2) (2022-08-01)
 
 
