@@ -9,6 +9,8 @@ COV_OPTS=-coverprofile=coverage.txt -covermode=atomic
 
 all: testcov lint tidy
 
+ci: all scan-gosec
+
 testcov:
 	cd ${VDIR} && ${GO} test -tags=all ${COV_OPTS} ./...
 

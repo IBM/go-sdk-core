@@ -1,3 +1,4 @@
+![GH Build Status](https://github.com/padamstx/go-sdk-core/actions/workflows/build-test.yaml/badge.svg?branch=ghactions)
 [![Build Status](https://app.travis-ci.com/IBM/go-sdk-core.svg?branch=main)](https://app.travis-ci.com/IBM/go-sdk-core)
 [![Release](https://img.shields.io/github/v/release/IBM/go-sdk-core)](https://github.com/IBM/go-sdk-core/releases/latest)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/IBM/go-sdk-core?filename=v5/go.mod)
