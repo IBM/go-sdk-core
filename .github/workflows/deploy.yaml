@@ -1,5 +1,5 @@
 
-name: Publish New Release
+name: Publish Release
 
 on:
   workflow_run:
