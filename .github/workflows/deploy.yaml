@@ -1,0 +1,54 @@
+
+name: Publish New Release
+
+on:
+  workflow_run:
+    workflows: ["Build & Test"]
+    branches: [ "main" ]
+    types:
+      - completed
+
+  # Allow workflow to be triggered from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    name: Create and Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        persist-credentials: false
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.16.x
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 14
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+
+    - name: Install Deployment Tools
+      run: |
+        npm install -g semantic-release
+        npm install -g @semantic-release/changelog
+        npm install -g @semantic-release/exec
+        npm install -g @semantic-release/git
+        npm install -g @semantic-release/github
+        npm install -g @semantic-release/commit-analyzer
+        pip install --user bump2version
+
+    - name: Create & Tag Release
+      if: ${{ github.event.workflow_run.conclusion == 'success' }}
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: npx semantic-release
