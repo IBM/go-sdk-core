@@ -1,6 +1,6 @@
 package core
 
-// (C) Copyright IBM Corp. 2021.
+// (C) Copyright IBM Corp. 2021, 2023.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ const (
 	vpcauthOperationPathCreateAccessToken = "/instance_identity/v1/token"
 	vpcauthOperationPathCreateIamToken    = "/instance_identity/v1/iam_token"
 	vpcauthMetadataFlavor                 = "ibm"
-	vpcauthMetadataServiceVersion         = "2021-09-20"
+	vpcauthMetadataServiceVersion         = "2022-03-01"
 	vpcauthInstanceIdentityTokenLifetime  = 300
 	vpcauthDefaultTimeout                 = time.Second * 30
 )
