@@ -1,3 +1,10 @@
+# [5.11.0](https://github.com/IBM/go-sdk-core/compare/v5.10.3...v5.11.0) (2023-01-09)
+
+
+### Features
+
+* create multi-part form as a streamed request body ([#169](https://github.com/IBM/go-sdk-core/issues/169)) ([7df8c71](https://github.com/IBM/go-sdk-core/commit/7df8c71c9a91dc0086ac61deec8e98513df6e6c3))
+
 ## [5.10.3](https://github.com/IBM/go-sdk-core/compare/v5.10.2...v5.10.3) (2023-01-09)
 
 
