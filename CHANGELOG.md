@@ -1,3 +1,12 @@
+## [5.10.3](https://github.com/IBM/go-sdk-core/compare/v5.10.2...v5.10.3) (2023-01-09)
+
+
+### Bug Fixes
+
+* pin build to semantic-release v19 ([11c0810](https://github.com/IBM/go-sdk-core/commit/11c08103974f7baf2235b0f7b186389e3054dd6d))
+* use node v18 with semantic-release ([07a57ef](https://github.com/IBM/go-sdk-core/commit/07a57ef1c30a1a64ec2c61a3bfef31de66a483cb))
+* **VpcInstanceAuthenticator:** use correct version string ([b4c7377](https://github.com/IBM/go-sdk-core/commit/b4c737774fea6900e7abd0c439d45681e8692f9f))
+
 ## [5.10.2](https://github.com/IBM/go-sdk-core/compare/v5.10.1...v5.10.2) (2022-08-01)
 
 
