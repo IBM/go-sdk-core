@@ -19,6 +19,5 @@ coverage.txt
 /.vscode/
 
 # files produced by "npm install" commands during build
-package.json
 package-lock.json
 node_modules/

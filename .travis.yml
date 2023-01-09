@@ -28,16 +28,12 @@ script:
 
 before_deploy:
   - nvm install 14
-  - npm install -g npm@6.x
-  - npm install @semantic-release/changelog
-  - npm install @semantic-release/exec
-  - npm install @semantic-release/git
-  - npm install @semantic-release/github
+  - npm install
   - pip install --user bump2version
 
 deploy:
   - provider: script
-    script: npx semantic-release@19
+    script: npm run semantic-release
     skip_cleanup: true
     on:
       go: '1.16.x'
