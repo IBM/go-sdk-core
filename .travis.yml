@@ -27,7 +27,7 @@ script:
   - make scan-gosec
 
 before_deploy:
-  - nvm install 14
+  - nvm install 18
   - npm install -g npm@6.x
   - npm install @semantic-release/changelog
   - npm install @semantic-release/exec
