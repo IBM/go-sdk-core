@@ -27,7 +27,7 @@ script:
   - make scan-gosec
 
 before_deploy:
-  - nvm install 18
+  - nvm install 14
   - npm install -g npm@6.x
   - npm install @semantic-release/changelog
   - npm install @semantic-release/exec
@@ -37,7 +37,7 @@ before_deploy:
 
 deploy:
   - provider: script
-    script: npx semantic-release
+    script: npx semantic-release@19
     skip_cleanup: true
     on:
       go: '1.16.x'
