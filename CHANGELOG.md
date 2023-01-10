@@ -1,3 +1,10 @@
+# [5.12.0](https://github.com/IBM/go-sdk-core/compare/v5.11.0...v5.12.0) (2023-01-10)
+
+
+### Features
+
+* **utils:** add helper for creating a byte array pointer ([#173](https://github.com/IBM/go-sdk-core/issues/173)) ([df9dcc6](https://github.com/IBM/go-sdk-core/commit/df9dcc6094b29fda152637810f749d9f035f6cae))
+
 # [5.11.0](https://github.com/IBM/go-sdk-core/compare/v5.10.3...v5.11.0) (2023-01-09)
 
 
