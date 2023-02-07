@@ -433,7 +433,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		if httpResponse.Body != nil {
 			var readErr error
 
-			defer httpResponse.Body.Close()
+			defer httpResponse.Body.Close() // #nosec G307
 			responseBody, readErr = io.ReadAll(httpResponse.Body)
 			if readErr != nil {
 				err = fmt.Errorf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error())
@@ -480,7 +480,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		} else {
 
 			// First, read the response body into a byte array.
-			defer httpResponse.Body.Close()
+			defer httpResponse.Body.Close() // #nosec G307
 			responseBody, readErr := io.ReadAll(httpResponse.Body)
 			if readErr != nil {
 				err = fmt.Errorf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error())
