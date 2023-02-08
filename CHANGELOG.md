@@ -1,3 +1,10 @@
+## [5.12.1](https://github.com/IBM/go-sdk-core/compare/v5.12.0...v5.12.1) (2023-02-08)
+
+
+### Bug Fixes
+
+* avoid warnings with new gosec ([a2b536c](https://github.com/IBM/go-sdk-core/commit/a2b536c19ab8e66912ad8588227c6fd6e257bdca))
+
 # [5.12.0](https://github.com/IBM/go-sdk-core/compare/v5.11.0...v5.12.0) (2023-01-10)
 
 
