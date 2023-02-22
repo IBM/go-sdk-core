@@ -533,6 +533,8 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 				return
 			}
 		}
+	} else {
+		_ = httpResponse.Body.Close()
 	}
 
 	return
