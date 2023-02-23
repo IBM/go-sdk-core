@@ -21,7 +21,8 @@ Here are some examples of acceptable commit messages, along with the release typ
 # Pull Requests
 
 If you want to contribute to the repository, here's a quick guide:
-  1. Fork the repository  
+  1. Fork the repository
+  - If you have "write" access to the repository, you can avoid using a fork.
   
   2. The `go-sdk-core` project uses Go modules for dependency management, so do NOT set the `GOPATH` environment 
   variable to include your local `go-sdk-core` project directory.  
@@ -30,17 +31,28 @@ If you want to contribute to the repository, here's a quick guide:
   
   4. Install the `golangci-lint` tool:
      ```sh
-     curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.31.0
+     curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.51.2
      ```  
-  * Note: As of this writing, the 1.31.0 version of `golangci-lint` is being used by this project.
+  * Note: As of this writing, the 1.51.2 version of `golangci-lint` is being used by this project.
   Please check the `curl` command found in the `.travis.yml` file to see the version of this tool that is currently 
   being used at the time you are planning to commit changes. This will ensure that you are using the same version 
   of the linter as the Travis build automation, which will ensure that you are using the same set of linter checks
   that the automated build uses.  
   
-  5. Make your code changes as needed.  Be sure to add new tests for any new or modified functionality.  
+  5. Install the `gosec` tool:
+     ```sh
+     curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+     ```  
+ 
+  6. Make sure that you have a clean "baseline" to work from by building/testing the project before
+     you start to make changes:
+     ```sh
+     make all
+     ```
+
+  7. Make your code changes as needed.  Be sure to add new tests for any new or modified functionality.  
   
-  6. Test your changes:
+  8. Test your changes:
      ```sh
      make test
      ```
@@ -55,19 +67,25 @@ If you want to contribute to the repository, here's a quick guide:
      go test -tags=retries
      ```
      
-  7. Check your code for lint issues:
+  9. Check your code for lint issues:
      ```sh
      make lint
      ```
   
-  8. Alternatively, to build, test and lint check in one step:
+  10. To build, test and lint check in one step:
      ```sh
      make all
      ```
-  9. Commit your changes:
+  
+  11. Make sure there are no security vulnerabilities by running `gosec`:
+     ```sh
+     make scan-gosec
+     ```
+
+  12. Commit your changes:
   * Commit messages should follow the Angular commit message guidelines as mentioned above.
   
-  10. Push your commit(s) to your fork and submit a pull request to the **main** branch.
+  13. Push your branch to remote and submit a pull request to the **main** branch.
 
 # Developer's Certificate of Origin 1.1
 

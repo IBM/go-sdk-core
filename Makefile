@@ -3,23 +3,21 @@ GO=go
 LINT=golangci-lint
 GOSEC=gosec
 
-VDIR=v5
-
 COV_OPTS=-coverprofile=coverage.txt -covermode=atomic
 
-all: testcov lint tidy
+all: tidy test lint
 
 testcov:
-	cd ${VDIR} && ${GO} test -tags=all ${COV_OPTS} ./...
+	${GO} test -tags=all ${COV_OPTS} ./...
 
 test:
-	cd ${VDIR} && ${GO} test -tags=all ./...
+	${GO} test -tags=all ./...
 
 lint:
-	cd ${VDIR} && ${LINT} run --build-tags=all
+	${LINT} run --build-tags=all
 
 scan-gosec:
-	cd ${VDIR} && ${GOSEC} ./...
+	${GOSEC} ./...
 
 tidy:
-	cd ${VDIR} && ${GO} mod tidy
+	${GO} mod tidy
