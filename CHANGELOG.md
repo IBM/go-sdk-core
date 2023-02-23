@@ -1,3 +1,10 @@
+## [5.12.2](https://github.com/IBM/go-sdk-core/compare/v5.12.1...v5.12.2) (2023-02-23)
+
+
+### Bug Fixes
+
+* BaseService.Request invoked without result does not close http.Response ([#176](https://github.com/IBM/go-sdk-core/issues/176)) ([a8c0324](https://github.com/IBM/go-sdk-core/commit/a8c0324701ed96381a47807fe03e6ae245d53205))
+
 ## [5.12.1](https://github.com/IBM/go-sdk-core/compare/v5.12.0...v5.12.1) (2023-02-08)
 
 
