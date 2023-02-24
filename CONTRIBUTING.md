@@ -63,7 +63,7 @@ If you want to contribute to the repository, here's a quick guide:
      Others might be added in the future.
      To run a specific class of tests (example 'retries'), use a command like this:
      ```
-     cd v5/core
+     cd core
      go test -tags=retries
      ```
      
