@@ -28,7 +28,7 @@ import (
 	"time"
 
 	"github.com/go-openapi/strfmt"
-	validator "gopkg.in/go-playground/validator.v9"
+	validator "github.com/go-playground/validator/v10"
 )
 
 // Validate is a shared validator instance used to perform validation of structs.
