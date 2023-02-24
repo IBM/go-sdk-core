@@ -1,3 +1,16 @@
+# [5.13.0](https://github.com/IBM/go-sdk-core/compare/v5.12.2...v5.13.0) (2023-02-24)
+
+
+### Bug Fixes
+
+* fix v5-related errors ([#178](https://github.com/IBM/go-sdk-core/issues/178)) ([e8e20a3](https://github.com/IBM/go-sdk-core/commit/e8e20a35d9f86224aa19e46726aa599a04fe29e2))
+* remove CONTRIBUTING.md from bump2version config ([#179](https://github.com/IBM/go-sdk-core/issues/179)) ([4d610bb](https://github.com/IBM/go-sdk-core/commit/4d610bb9655ac898384c9e7ab1ae591009f3f845))
+
+
+### Features
+
+* bump minimum go version to 1.18 ([#177](https://github.com/IBM/go-sdk-core/issues/177)) ([4648b07](https://github.com/IBM/go-sdk-core/commit/4648b07558e6bc80d7bd1c32484a7f8642708087))
+
 ## [5.12.2](https://github.com/IBM/go-sdk-core/compare/v5.12.1...v5.12.2) (2023-02-23)
 
 
