@@ -18,7 +18,6 @@ package core
 // limitations under the License.
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -26,12 +25,10 @@ import (
 
 // Note: the following functions are used from the config_utils_test.go file:
 // setTestEnvironment()
-// clearTestEnvironment()
 // setTestVCAP()
-// clearTestVCAP()
 
 func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
-	os.Setenv("IBM_CREDENTIALS_FILE", "../resources/my-credentials.env")
+	t.Setenv("IBM_CREDENTIALS_FILE", "../resources/my-credentials.env")
 
 	authenticator, err := GetAuthenticatorFromEnvironment("service-1")
 	assert.Nil(t, err)
@@ -122,12 +119,10 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	assert.Equal(t, "user1", iamAuth.ClientId)
 	assert.Equal(t, "secret1", iamAuth.ClientSecret)
 	assert.Equal(t, "https://iam.refresh-token.com", iamAuth.URL)
-
-	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
 
 func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
-	setTestEnvironment()
+	setTestEnvironment(t)
 
 	authenticator, err := GetAuthenticatorFromEnvironment("service-1")
 	assert.Nil(t, err)
@@ -212,8 +207,6 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotNil(t, containerAuth)
 	assert.Equal(t, "iam-user2", containerAuth.IAMProfileName)
-
-	clearTestEnvironment()
 }
 
 func TestGetAuthenticatorFromEnvironment3(t *testing.T) {
@@ -233,6 +226,4 @@ func TestGetAuthenticatorFromEnvironment3(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
 	assert.Equal(t, AUTHTYPE_IAM, authenticator.AuthenticationType())
-
-	clearTestVCAP()
 }

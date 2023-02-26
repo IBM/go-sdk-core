@@ -1825,7 +1825,7 @@ func TestSetEnableGzipCompression(t *testing.T) {
 func TestExtConfigFromCredentialFile(t *testing.T) {
 	pwd, _ := os.Getwd()
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
-	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
+	t.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
 
 	service, _ := NewBaseService(
 		&ServiceOptions{
@@ -1889,14 +1889,12 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 	assert.NotNil(t, actualClient)
 	assert.Equal(t, int(5), actualClient.RetryMax)
 	assert.Equal(t, time.Duration(10)*time.Second, actualClient.RetryWaitMax)
-
-	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
 
 func TestExtConfigError(t *testing.T) {
 	pwd, _ := os.Getwd()
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
-	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
+	t.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
 
 	service, _ := NewBaseService(
 		&ServiceOptions{
@@ -1905,12 +1903,10 @@ func TestExtConfigError(t *testing.T) {
 		})
 	err := service.ConfigureService("error4")
 	assert.NotNil(t, err)
-
-	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
 
 func TestExtConfigFromEnvironment(t *testing.T) {
-	setTestEnvironment()
+	setTestEnvironment(t)
 
 	service, _ := NewBaseService(
 		&ServiceOptions{
@@ -1923,8 +1919,6 @@ func TestExtConfigFromEnvironment(t *testing.T) {
 	assert.Equal(t, "https://service3/api", service.Options.URL)
 	assert.False(t, service.IsSSLDisabled())
 	assert.False(t, service.GetEnableGzipCompression())
-
-	clearTestEnvironment()
 }
 
 func TestExtConfigFromVCAP(t *testing.T) {
@@ -1940,8 +1934,6 @@ func TestExtConfigFromVCAP(t *testing.T) {
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service2/api", service.Options.URL)
 	assert.False(t, service.IsSSLDisabled())
-
-	clearTestVCAP()
 }
 
 func TestConfigureServiceFromCredFile(t *testing.T) {
@@ -1957,7 +1949,7 @@ func TestConfigureServiceFromCredFile(t *testing.T) {
 
 	pwd, _ := os.Getwd()
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
-	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
+	t.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
 
 	err = service.ConfigureService("service5")
 	assert.Nil(t, err)
@@ -1965,8 +1957,6 @@ func TestConfigureServiceFromCredFile(t *testing.T) {
 	assert.Equal(t, "https://service5/api", service.Options.URL)
 	assert.True(t, service.IsSSLDisabled())
 	assert.False(t, service.GetEnableGzipCompression())
-
-	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
 
 func TestConfigureServiceFromVCAP(t *testing.T) {
@@ -1985,8 +1975,6 @@ func TestConfigureServiceFromVCAP(t *testing.T) {
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service3/api", service.Options.URL)
 	assert.False(t, service.IsSSLDisabled())
-
-	clearTestVCAP()
 }
 
 func TestConfigureServiceFromEnv(t *testing.T) {
@@ -2000,20 +1988,18 @@ func TestConfigureServiceFromEnv(t *testing.T) {
 	assert.Equal(t, "bad url", service.Options.URL)
 	assert.False(t, service.IsSSLDisabled())
 
-	setTestEnvironment()
+	setTestEnvironment(t)
 	err = service.ConfigureService("service_1")
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "https://service1/api", service.Options.URL)
 	assert.True(t, service.IsSSLDisabled())
-
-	clearTestEnvironment()
 }
 
 func TestConfigureServiceError(t *testing.T) {
 	pwd, _ := os.Getwd()
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
-	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
+	t.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
 
 	service, err := NewBaseService(
 		&ServiceOptions{
@@ -2023,7 +2009,6 @@ func TestConfigureServiceError(t *testing.T) {
 	assert.Nil(t, err)
 	err = service.ConfigureService("")
 	assert.NotNil(t, err)
-	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
 
 func TestAuthNotConfigured(t *testing.T) {

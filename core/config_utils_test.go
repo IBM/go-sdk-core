@@ -32,12 +32,8 @@ const vcapServicesKey = "VCAP_SERVICES"
 func setTestVCAP(t *testing.T) {
 	data, err := os.ReadFile("../resources/vcap_services.json")
 	if assert.Nil(t, err) {
-		os.Setenv(vcapServicesKey, string(data))
+		t.Setenv(vcapServicesKey, string(data))
 	}
-}
-
-func clearTestVCAP() {
-	os.Unsetenv(vcapServicesKey)
 }
 
 func TestGetServicePropertiesError(t *testing.T) {
@@ -54,7 +50,7 @@ func TestGetServicePropertiesNoConfig(t *testing.T) {
 func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 	pwd, _ := os.Getwd()
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
-	os.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
+	t.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
 
 	props, err := GetServiceProperties("service-1")
 	assert.Nil(t, err)
@@ -108,12 +104,10 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 	assert.Equal(t, "my-api-key", props[PROPNAME_APIKEY])
 	assert.Equal(t, "https://iamhost/iam/api", props[PROPNAME_AUTH_URL])
 	assert.Equal(t, "scope1 scope2 scope3", props[PROPNAME_SCOPE])
-
-	os.Unsetenv("IBM_CREDENTIALS_FILE")
 }
 
 func TestGetServicePropertiesFromEnvironment(t *testing.T) {
-	setTestEnvironment()
+	setTestEnvironment(t)
 
 	props, err := GetServiceProperties("service-1")
 	assert.Nil(t, err)
@@ -166,9 +160,6 @@ func TestGetServicePropertiesFromEnvironment(t *testing.T) {
 	assert.Equal(t, "iam", props[PROPNAME_AUTH_TYPE])
 	assert.Equal(t, "my-api-key", props[PROPNAME_APIKEY])
 	assert.Equal(t, "A B C D", props[PROPNAME_SCOPE])
-
-	clearTestEnvironment()
-	assert.Equal(t, "", os.Getenv("SERVICE_1_URL"))
 }
 
 func TestGetServicePropertiesFromVCAP(t *testing.T) {
@@ -200,8 +191,6 @@ func TestGetServicePropertiesFromVCAP(t *testing.T) {
 	assert.Equal(t, "", props[PROPNAME_USERNAME])
 	assert.Equal(t, "", props[PROPNAME_PASSWORD])
 	assert.Equal(t, strings.ToUpper(AUTHTYPE_IAM), strings.ToUpper(props[PROPNAME_AUTH_TYPE]))
-
-	clearTestVCAP()
 }
 
 func TestLoadFromVCAPServicesWithServiceEntries(t *testing.T) {
@@ -231,7 +220,6 @@ func TestLoadFromVCAPServicesWithServiceEntries(t *testing.T) {
 	assert.Equal(t, "not-a-username-3", credential3.Username)
 	assert.Equal(t, "not-a-password-3", credential3.Password)
 	assert.Equal(t, "https://on.the.toolchainplatform.net/devops-insights-3/api", credential3.URL)
-	clearTestVCAP()
 }
 
 func TestLoadFromVCAPServicesEmptyService(t *testing.T) {
@@ -239,7 +227,6 @@ func TestLoadFromVCAPServicesEmptyService(t *testing.T) {
 	// Verify we checked service entry names first
 	credential := loadFromVCAPServices("empty_service")
 	assert.Nil(t, credential, "Credentials should not be nil")
-	clearTestVCAP()
 }
 
 func TestLoadFromVCAPServicesNoCredentials(t *testing.T) {
@@ -247,11 +234,9 @@ func TestLoadFromVCAPServicesNoCredentials(t *testing.T) {
 	// Verify we checked service entry names first
 	credential := loadFromVCAPServices("no-creds-service")
 	assert.Nil(t, credential)
-	clearTestVCAP()
 }
 
 func TestLoadFromVCAPServicesWithEmptyString(t *testing.T) {
-	clearTestVCAP()
 	credential := loadFromVCAPServices("watson")
 	assert.Nil(t, credential, "Credentials should nil")
 }
@@ -267,8 +252,7 @@ func TestLoadFromVCAPServicesWithInvalidJSON(t *testing.T) {
 			}
 		}]
 	}`
-	os.Setenv("VCAP_SERVICES", vcapServicesFail)
+	t.Setenv("VCAP_SERVICES", vcapServicesFail)
 	credential := loadFromVCAPServices("watson")
 	assert.Nil(t, credential, "Credentials should be nil")
-	os.Unsetenv("VCAP_SERVICES")
 }
