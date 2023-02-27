@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -1136,7 +1135,7 @@ func TestIamLiveTokenServer(t *testing.T) {
 	var tokenServerResponse *IamTokenServerResponse
 
 	// Get an iam authenticator from the environment.
-	os.Setenv("IBM_CREDENTIALS_FILE", "../../iamtest.env")
+	t.Setenv("IBM_CREDENTIALS_FILE", "../../iamtest.env")
 
 	auth, err := GetAuthenticatorFromEnvironment("iamtest1")
 	assert.Nil(t, err)

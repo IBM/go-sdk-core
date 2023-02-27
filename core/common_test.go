@@ -6,7 +6,7 @@ package core
 import (
 	"bytes"
 	"encoding/json"
-	"os"
+	"testing"
 )
 
 // (C) Copyright IBM Corp. 2020.
@@ -89,16 +89,10 @@ var testEnvironment = map[string]string{
 	"SERVICE13_IAM_PROFILE_NAME": "iam-user2",
 }
 
-// Set the environment variables described in our map.
-func setTestEnvironment() {
+// setTestEnvironment sets the environment variables described in our map.
+// The environment variables are restored to its original value after the test.
+func setTestEnvironment(t *testing.T) {
 	for key, value := range testEnvironment {
-		os.Setenv(key, value)
-	}
-}
-
-// Clear the test-related environment variables.
-func clearTestEnvironment() {
-	for key := range testEnvironment {
-		os.Unsetenv(key)
+		t.Setenv(key, value)
 	}
 }
