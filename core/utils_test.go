@@ -30,6 +30,7 @@ func TestIsJSONMimeType(t *testing.T) {
 	assert.True(t, IsJSONMimeType("application/json"))
 	assert.True(t, IsJSONMimeType("APPlication/json"))
 	assert.True(t, IsJSONMimeType("application/json;blah"))
+	assert.True(t, IsJSONMimeType("application/json ; blah"))
 	assert.True(t, IsJSONMimeType("application/vnd.docker.distribution.manifest.v2+json"))
 	assert.True(t, IsJSONMimeType("application/vnd.anothervendor.custom.semantics+json"))
 	assert.True(t, IsJSONMimeType("application/vnd.yet.another.vendor.with.custom.semantics.blah.v3+json;charset=UTF8"))
@@ -43,6 +44,7 @@ func TestIsJSONPatchMimeType(t *testing.T) {
 	assert.True(t, IsJSONPatchMimeType("application/json-patch+json"))
 	assert.True(t, IsJSONPatchMimeType("APPlication/json-PATCH+json"))
 	assert.True(t, IsJSONPatchMimeType("application/json-patch+json;charset=UTF8"))
+	assert.True(t, IsJSONPatchMimeType("application/json-patch+json ; charset=UTF8"))
 
 	assert.False(t, IsJSONPatchMimeType("application/json"))
 	assert.False(t, IsJSONPatchMimeType("YOapplication/json-patch+jsonYO"))
