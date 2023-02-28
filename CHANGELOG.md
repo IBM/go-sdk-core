@@ -1,3 +1,10 @@
+## [5.13.1](https://github.com/IBM/go-sdk-core/compare/v5.13.0...v5.13.1) (2023-02-28)
+
+
+### Bug Fixes
+
+* **utils:** recognize content types with whitespace ([#181](https://github.com/IBM/go-sdk-core/issues/181)) ([09fe5cf](https://github.com/IBM/go-sdk-core/commit/09fe5cfc2590b0b2cfacc95b3736e3bdb71db442))
+
 # [5.13.0](https://github.com/IBM/go-sdk-core/compare/v5.12.2...v5.13.0) (2023-02-24)
 
 
