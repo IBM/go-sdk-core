@@ -1120,8 +1120,8 @@ func TestIamNewTokenDataError1(t *testing.T) {
 //
 // Then comment out the "t.Skip()" line below, then run these commands:
 //
-//	cd v<major-version>/core
-//	go test -v -tags=auth -run=TestIamLiveTokenServer -v
+//	cd core
+//	go test -v -tags=auth -run=TestIamLiveTokenServer
 //
 // To trace request/response messages, change "iamAuthTestLogLevel" above to be "LevelDebug".
 func TestIamLiveTokenServer(t *testing.T) {
@@ -1135,7 +1135,7 @@ func TestIamLiveTokenServer(t *testing.T) {
 	var tokenServerResponse *IamTokenServerResponse
 
 	// Get an iam authenticator from the environment.
-	t.Setenv("IBM_CREDENTIALS_FILE", "../../iamtest.env")
+	t.Setenv("IBM_CREDENTIALS_FILE", "../iamtest.env")
 
 	auth, err := GetAuthenticatorFromEnvironment("iamtest1")
 	assert.Nil(t, err)

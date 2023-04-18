@@ -764,7 +764,6 @@ func TestCp4dGetTokenServerError(t *testing.T) {
 	assert.Empty(t, token)
 }
 
-//
 // In order to test with a live CP4D server, create file "cp4dtest.env" in the project root.
 // It should look like this:
 //
@@ -780,53 +779,56 @@ func TestCp4dGetTokenServerError(t *testing.T) {
 // CP4DTEST2_APIKEY=<apikey>
 // CP4DTEST2_AUTH_DISABLE_SSL=true
 //
-// Then uncomment the function below, then run these commands:
-// cd v<major-version>/core
-// go test -v -tags=auth -run=TestCp4dLiveTokenServer
+// Then comment out the "t.Skip()" line below, then run these commands:
 //
-
-// func TestCp4dLiveTokenServer(t *testing.T) {
-//	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+//	cd core
+//	go test -v -tags=auth -run=TestCp4dLiveTokenServer
 //
-// 	var request *http.Request
-// 	var err error
-// 	var authHeader string
+// To trace request/response messages, change "cp4dAuthTestLogLevel" above to be "LevelDebug".
+func TestCp4dLiveTokenServer(t *testing.T) {
+	t.Skip("Skipping CP4D integration test...")
 
-// 	// Get two cp4d authenticators from the environment.
-// 	// "cp4dtest1" uses username/password
-// 	// "cp4dtest2" uses username/apikey
-// 	os.Setenv("IBM_CREDENTIALS_FILE", "../../cp4dtest.env")
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
 
-// 	auth1, err := GetAuthenticatorFromEnvironment("cp4dtest1")
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, auth1)
+	var request *http.Request
+	var err error
+	var authHeader string
 
-// 	auth2, err := GetAuthenticatorFromEnvironment("cp4dtest2")
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, auth2)
+	// Get two cp4d authenticators from the environment.
+	// "cp4dtest1" uses username/password
+	// "cp4dtest2" uses username/apikey
+	t.Setenv("IBM_CREDENTIALS_FILE", "../cp4dtest.env")
 
-// 	// Create a new Request object.
-// 	builder, err := NewRequestBuilder("GET").ResolveRequestURL("https://localhost/placeholder/url", "", nil)
-// 	assert.Nil(t, err)
-// 	assert.NotNil(t, builder)
+	auth1, err := GetAuthenticatorFromEnvironment("cp4dtest1")
+	assert.Nil(t, err)
+	assert.NotNil(t, auth1)
 
-// 	request, _ = builder.Build()
-// 	assert.NotNil(t, request)
-// 	err = auth1.Authenticate(request)
-// 	assert.Nil(t, err)
+	auth2, err := GetAuthenticatorFromEnvironment("cp4dtest2")
+	assert.Nil(t, err)
+	assert.NotNil(t, auth2)
 
-// 	authHeader = request.Header.Get("Authorization")
-// 	assert.NotEmpty(t, authHeader)
-// 	assert.True(t, strings.HasPrefix(authHeader, "Bearer "))
-// 	t.Logf("Authorization: %s\n", authHeader)
+	// Create a new Request object.
+	builder, err := NewRequestBuilder("GET").ResolveRequestURL("https://localhost/placeholder/url", "", nil)
+	assert.Nil(t, err)
+	assert.NotNil(t, builder)
 
-// 	request, _ = builder.Build()
-// 	assert.NotNil(t, request)
-// 	err = auth2.Authenticate(request)
-// 	assert.Nil(t, err)
+	request, _ = builder.Build()
+	assert.NotNil(t, request)
+	err = auth1.Authenticate(request)
+	assert.Nil(t, err)
 
-// 	authHeader = request.Header.Get("Authorization")
-// 	assert.NotEmpty(t, authHeader)
-// 	assert.True(t, strings.HasPrefix(authHeader, "Bearer "))
-// 	t.Logf("Authorization: %s\n", authHeader)
-// }
+	authHeader = request.Header.Get("Authorization")
+	assert.NotEmpty(t, authHeader)
+	assert.True(t, strings.HasPrefix(authHeader, "Bearer "))
+	t.Logf("Authorization: %s\n", authHeader)
+
+	request, _ = builder.Build()
+	assert.NotNil(t, request)
+	err = auth2.Authenticate(request)
+	assert.Nil(t, err)
+
+	authHeader = request.Header.Get("Authorization")
+	assert.NotEmpty(t, authHeader)
+	assert.True(t, strings.HasPrefix(authHeader, "Bearer "))
+	t.Logf("Authorization: %s\n", authHeader)
+}
