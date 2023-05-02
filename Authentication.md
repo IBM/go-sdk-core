@@ -328,7 +328,8 @@ The IAM access token is added to each outbound request in the `Authorization` he
 ### Properties
 
 - CRTokenFilename: (optional) the name of the file containing the injected CR token value.
-If not specified, then `/var/run/secrets/tokens/vault-token` is used as the default value.
+If not specified, then the authenticator will first try `/var/run/secrets/tokens/vault-token`
+and then `/var/run/secrets/tokens/sa-token` as the default value (first file found is used).
 The application must have `read` permissions on the file containing the CR token value.
 
 - IAMProfileName: (optional) the name of the linked trusted IAM profile to be used when obtaining the
