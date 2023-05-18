@@ -1,3 +1,10 @@
+## [5.13.3](https://github.com/IBM/go-sdk-core/compare/v5.13.2...v5.13.3) (2023-05-18)
+
+
+### Bug Fixes
+
+* tweak JSON parsing error message ([#185](https://github.com/IBM/go-sdk-core/issues/185)) ([7474f1b](https://github.com/IBM/go-sdk-core/commit/7474f1b73bf19b4d52fbe680fef04c3932d1fc48))
+
 ## [5.13.2](https://github.com/IBM/go-sdk-core/compare/v5.13.1...v5.13.2) (2023-05-05)
 
 
