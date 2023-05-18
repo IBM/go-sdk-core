@@ -504,7 +504,7 @@ func TestRequestGoodResponseJSONDeserFailure(t *testing.T) {
 	assert.Nil(t, detailedResponse.Result)
 	assert.Equal(t,
 		true,
-		strings.HasPrefix(err.Error(), "An error occurred while unmarshalling the response body:"))
+		strings.HasPrefix(err.Error(), "An error occurred while processing the HTTP response:"))
 	// t.Log("Decode error:\n", err.Error())
 }
 
