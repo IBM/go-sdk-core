@@ -1,3 +1,10 @@
+## [5.13.4](https://github.com/IBM/go-sdk-core/compare/v5.13.3...v5.13.4) (2023-05-22)
+
+
+### Bug Fixes
+
+* **ContainerAuthenticator:** add sa-token as default CR token filename ([#183](https://github.com/IBM/go-sdk-core/issues/183)) ([25472f3](https://github.com/IBM/go-sdk-core/commit/25472f3909b31d939cef45f21edf7d11bcbb0a9d))
+
 ## [5.13.3](https://github.com/IBM/go-sdk-core/compare/v5.13.2...v5.13.3) (2023-05-18)
 
 
