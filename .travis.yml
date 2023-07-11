@@ -1,6 +1,6 @@
 language: go
 
-dist: bionic
+dist: jammy
 
 go:
 - '1.18.x'
@@ -28,7 +28,9 @@ script:
   - make scan-gosec
 
 before_deploy:
-  - nvm install 14
+  - nvm install 18
+  - node --version
+  - npm --version
   - npm install
   - pip install --user bump2version
 
