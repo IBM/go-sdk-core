@@ -180,7 +180,7 @@ authenticator type is intended for situations in which the application will be m
 token itself in terms of initial acquisition and refreshing as needed.
 
 
-## Identity and Access Management Authentication (IAM)
+## Identity and Access Management (IAM) Authentication
 The `IamAuthenticator` will accept a user-supplied apikey or refresh token and will perform
 the necessary interactions with the IAM token service to obtain a suitable
 bearer token for the specified apikey or refresh token.  The authenticator will also obtain 
