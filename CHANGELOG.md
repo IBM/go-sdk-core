@@ -1,3 +1,10 @@
+# [5.14.0](https://github.com/IBM/go-sdk-core/compare/v5.13.4...v5.14.0) (2023-08-18)
+
+
+### Features
+
+* bump Go versions ([#188](https://github.com/IBM/go-sdk-core/issues/188)) ([d1496b1](https://github.com/IBM/go-sdk-core/commit/d1496b17d2b6d49787079ae0cd1d94d0f78d81c4))
+
 ## [5.13.4](https://github.com/IBM/go-sdk-core/compare/v5.13.3...v5.13.4) (2023-05-22)
 
 
