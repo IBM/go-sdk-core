@@ -3,9 +3,9 @@ language: go
 dist: jammy
 
 go:
-- '1.18.x'
 - '1.19.x'
 - '1.20.x'
+- '1.21.x'
 
 notifications:
   email: false
@@ -39,5 +39,5 @@ deploy:
     script: npm run semantic-release
     skip_cleanup: true
     on:
-      go: '1.18.x'
+      go: '1.19.x'
       branch: main
