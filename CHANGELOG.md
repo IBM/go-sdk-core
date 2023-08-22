@@ -1,3 +1,10 @@
+## [5.14.1](https://github.com/IBM/go-sdk-core/compare/v5.14.0...v5.14.1) (2023-08-22)
+
+
+### Bug Fixes
+
+* **RedactSecrets:** add additional keywords to be redacted ([#191](https://github.com/IBM/go-sdk-core/issues/191)) ([d176568](https://github.com/IBM/go-sdk-core/commit/d1765683a46a4994f91bb70e51f95396c115c4c7)), closes [#190](https://github.com/IBM/go-sdk-core/issues/190)
+
 # [5.14.0](https://github.com/IBM/go-sdk-core/compare/v5.13.4...v5.14.0) (2023-08-18)
 
 
