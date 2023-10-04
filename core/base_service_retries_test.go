@@ -50,7 +50,7 @@ func clientInit(method string, url string, maxRetries int, maxIntervalSecs int) 
 		URL:           url,
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, err = NewBaseService(options)
+	service, err = NewBaseService(options, false)
 	Expect(err).To(BeNil())
 	if maxRetries > 0 {
 		service.EnableRetries(maxRetries, time.Duration(maxIntervalSecs)*time.Second)

@@ -62,7 +62,7 @@ func TestClone(t *testing.T) {
 		URL:           "https://myservice.ibm.com/api/v1",
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, err = NewBaseService(options)
+	service, err = NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, "https://myservice.ibm.com/api/v1", service.Options.URL)
@@ -99,7 +99,7 @@ func TestRequestGoodResponseJSON(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -144,7 +144,7 @@ func TestRequestGoodResponseCustomJSONContentType(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -188,7 +188,7 @@ func TestRequestGoodResponseJSONStream(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -237,7 +237,7 @@ func TestRequestGoodResponseJSONExtraFields(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, _ := NewBaseService(options)
+	service, _ := NewBaseService(options, false)
 
 	// Use a cloned service to verify it works ok.
 	service = service.Clone()
@@ -270,7 +270,7 @@ func TestRequestGoodResponseStream(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
@@ -310,7 +310,7 @@ func TestRequestGoodResponseText(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
@@ -347,7 +347,7 @@ func TestRequestGoodResponseString(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
@@ -389,7 +389,7 @@ func TestRequestGoodResponseNonJSONNoContentType(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
@@ -429,7 +429,7 @@ func TestRequestGoodResponseByteSliceNoContentType(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
@@ -464,7 +464,7 @@ func TestRequestUnexpectedResponse(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_NOAUTH, service.Options.Authenticator.AuthenticationType())
@@ -494,7 +494,7 @@ func TestRequestGoodResponseJSONDeserFailure(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, _ := NewBaseService(options)
+	service, _ := NewBaseService(options, false)
 
 	var foo *Foo
 	detailedResponse, err := service.Request(req, &foo)
@@ -518,7 +518,7 @@ func TestRequestNoAuthenticatorFailure(t *testing.T) {
 		URL:           "https://myservice.ibm.com/api",
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, _ := NewBaseService(options)
+	service, _ := NewBaseService(options, false)
 
 	// Now force the authenticator to be nil.
 	service.Options.Authenticator = nil
@@ -548,7 +548,7 @@ func TestRequestGoodResponseNoBody(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -584,7 +584,7 @@ func TestRequestGoodResponseUnexpectedBody(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -617,7 +617,7 @@ func TestRequestWithResultGoodResponseNoBody(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -654,7 +654,7 @@ func TestRequestWithResultGoodResponseNoBodyJSONObject(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -690,7 +690,7 @@ func TestRequestWithResultGoodResponseNoBodyJSONArray(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -726,7 +726,7 @@ func TestRequestWithResultGoodResponseNoBodyString(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -763,7 +763,7 @@ func TestRequestWithResultGoodResponseEmptyObjectBody(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -800,7 +800,7 @@ func TestRequestGoodResponseEmptyArrayBody(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -874,7 +874,7 @@ func TestRequestErrorResponseJSON(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, _ := NewBaseService(options)
+	service, _ := NewBaseService(options, false)
 
 	var foo *Foo
 	response, err := service.Request(req, &foo)
@@ -910,7 +910,7 @@ func TestRequestErrorResponseJSONDeserError(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, _ := NewBaseService(options)
+	service, _ := NewBaseService(options, false)
 
 	var foo *Foo
 	response, err := service.Request(req, &foo)
@@ -942,7 +942,7 @@ func TestRequestErrorResponseNotJSON(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, _ := NewBaseService(options)
+	service, _ := NewBaseService(options, false)
 
 	var foo *Foo
 	response, err := service.Request(req, &foo)
@@ -978,7 +978,7 @@ func TestRequestErrorResponseNoBody(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
@@ -997,7 +997,7 @@ func TestRequestErrorResponseNoBody(t *testing.T) {
 func TestClient(t *testing.T) {
 	mockClient := http.Client{}
 	authenticator, _ := NewBasicAuthenticator("username", "password")
-	service, _ := NewBaseService(&ServiceOptions{Authenticator: authenticator})
+	service, _ := NewBaseService(&ServiceOptions{Authenticator: authenticator}, false)
 	service.SetHTTPClient(&mockClient)
 	assert.ObjectsAreEqual(mockClient, service.Client)
 }
@@ -1022,7 +1022,7 @@ func TestRequestForDefaultUserAgent(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, _ := NewBaseService(options)
+	service, _ := NewBaseService(options, false)
 
 	var foo *Foo
 	_, _ = service.Request(req, &foo)
@@ -1048,7 +1048,7 @@ func TestRequestForProvidedUserAgent(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, _ := NewBaseService(options)
+	service, _ := NewBaseService(options, false)
 	headers := http.Header{}
 	headers.Add("User-Agent", "provided user agent")
 	service.SetDefaultHeaders(headers)
@@ -1070,7 +1070,7 @@ func TestRequestHostHeaderDefault(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, _ := NewBaseService(options)
+	service, _ := NewBaseService(options, false)
 	headers := http.Header{}
 	headers.Add("Host", "server1.cloud.ibm.com")
 	service.SetDefaultHeaders(headers)
@@ -1092,7 +1092,7 @@ func TestIncorrectURL(t *testing.T) {
 		URL:           "{xxx}",
 		Authenticator: authenticator,
 	}
-	_, serviceErr := NewBaseService(options)
+	_, serviceErr := NewBaseService(options, false)
 	expectedError := fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
 	assert.Equal(t, expectedError.Error(), serviceErr.Error())
 }
@@ -1102,13 +1102,13 @@ func TestDisableSSLVerification(t *testing.T) {
 		URL:           "test.com",
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, _ := NewBaseService(options)
+	service, _ := NewBaseService(options, false)
 	assert.False(t, service.IsSSLDisabled())
 	service.DisableSSLVerification()
 	assert.True(t, service.IsSSLDisabled())
 
 	// Try another test while setting the service client to nil
-	service, _ = NewBaseService(options)
+	service, _ = NewBaseService(options, false)
 	service.Client = nil
 	assert.False(t, service.IsSSLDisabled())
 	service.DisableSSLVerification()
@@ -1121,7 +1121,7 @@ func TestDisableSSLVerificationWithRetries(t *testing.T) {
 		URL:           "test.com",
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, _ := NewBaseService(options)
+	service, _ := NewBaseService(options, false)
 
 	// Verify that we can first enable retries, then disable SSL
 	assert.False(t, service.IsSSLDisabled())
@@ -1133,7 +1133,7 @@ func TestDisableSSLVerificationWithRetries(t *testing.T) {
 	assert.True(t, service.IsSSLDisabled())
 
 	// Verify that we can first disable SSL, then enable retries, etc.
-	service, _ = NewBaseService(options)
+	service, _ = NewBaseService(options, false)
 	assert.False(t, service.IsSSLDisabled())
 	service.DisableSSLVerification()
 	assert.True(t, service.IsSSLDisabled())
@@ -1143,7 +1143,7 @@ func TestDisableSSLVerificationWithRetries(t *testing.T) {
 	assert.True(t, service.IsSSLDisabled())
 
 	// Verify that we can first enable retries, then disable SSL, etc.
-	service, _ = NewBaseService(options)
+	service, _ = NewBaseService(options, false)
 	assert.False(t, service.IsSSLDisabled())
 	assert.False(t, isRetryableClient(service.Client))
 
@@ -1179,7 +1179,7 @@ func TestRequestBasicAuth1(t *testing.T) {
 		},
 	}
 
-	service, _ := NewBaseService(options)
+	service, _ := NewBaseService(options, false)
 	assert.NotNil(t, service.Options.Authenticator)
 	assert.Equal(t, AUTHTYPE_BASIC, service.Options.Authenticator.AuthenticationType())
 
@@ -1225,7 +1225,7 @@ func TestRequestBasicAuth2(t *testing.T) {
 		},
 	}
 
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -1251,7 +1251,7 @@ func TestBasicAuthConfigError(t *testing.T) {
 		},
 	}
 
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.NotNil(t, err)
 	assert.Nil(t, service)
 }
@@ -1274,7 +1274,7 @@ func TestRequestNoAuth1(t *testing.T) {
 		Authenticator: &NoAuthAuthenticator{},
 	}
 
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -1305,7 +1305,7 @@ func TestRequestNoAuth2(t *testing.T) {
 		},
 	}
 
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -1355,7 +1355,7 @@ func TestRequestIAMAuth(t *testing.T) {
 			ApiKey: "xxxxx",
 		},
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -1395,7 +1395,7 @@ func TestRequestIAMFailure(t *testing.T) {
 			ApiKey: "xxxxx",
 		},
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -1432,7 +1432,7 @@ func TestRequestIAMFailureRetryAfter(t *testing.T) {
 			ApiKey: "xxxxx",
 		},
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -1487,7 +1487,7 @@ func TestRequestIAMWithIdSecret(t *testing.T) {
 			ClientSecret: "betts",
 		},
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -1504,7 +1504,7 @@ func TestIAMErrorClientIdOnly(t *testing.T) {
 				ApiKey:   "xxxxx",
 				ClientId: "foo",
 			},
-		})
+		}, false)
 	assert.NotNil(t, err)
 }
 
@@ -1516,7 +1516,7 @@ func TestIAMErrorClientSecretOnly(t *testing.T) {
 				ApiKey:       "xxxxx",
 				ClientSecret: "bar",
 			},
-		})
+		}, false)
 	assert.NotNil(t, err)
 }
 
@@ -1529,7 +1529,7 @@ func TestRequestIAMNoApiKey(t *testing.T) {
 				ClientId:     "foo",
 				ClientSecret: "bar",
 			},
-		})
+		}, false)
 	assert.NotNil(t, err)
 }
 
@@ -1565,7 +1565,7 @@ func TestRequestCP4DAuth(t *testing.T) {
 		},
 	}
 
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 
@@ -1594,7 +1594,7 @@ func TestRequestCP4DFail(t *testing.T) {
 			Password: "bogus",
 		},
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -1632,7 +1632,7 @@ func TestRequestCp4dFailureRetryAfter(t *testing.T) {
 			Password: "bogus",
 		},
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Options.Authenticator)
@@ -1657,7 +1657,7 @@ func TestSetURL(t *testing.T) {
 			Authenticator: &IamAuthenticator{
 				ApiKey: "xxxxx",
 			},
-		})
+		}, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 
@@ -1669,7 +1669,7 @@ func TestSetServiceURL(t *testing.T) {
 	service, err := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
-		})
+		}, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 
@@ -1691,7 +1691,7 @@ func TestSetUserAgent(t *testing.T) {
 	service, err := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
-		})
+		}, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotEmpty(t, service.UserAgent)
@@ -1716,7 +1716,7 @@ func TestEnableRetries(t *testing.T) {
 	options := &ServiceOptions{
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Client)
@@ -1751,7 +1751,7 @@ func TestClientWithRetries(t *testing.T) {
 	options := &ServiceOptions{
 		Authenticator: &NoAuthAuthenticator{},
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Client)
@@ -1789,7 +1789,7 @@ func TestClientWithRetries(t *testing.T) {
 	assert.Equal(t, client, service.Client)
 
 	// Create a new service and perform the steps in a different order.
-	service, err = NewBaseService(options)
+	service, err = NewBaseService(options, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.Client)
@@ -1811,7 +1811,7 @@ func TestSetEnableGzipCompression(t *testing.T) {
 	service, err := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
-		})
+		}, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 
@@ -1831,7 +1831,7 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
-		})
+		}, false)
 	err := service.ConfigureService("service-1")
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
@@ -1844,7 +1844,7 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
-		})
+		}, false)
 	err = service.ConfigureService("service2")
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
@@ -1863,7 +1863,7 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
-		})
+		}, false)
 	err = service.ConfigureService("service3")
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
@@ -1964,7 +1964,7 @@ func TestConfigureServiceFromVCAP(t *testing.T) {
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
 			URL:           "bad url",
-		})
+		}, false)
 	assert.Nil(t, err)
 	assert.NotNil(t, service)
 	assert.Equal(t, "bad url", service.Options.URL)
@@ -2024,7 +2024,7 @@ func TestAuthInterfaceNilValue(t *testing.T) {
 		Authenticator: authenticator,
 	}
 
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, service)
 	assert.NotNil(t, err)
 	assert.Equal(t, ERRORMSG_NO_AUTHENTICATOR, err.Error())

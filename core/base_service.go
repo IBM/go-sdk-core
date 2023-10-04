@@ -82,7 +82,7 @@ type BaseService struct {
 
 // NewBaseService constructs a new instance of BaseService. Validation on input
 // parameters and service options will be performed before instance creation.
-func NewBaseService(options *ServiceOptions) (*BaseService, error) {
+func NewBaseService(options *ServiceOptions, allowRedirect bool) (*BaseService, error) {
 	if HasBadFirstOrLastChar(options.URL) {
 		return nil, fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
 	}
@@ -97,8 +97,12 @@ func NewBaseService(options *ServiceOptions) (*BaseService, error) {
 
 	service := BaseService{
 		Options: options,
+	}
 
-		Client: DefaultHTTPClient(),
+	if allowRedirect {
+		service.Client = RedirectableHTTPClient()
+	} else {
+		service.Client = DefaultHTTPClient()
 	}
 
 	// Set a default value for the User-Agent http header.
@@ -693,6 +697,20 @@ func (service *BaseService) DisableRetries() {
 // DefaultHTTPClient returns a non-retryable http client with default configuration.
 func DefaultHTTPClient() *http.Client {
 	client := cleanhttp.DefaultPooledClient()
+	setMinimumTLSVersion(client)
+	return client
+}
+
+func RedirectableHTTPClient() *http.Client {
+	client := cleanhttp.DefaultPooledClient()
+	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		redirectHeader := make(map[string][]string)
+		for k, v := range via[len(via)-1].Header {
+			redirectHeader[k] = v
+		}
+		req.Header = redirectHeader
+		return nil
+	}
 	setMinimumTLSVersion(client)
 	return client
 }

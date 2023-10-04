@@ -625,7 +625,7 @@ func TestRequestWithContext(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 
 	var foo *Foo
@@ -666,7 +666,7 @@ func TestRequestWithContextTimeout(t *testing.T) {
 		URL:           server.URL,
 		Authenticator: authenticator,
 	}
-	service, err := NewBaseService(options)
+	service, err := NewBaseService(options, false)
 	assert.Nil(t, err)
 
 	var foo *Foo
