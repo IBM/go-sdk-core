@@ -3,6 +3,7 @@ module github.com/IBM/go-sdk-core/v5
 go 1.20
 
 require (
+	github.com/ghodss/yaml v1.0.0
 	github.com/go-openapi/strfmt v0.22.1
 	github.com/go-playground/validator/v10 v10.18.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
@@ -33,5 +34,6 @@ require (
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
+	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

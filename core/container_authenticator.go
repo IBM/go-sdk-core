@@ -174,7 +174,7 @@ func (builder *ContainerAuthenticatorBuilder) Build() (*ContainerAuthenticator, 
 	// Make sure the config is valid.
 	err := builder.ContainerAuthenticator.Validate()
 	if err != nil {
-		return nil, err
+		return nil, rewrapSDKError(err, "ContainerAuthenticatorBuilder.Build")
 	}
 
 	return &builder.ContainerAuthenticator, nil
@@ -204,7 +204,7 @@ func (authenticator *ContainerAuthenticator) client() *http.Client {
 // configuration properties.
 func newContainerAuthenticatorFromMap(properties map[string]string) (authenticator *ContainerAuthenticator, err error) {
 	if properties == nil {
-		return nil, fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
+		return nil, coreSDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", "newContainerAuthenticatorFromMap")
 	}
 
 	// Grab the AUTH_DISABLE_SSL string property and convert to a boolean value.
@@ -239,7 +239,7 @@ func (*ContainerAuthenticator) AuthenticationType() string {
 func (authenticator *ContainerAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.GetToken()
 	if err != nil {
-		return err
+		return rewrapSDKError(err, "ContainerAuthenticator.Authenticate")
 	}
 
 	request.Header.Set("Authorization", "Bearer "+token)
@@ -284,7 +284,8 @@ func (authenticator *ContainerAuthenticator) Validate() error {
 
 	// Check to make sure that one of IAMProfileName or IAMProfileID are specified.
 	if authenticator.IAMProfileName == "" && authenticator.IAMProfileID == "" {
-		return fmt.Errorf(ERRORMSG_ATLEAST_ONE_PROP_ERROR, "IAMProfileName", "IAMProfileID")
+		errMsg := fmt.Sprintf(ERRORMSG_ATLEAST_ONE_PROP_ERROR, "IAMProfileName", "IAMProfileID")
+		return coreSDKErrorf(nil, errMsg, "both-props", "ContainerAuthenticator.Validate")
 	}
 
 	// Validate ClientId and ClientSecret.  They must both be specified togther or neither should be specified.
@@ -293,11 +294,13 @@ func (authenticator *ContainerAuthenticator) Validate() error {
 	} else {
 		// Since it is NOT the case that both properties are empty, make sure BOTH are specified.
 		if authenticator.ClientID == "" {
-			return fmt.Errorf(ERRORMSG_PROP_MISSING, "ClientID")
+			errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "ClientID")
+			return coreSDKErrorf(nil, errMsg, "missing-id", "ContainerAuthenticator.Validate")
 		}
 
 		if authenticator.ClientSecret == "" {
-			return fmt.Errorf(ERRORMSG_PROP_MISSING, "ClientSecret")
+			errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "ClientSecret")
+			return coreSDKErrorf(nil, errMsg, "missing-secret", "ContainerAuthenticator.Validate")
 		}
 	}
 
@@ -313,7 +316,7 @@ func (authenticator *ContainerAuthenticator) GetToken() (string, error) {
 		// synchronously request the token
 		err := authenticator.synchronizedRequestToken()
 		if err != nil {
-			return "", err
+			return "", rewrapSDKError(err, "ContainerAuthenticator.GetToken")
 		}
 	} else if authenticator.getTokenData().needsRefresh() {
 		GetLogger().Debug("Performing background asynchronous token fetch...")
@@ -326,7 +329,7 @@ func (authenticator *ContainerAuthenticator) GetToken() (string, error) {
 
 	// return an error if the access token is not valid or was not fetched
 	if authenticator.getTokenData() == nil || authenticator.getTokenData().AccessToken == "" {
-		return "", fmt.Errorf("Error while trying to get access token")
+		return "", coreSDKErrorf(nil, "Error while trying to get access token", "no-token", "ContainerAuthenticator.GetToken")
 	}
 
 	return authenticator.getTokenData().AccessToken, nil
@@ -376,14 +379,14 @@ func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResp
 		if err == nil {
 			err = fmt.Errorf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN, "reason unknown")
 		}
-		return nil, NewAuthenticationError(&DetailedResponse{}, err)
+		return nil, coreAuthenticationErrorf(err, err.Error(), "no-cr-token", &DetailedResponse{})
 	}
 
 	// Set up the request for the IAM "get token" invocation.
 	builder := NewRequestBuilder(POST)
 	_, err = builder.ResolveRequestURL(authenticator.url(), iamAuthOperationPathGetToken, nil)
 	if err != nil {
-		return nil, NewAuthenticationError(&DetailedResponse{}, err)
+		return nil, coreAuthenticationErrorf(err, err.Error(), "container-iam-token-url-fail", &DetailedResponse{})
 	}
 
 	builder.AddHeader(CONTENT_TYPE, FORM_URL_ENCODED_HEADER)
@@ -413,7 +416,7 @@ func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResp
 
 	req, err := builder.Build()
 	if err != nil {
-		return nil, NewAuthenticationError(&DetailedResponse{}, err)
+		return nil, coreAuthenticationErrorf(err, err.Error(), "container-iam-token-build-fail", &DetailedResponse{})
 	}
 
 	// If client id and secret were configured by the user, then set them on the request
@@ -435,7 +438,7 @@ func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResp
 	GetLogger().Debug("Invoking IAM 'get token' operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		return nil, NewAuthenticationError(&DetailedResponse{}, err)
+		return nil, coreAuthenticationErrorf(err, err.Error(), "container-iam-token-invoke-fail", &DetailedResponse{})
 	}
 	GetLogger().Debug("Returned from IAM 'get token' operation, received status code %d", resp.StatusCode)
 
@@ -466,8 +469,8 @@ func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResp
 		if iamErrorMsg == "" {
 			iamErrorMsg = "IAM error response not available"
 		}
-		err = fmt.Errorf(ERRORMSG_IAM_GETTOKEN_ERROR, detailedResponse.StatusCode, builder.URL, iamErrorMsg)
-		return nil, NewAuthenticationError(detailedResponse, err)
+		errMsg := fmt.Sprintf(ERRORMSG_IAM_GETTOKEN_ERROR, detailedResponse.StatusCode, builder.URL, iamErrorMsg)
+		return nil, coreAuthenticationErrorf(err, errMsg, "container-get-token-fail", detailedResponse)
 	}
 
 	// Good response, so unmarshal the response body into an IamTokenServerResponse instance.
@@ -493,8 +496,10 @@ func (authenticator *ContainerAuthenticator) retrieveCRToken() (crToken string, 
 	}
 
 	if err != nil {
-		err = fmt.Errorf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN, err.Error())
-		GetLogger().Debug(err.Error())
+		errMsg := fmt.Sprintf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN, err.Error())
+		sdkErr := coreSDKErrorf(err, errMsg, "no-cr-token", "ContainerAuthenticator.retrieveCRToken")
+		GetLogger().Debug(sdkErr.GetDebugMessage())
+		err = sdkErr
 		return
 	}
 
@@ -509,6 +514,7 @@ func (authenticator *ContainerAuthenticator) readFile(filename string) (crToken 
 	var bytes []byte
 	bytes, err = os.ReadFile(filename) // #nosec G304
 	if err != nil {
+		err = coreSDKErrorf(err, err.Error(), "read-file-error", "ContainerAuthenticator.readFile")
 		GetLogger().Debug(err.Error())
 		return
 	}

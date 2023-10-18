@@ -84,14 +84,15 @@ type BaseService struct {
 // parameters and service options will be performed before instance creation.
 func NewBaseService(options *ServiceOptions) (*BaseService, error) {
 	if HasBadFirstOrLastChar(options.URL) {
-		return nil, fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
+		return nil, coreSDKErrorf(nil, fmt.Sprintf(ERRORMSG_PROP_INVALID, "URL"), "bad-char", "NewBaseService")
 	}
 
 	if IsNil(options.Authenticator) {
-		return nil, fmt.Errorf(ERRORMSG_NO_AUTHENTICATOR)
+		return nil, coreSDKErrorf(nil, ERRORMSG_NO_AUTHENTICATOR, "missing-auth", "NewBaseService")
 	}
 
 	if err := options.Authenticator.Validate(); err != nil {
+		err = rewrapSDKError(err, "NewBaseService")
 		return nil, err
 	}
 
@@ -130,6 +131,7 @@ func (service *BaseService) ConfigureService(serviceName string) error {
 	// Try to load service properties from external config.
 	serviceProps, err := getServiceProperties(serviceName)
 	if err != nil {
+		err = rewrapSDKError(err, "BaseService.ConfigureService")
 		return err
 	}
 
@@ -141,6 +143,7 @@ func (service *BaseService) ConfigureService(serviceName string) error {
 		if url, ok := serviceProps[PROPNAME_SVC_URL]; ok && url != "" {
 			err := service.SetURL(url)
 			if err != nil {
+				err = rewrapSDKError(err, "BaseService.ConfigureService")
 				return err
 			}
 		}
@@ -204,13 +207,13 @@ func (service *BaseService) ConfigureService(serviceName string) error {
 //
 // Deprecated: use SetServiceURL instead.
 func (service *BaseService) SetURL(url string) error {
-	return service.SetServiceURL(url)
+	return rewrapSDKError(service.SetServiceURL(url), "BaseService.ConfigureService")
 }
 
 // SetServiceURL sets the service URL.
 func (service *BaseService) SetServiceURL(url string) error {
 	if HasBadFirstOrLastChar(url) {
-		return fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
+		return coreSDKErrorf(nil, fmt.Sprintf(ERRORMSG_PROP_INVALID, "URL"), "bad-char", "BaseService.SetServiceURL")
 	}
 
 	service.Options.URL = url
@@ -371,13 +374,13 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 
 	// Add authentication to the outbound request.
 	if IsNil(service.Options.Authenticator) {
-		err = fmt.Errorf(ERRORMSG_NO_AUTHENTICATOR)
+		err = coreSDKErrorf(nil, ERRORMSG_NO_AUTHENTICATOR, "missing-auth", "BaseService.Request")
 		return
 	}
 
 	authError := service.Options.Authenticator.Authenticate(req)
 	if authError != nil {
-		err = fmt.Errorf(ERRORMSG_AUTHENTICATE_ERROR, authError.Error())
+		err = coreSDKErrorf(nil, fmt.Sprintf(ERRORMSG_AUTHENTICATE_ERROR, authError.Error()), "auth-failed", "BaseService.Request")
 		castErr, ok := authError.(*AuthenticationError)
 		if ok {
 			detailedResponse = castErr.Response
@@ -399,9 +402,11 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	var httpResponse *http.Response
 	httpResponse, err = service.Client.Do(req)
 	if err != nil {
+		errMsg := err.Error()
 		if strings.Contains(err.Error(), SSL_CERTIFICATION_ERROR) {
-			err = fmt.Errorf(ERRORMSG_SSL_VERIFICATION_FAILED + "\n" + err.Error())
+			errMsg = ERRORMSG_SSL_VERIFICATION_FAILED + "\n" + errMsg
 		}
+		err = coreSDKErrorf(err, errMsg, "request-error", "BaseService.Request")
 		return
 	}
 
@@ -436,14 +441,14 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			defer httpResponse.Body.Close() // #nosec G307
 			responseBody, readErr = io.ReadAll(httpResponse.Body)
 			if readErr != nil {
-				err = fmt.Errorf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error())
+				err = coreHTTPErrorf(readErr, ERRORMSG_READ_RESPONSE_BODY, "cant-read-error-res-body", "", "", detailedResponse)
 				return
 			}
 		}
 
 		// If the responseBody is empty, then just return a generic error based on the status code.
 		if len(responseBody) == 0 {
-			err = fmt.Errorf(http.StatusText(httpResponse.StatusCode))
+			err = coreHTTPErrorf(nil, http.StatusText(httpResponse.StatusCode), "no-error-res-body", "", "", detailedResponse)
 			return
 		}
 
@@ -454,7 +459,9 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			responseMap, decodeErr := decodeAsMap(responseBody)
 			if decodeErr == nil {
 				detailedResponse.Result = responseMap
-				err = fmt.Errorf(getErrorMessage(responseMap, detailedResponse.StatusCode))
+				errorMsg := getErrorMessage(responseMap, detailedResponse.StatusCode)
+				errorCode := getErrorCode(responseMap)
+				err = coreHTTPErrorf(nil, errorMsg, "error-res", "", errorCode, detailedResponse)
 				return
 			}
 		}
@@ -463,7 +470,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		// just return the response body byte array in the RawResult field along with
 		// an error object that contains the generic error message for the status code.
 		detailedResponse.RawResult = responseBody
-		err = fmt.Errorf(http.StatusText(httpResponse.StatusCode))
+		err = coreHTTPErrorf(nil, http.StatusText(httpResponse.StatusCode), "non-json-error-res", "", "", detailedResponse)
 		return
 	}
 
@@ -483,7 +490,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			defer httpResponse.Body.Close() // #nosec G307
 			responseBody, readErr := io.ReadAll(httpResponse.Body)
 			if readErr != nil {
-				err = fmt.Errorf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error())
+				err = coreHTTPErrorf(readErr, ERRORMSG_READ_RESPONSE_BODY, "cant-read-success-res-body", "", "", detailedResponse)
 				return
 			}
 
@@ -499,7 +506,8 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 				if decodeErr != nil {
 					// Error decoding the response body.
 					// Return the response body in RawResult, along with an error.
-					err = fmt.Errorf(ERRORMSG_UNMARSHAL_RESPONSE_BODY, decodeErr.Error())
+					errMsg := fmt.Sprintf(ERRORMSG_UNMARSHAL_RESPONSE_BODY, decodeErr.Error())
+					err = coreHTTPErrorf(decodeErr, errMsg, "res-body-decode-error", "", "", detailedResponse)
 					detailedResponse.RawResult = responseBody
 					return
 				}
@@ -529,7 +537,8 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 				// At this point, we don't know how to set the result field, so we have to return an error.
 				// But make sure we save the bytes we read in the DetailedResponse for debugging purposes
 				detailedResponse.Result = responseBody
-				err = fmt.Errorf(ERRORMSG_UNEXPECTED_RESPONSE, contentType, resultType)
+				errMsg := fmt.Sprintf(ERRORMSG_UNEXPECTED_RESPONSE, contentType, resultType)
+				err = coreHTTPErrorf(nil, errMsg, "unparsable-result-field", "", "", detailedResponse)
 				return
 			}
 		}
@@ -552,6 +561,7 @@ type Errors struct {
 // response.
 type Error struct {
 	Message string `json:"message,omitempty"`
+	Code string `json:"code,omitempty"`
 }
 
 // decodeAsMap: Decode the specified JSON byte-stream into a map (akin to a generic JSON object).
@@ -567,6 +577,9 @@ type Error struct {
 //  3. This function will close the io.ReadCloser before returning.
 func decodeAsMap(byteBuffer []byte) (result map[string]interface{}, err error) {
 	err = json.NewDecoder(bytes.NewReader(byteBuffer)).Decode(&result)
+	if err != nil {
+		err = coreSDKErrorf(err, err.Error(), "decode-error", "decodeAsMap")
+	}
 	return
 }
 
@@ -610,6 +623,31 @@ func getErrorMessage(responseMap map[string]interface{}, statusCode int) string 
 	// If we couldn't find an error message above, just return the generic text
 	// for the status code.
 	return http.StatusText(statusCode)
+}
+
+// getErrorCode: try to retrieve an error code from the decoded response body (map).
+func getErrorCode(responseMap map[string]interface{}) string {
+
+	// If the response contained the "errors" field, then try to deserialize responseMap
+	// into an array of Error structs, then return the first entry's "Message" field.
+	if _, ok := responseMap["errors"]; ok {
+		var errors Errors
+		responseBuffer, _ := json.Marshal(responseMap)
+		if err := json.Unmarshal(responseBuffer, &errors); err == nil {
+			return errors.Errors[0].Code
+		}
+	}
+
+	// Return the "code" field if present and is a string.
+	if val, ok := responseMap["code"]; ok {
+		errorCode, ok := val.(string)
+		if ok {
+			return errorCode
+		}
+	}
+
+	// If we couldn't find a code, return an empty string
+	return ""
 }
 
 // isRetryableClient() will return true if and only if "client" is
@@ -766,17 +804,17 @@ func IBMCloudSDKRetryPolicy(ctx context.Context, resp *http.Response, err error)
 		if v, ok := err.(*url.Error); ok {
 			// Don't retry if the error was due to too many redirects.
 			if redirectsErrorRe.MatchString(v.Error()) {
-				return false, v
+				return false, coreSDKErrorf(v, v.Error(), "too-many-redirects", "IBMCloudSDKRetryPolicy")
 			}
 
 			// Don't retry if the error was due to an invalid protocol scheme.
 			if schemeErrorRe.MatchString(v.Error()) {
-				return false, v
+				return false, coreSDKErrorf(v, v.Error(), "invalid-scheme", "IBMCloudSDKRetryPolicy")
 			}
 
 			// Don't retry if the error was due to TLS cert verification failure.
 			if _, ok := v.Err.(x509.UnknownAuthorityError); ok {
-				return false, v
+				return false, coreSDKErrorf(v, v.Error(), "cert-failure", "IBMCloudSDKRetryPolicy")
 			}
 		}
 

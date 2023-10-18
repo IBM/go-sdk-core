@@ -35,6 +35,7 @@ func NewBearerTokenAuthenticator(bearerToken string) (*BearerTokenAuthenticator,
 		BearerToken: bearerToken,
 	}
 	if err := obj.Validate(); err != nil {
+		err = rewrapSDKError(err, "NewBearerTokenAuthenticator")
 		return nil, err
 	}
 	return obj, nil
@@ -43,7 +44,7 @@ func NewBearerTokenAuthenticator(bearerToken string) (*BearerTokenAuthenticator,
 // newBearerTokenAuthenticator : Constructs a new BearerTokenAuthenticator instance from a map.
 func newBearerTokenAuthenticatorFromMap(properties map[string]string) (*BearerTokenAuthenticator, error) {
 	if properties == nil {
-		return nil, fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
+		return nil, coreSDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", "newBearerTokenAuthenticatorFromMap")
 	}
 
 	return NewBearerTokenAuthenticator(properties[PROPNAME_BEARER_TOKEN])
@@ -69,7 +70,7 @@ func (this *BearerTokenAuthenticator) Authenticate(request *http.Request) error 
 // Ensures the bearer token is not Nil.
 func (this BearerTokenAuthenticator) Validate() error {
 	if this.BearerToken == "" {
-		return fmt.Errorf(ERRORMSG_PROP_MISSING, "BearerToken")
+		return coreSDKErrorf(nil, fmt.Sprintf(ERRORMSG_PROP_MISSING, "BearerToken"), "no-token", "BearerTokenAuthenticator.Validate")
 	}
 	return nil
 }

@@ -15,6 +15,7 @@ package core
 // limitations under the License.
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -29,15 +30,37 @@ type Authenticator interface {
 type AuthenticationError struct {
 	Response *DetailedResponse
 	Err      error
+	*IBMError
 }
 
 func (e *AuthenticationError) Error() string {
+	if e.Err == nil {
+		return e.Summary
+	}
 	return e.Err.Error()
+}
+func (e *AuthenticationError) GetDebugMessage() string {
+  return getErrorInfoAsYAML(e)
+}
+func (e *AuthenticationError) GetID() string {
+  return createIDHash("auth_error", e.getBaseSignature(), fmt.Sprint(e.Response.GetStatusCode()))
 }
 
 func NewAuthenticationError(response *DetailedResponse, err error) *AuthenticationError {
-	return &AuthenticationError{
-		Response: response,
-		Err:      err,
-	}
+	// TODO: Log a deprecation notice
+	sys, ver := getSystemInfo()
+	return AuthenticationErrorf(err, err.Error(), sys, ver, "deprecated", response)
+}
+
+func coreAuthenticationErrorf(err error, summary, discriminator string, response *DetailedResponse) *AuthenticationError {
+	sys, ver := getSystemInfo()
+	return AuthenticationErrorf(err, summary, sys, ver, discriminator, response)
+}
+
+func AuthenticationErrorf(err error, summary, system, version, discriminator string, response *DetailedResponse) *AuthenticationError {
+  return &AuthenticationError{
+    IBMError: ibmErrorf(err, summary, system, version, discriminator),
+    Response: response,
+    Err:      err,
+  }
 }
