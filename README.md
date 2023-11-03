@@ -28,6 +28,7 @@ The go-sdk-core project supports the following types of authentication:
 - Container Authentication
 - VPC Instance Authentication
 - Cloud Pak for Data Authentication
+- Multi-Cloud Saas Platform (MCSP) Authentication
 - No Authentication (for testing)
 
 For more information about the various authentication types and how to use them with your services, click [here](Authentication.md).

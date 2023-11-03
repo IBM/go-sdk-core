@@ -6,6 +6,7 @@ The go-sdk-core project supports the following types of authentication:
 - Container Authentication
 - VPC Instance Authentication
 - Cloud Pak for Data Authentication
+- Multi-Cloud Saas Platform (MCSP) Authentication
 - No Authentication (for testing)
 
 The SDK user configures the appropriate type of authentication for use with service instances.  
@@ -228,7 +229,7 @@ certificate should be disabled or not. The default value is `false`.
 - Headers: (optional) A set of key/value pairs that will be sent as HTTP headers in requests
 made to the IAM token service.
 
-- Client: (Optional) The `http.Client` object used to invoke token servive requests. If not specified
+- Client: (Optional) The `http.Client` object used to invoke token service requests. If not specified
 by the user, a suitable default Client will be constructed.
 
 ### Usage Notes
@@ -367,7 +368,7 @@ certificate should be disabled or not. The default value is `false`.
 - Headers: (optional) A set of key/value pairs that will be sent as HTTP headers in requests
 made to the IAM token service.
 
-- Client: (optional) The `http.Client` object used to invoke token servive requests. If not specified
+- Client: (optional) The `http.Client` object used to invoke token service requests. If not specified
 by the user, a suitable default Client will be constructed.
 
 ### Programming example
@@ -557,7 +558,7 @@ certificate should be disabled or not. The default value is `false`.
 - Headers: (optional) A set of key/value pairs that will be sent as HTTP headers in requests
 made to the Cloud Pak for Data token service.
 
-- Client: (Optional) The `http.Client` object used to invoke token servive requests. If not specified
+- Client: (Optional) The `http.Client` object used to invoke token service requests. If not specified
 by the user, a suitable default Client will be constructed.
 
 ### Programming example
@@ -607,6 +608,100 @@ import {
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
     ServiceName:   "example_service1",
+}
+
+// Construct the service instance.
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
+if err != nil {
+    panic(err)
+}
+
+// 'service' can now be used to invoke operations.
+```
+
+
+## Multi-Cloud Saas Platform (MCSP) Authentication
+The `MCSPAuthenticator` can be used in scenarios where an application needs to
+interact with an IBM Cloud service that has been deployed to a non-IBM Cloud environment (e.g. AWS).
+It accepts a user-supplied apikey and performs the necessary interactions with the
+Multi-Cloud Saas Platform token service to obtain a suitable MCSP access token (a bearer token)
+for the specified apikey.
+The authenticator will also obtain a new bearer token when the current token expires.
+The bearer token is then added to each outbound request in the `Authorization` header in the
+form:
+```
+   Authorization: Bearer <bearer-token>
+```
+
+### Properties
+
+- ApiKey: (required) the apikey to be used to obtain an MCSP access token.
+
+- URL: (required) The URL representing the MCSP token service endpoint's base URL string. Do not include the
+operation path (e.g. `/siusermgr/api/1.0/apikeys/token`) as part of this property's value.
+
+- DisableSSLVerification: (optional) A flag that indicates whether verificaton of the server's SSL 
+certificate should be disabled or not. The default value is `false`.
+
+- Headers: (optional) A set of key/value pairs that will be sent as HTTP headers in requests
+made to the MCSP token service.
+
+- Client: (optional) The `http.Client` object used to invoke token service requests. If not specified
+by the user, a suitable default Client will be constructed.
+
+### Usage Notes
+- When constructing an MCSPAuthenticator instance, you must specify the ApiKey and URL properties.
+
+- The authenticator will use the token server's `POST /siusermgr/api/1.0/apikeys/token` operation to
+exchange the user-supplied apikey for an MCSP access token (the bearer token).
+
+### Programming example
+```go
+import {
+    "github.com/IBM/go-sdk-core/v5/core"
+    "<appropriate-git-repo-url>/exampleservicev1"
+}
+...
+// Create the authenticator.
+authenticator, err := core.NewMCSPAuthenticatorBuilder().
+    SetApiKey("myapikey").
+    SetURL("https://example.mcsp.token-exchange.com").
+    Build()
+if err != nil {
+    panic(err)
+}
+
+// Create the service options struct.
+options := &exampleservicev1.ExampleServiceV1Options{
+    Authenticator: authenticator,
+}
+
+// Construct the service instance.
+service, err := exampleservicev1.NewExampleServiceV1(options)
+if err != nil {
+    panic(err)
+}
+
+// 'service' can now be used to invoke operations.
+```
+
+### Configuration example
+External configuration:
+```
+export EXAMPLE_SERVICE_AUTH_TYPE=mcsp
+export EXAMPLE_SERVICE_APIKEY=myapikey
+export EXAMPLE_SERVICE_AUTH_URL=https://example.mcsp.token-exchange.com
+```
+Application code:
+```go
+import {
+    "<appropriate-git-repo-url>/exampleservicev1"
+}
+...
+
+// Create the service options struct.
+options := &exampleservicev1.ExampleServiceV1Options{
+    ServiceName:   "example_service",
 }
 
 // Construct the service instance.
