@@ -119,6 +119,18 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	assert.Equal(t, "user1", iamAuth.ClientId)
 	assert.Equal(t, "secret1", iamAuth.ClientSecret)
 	assert.Equal(t, "https://iam.refresh-token.com", iamAuth.URL)
+
+	// IBMVerify Authenticator.
+	authenticator, err = GetAuthenticatorFromEnvironment("service10")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_IBMVERIFY, authenticator.AuthenticationType())
+	ibmverifyAuth, ok := authenticator.(*IBMVerifyAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, ibmverifyAuth)
+	assert.Equal(t, "my-api-key", ibmverifyAuth.ApiKey)
+	assert.Equal(t, "https://ibmverify.ibm.com", ibmverifyAuth.URL)
+	assert.True(t, ibmverifyAuth.DisableSSLVerification)
 }
 
 func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
@@ -207,6 +219,17 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotNil(t, containerAuth)
 	assert.Equal(t, "iam-user2", containerAuth.IAMProfileName)
+
+	authenticator, err = GetAuthenticatorFromEnvironment("service14")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_IBMVERIFY, authenticator.AuthenticationType())
+	ibmverifyAuth, ok := authenticator.(*IBMVerifyAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, ibmverifyAuth)
+	assert.Equal(t, "my-api-key", ibmverifyAuth.ApiKey)
+	assert.Equal(t, "https://ibmverify.ibm.com", ibmverifyAuth.URL)
+	assert.True(t, ibmverifyAuth.DisableSSLVerification)
 }
 
 func TestGetAuthenticatorFromEnvironment3(t *testing.T) {

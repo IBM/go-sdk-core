@@ -23,6 +23,7 @@ const (
 	AUTHTYPE_CP4D         = "cp4d"
 	AUTHTYPE_CONTAINER    = "container"
 	AUTHTYPE_VPC          = "vpc"
+	AUTHTYPE_IBMVERIFY    = "ibmverify"
 
 	// Names of properties that can be defined as part of an external configuration (credential file, env vars, etc.).
 	// Example:  export MYSERVICE_URL=https://myurl

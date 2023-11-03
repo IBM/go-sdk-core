@@ -87,6 +87,10 @@ var testEnvironment = map[string]string{
 	"SERVICE11_AUTH_TYPE":        "bad_auth_type",
 	"SERVICE12_APIKEY":           "my-apikey",
 	"SERVICE13_IAM_PROFILE_NAME": "iam-user2",
+	"SERVICE14_AUTH_TYPE":        "ibmverify",
+	"SERVICE14_AUTH_URL":         "https://ibmverify.ibm.com",
+	"SERVICE14_APIKEY":           "my-api-key",
+	"SERVICE14_AUTH_DISABLE_SSL": "true",
 }
 
 // setTestEnvironment sets the environment variables described in our map.

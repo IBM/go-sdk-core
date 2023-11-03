@@ -58,6 +58,8 @@ func GetAuthenticatorFromEnvironment(credentialKey string) (authenticator Authen
 		authenticator, err = newVpcInstanceAuthenticatorFromMap(properties)
 	} else if strings.EqualFold(authType, AUTHTYPE_CP4D) {
 		authenticator, err = newCloudPakForDataAuthenticatorFromMap(properties)
+	} else if strings.EqualFold(authType, AUTHTYPE_IBMVERIFY) {
+		authenticator, err = newIBMVerifyAuthenticatorFromMap(properties)
 	} else if strings.EqualFold(authType, AUTHTYPE_NOAUTH) {
 		authenticator, err = NewNoAuthAuthenticator()
 	} else {
