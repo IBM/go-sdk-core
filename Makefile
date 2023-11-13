@@ -2,6 +2,7 @@
 GO=go
 LINT=golangci-lint
 GOSEC=gosec
+FORMATTER=goimports
 
 COV_OPTS=-coverprofile=coverage.txt -covermode=atomic
 
@@ -15,9 +16,13 @@ test:
 
 lint:
 	${LINT} run --build-tags=all
+	DIFF=$$(${FORMATTER} -d core); if [[ -n "$$DIFF" ]]; then printf "\n$$DIFF" && exit 1; fi
 
 scan-gosec:
 	${GOSEC} ./...
+
+format:
+	${FORMATTER} -w core
 
 tidy:
 	${GO} mod tidy
