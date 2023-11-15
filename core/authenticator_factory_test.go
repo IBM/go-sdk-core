@@ -3,7 +3,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2019.
+// (C) Copyright IBM Corp. 2019, 2023.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -119,6 +119,18 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	assert.Equal(t, "user1", iamAuth.ClientId)
 	assert.Equal(t, "secret1", iamAuth.ClientSecret)
 	assert.Equal(t, "https://iam.refresh-token.com", iamAuth.URL)
+
+	// MCSP Authenticator.
+	authenticator, err = GetAuthenticatorFromEnvironment("service10")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_MCSP, authenticator.AuthenticationType())
+	mcspAuth, ok := authenticator.(*MCSPAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, mcspAuth)
+	assert.Equal(t, "my-api-key", mcspAuth.ApiKey)
+	assert.Equal(t, "https://mcsp.ibm.com", mcspAuth.URL)
+	assert.True(t, mcspAuth.DisableSSLVerification)
 }
 
 func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
@@ -207,6 +219,17 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotNil(t, containerAuth)
 	assert.Equal(t, "iam-user2", containerAuth.IAMProfileName)
+
+	authenticator, err = GetAuthenticatorFromEnvironment("service14")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_MCSP, authenticator.AuthenticationType())
+	mcspAuth, ok := authenticator.(*MCSPAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, mcspAuth)
+	assert.Equal(t, "my-api-key", mcspAuth.ApiKey)
+	assert.Equal(t, "https://mcsp.ibm.com", mcspAuth.URL)
+	assert.True(t, mcspAuth.DisableSSLVerification)
 }
 
 func TestGetAuthenticatorFromEnvironment3(t *testing.T) {
