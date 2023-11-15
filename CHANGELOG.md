@@ -1,3 +1,10 @@
+# [5.15.0](https://github.com/IBM/go-sdk-core/compare/v5.14.1...v5.15.0) (2023-11-15)
+
+
+### Features
+
+* **MCSPAuthenticator:** add new authenticator for Multi-Cloud Saas Platform ([#198](https://github.com/IBM/go-sdk-core/issues/198)) ([8987085](https://github.com/IBM/go-sdk-core/commit/898708506dd28fdc5992a05d99e894302b87d21b))
+
 ## [5.14.1](https://github.com/IBM/go-sdk-core/compare/v5.14.0...v5.14.1) (2023-08-22)
 
 
