@@ -38,6 +38,7 @@ import (
 const (
 	headerNameUserAgent = "User-Agent"
 	sdkName             = "ibm-go-sdk-core"
+	maxRedirects        = 10
 )
 
 // ServiceOptions is a struct of configuration values for a service.
@@ -117,7 +118,7 @@ func (service *BaseService) Clone() *BaseService {
 	// First, copy the service options struct.
 	serviceOptions := *service.Options
 
-	// Next, make a copy the service struct, then use the copy of the service options.
+	// Next, make a copy of the service struct, then use the copy of the service options.
 	// Note, we'll re-use the "Client" instance from the original BaseService instance.
 	clone := *service
 	clone.Options = &serviceOptions
@@ -234,7 +235,7 @@ func (service *BaseService) SetDefaultHeaders(headers http.Header) {
 // the retryable client; otherwise "client" will be stored
 // directly on "service".
 func (service *BaseService) SetHTTPClient(client *http.Client) {
-	setMinimumTLSVersion(client)
+	setupHTTPClient(client)
 
 	if isRetryableClient(service.Client) {
 		// If "service" is currently holding a retryable client,
@@ -298,15 +299,76 @@ func (service *BaseService) IsSSLDisabled() bool {
 	return false
 }
 
-// setMinimumTLSVersion sets the minimum TLS version required by the client to TLS v1.2
-func setMinimumTLSVersion(client *http.Client) {
-	if tr, ok := client.Transport.(*http.Transport); tr != nil && ok {
-		if tr.TLSClientConfig == nil {
-			tr.TLSClientConfig = &tls.Config{} // #nosec G402
-		}
-
-		tr.TLSClientConfig.MinVersion = tls.VersionTLS12
+// setupHTTPClient will configure "client" for use with the BaseService object.
+func setupHTTPClient(client *http.Client) {
+	// Set our "CheckRedirect" function to allow safe headers to be included
+	// in redirected requests under certain conditions.
+	if client.CheckRedirect == nil {
+		client.CheckRedirect = checkRedirect
 	}
+}
+
+// checkRedirect is used as an override for the default "CheckRedirect" function supplied
+// by the net/http package and implements some additional logic required by IBM SDKs.
+func checkRedirect(req *http.Request, via []*http.Request) error {
+
+	// The net/http module is implemented such that it will only include "safe" headers
+	// ("Authorization", "WWW-Authenticate", "Cookie", "Cookie2") when redirecting a request
+	// if the redirected host is the same host or a sub-domain of the original request's host.
+	// Example: foo.com redirected to foo.com or bar.foo.com would work, but bar.com would not.
+	// This "CheckRedirect" implementation will propagate "safe" headers in a redirected request
+	// only in situations where the hosts associated with the original and redirected request URLs
+	// are both located within the ".cloud.ibm.com" domain.
+
+	// First, perform the check that is done by the default CheckRedirect function
+	// to ensure we don't exhaust our max redirect limit.
+	if len(via) >= maxRedirects {
+		GetLogger().Debug("Exceeded max redirects: %d", maxRedirects)
+		return fmt.Errorf("stopped after %d redirects", maxRedirects)
+	}
+
+	if len(via) > 0 {
+		GetLogger().Debug("Detected %d prior request(s)", len(via))
+		originalReq := via[0]
+		redirectedReq := req
+		GetLogger().Debug("Redirecting request from %s to %s", originalReq.URL.String(), redirectedReq.URL.String())
+		redirectedHeader := req.Header
+		originalHeader := via[0].Header
+
+		originalHost := originalReq.URL.Hostname()
+		redirectedHost := redirectedReq.URL.Hostname()
+
+		if shouldCopySafeHeadersOnRedirect(originalHost, redirectedHost) {
+
+			// We're only concerned with "safe" headers since these are the ones that are not
+			// propagated automatically by net/http for a "cross-site" redirect.
+			for _, headerKey := range []string{"Authorization", "WWW-Authenticate", "Cookie", "Cookie2"} {
+				// If the original request contains a value for "headerKey"
+				// *and* this header is not already present in the redirected request,
+				// then copy the value from the original request to the redirected request.
+				if v, inOriginalRequest := originalHeader[headerKey]; inOriginalRequest {
+					if _, inRedirectedRequest := redirectedHeader[headerKey]; !inRedirectedRequest {
+						redirectedHeader[headerKey] = v
+						GetLogger().Debug("Propagating header '%s' in redirected request", headerKey)
+					}
+				}
+			}
+		} else {
+			GetLogger().Debug("Redirected request is not within the trusted domain.")
+		}
+	} else {
+		GetLogger().Debug("Detected no prior requests!")
+	}
+	return nil
+}
+
+// shouldCopySafeHeadersOnRedirect returns true iff safe headers should be copied
+// to a redirected request.
+func shouldCopySafeHeadersOnRedirect(fromHost, toHost string) bool {
+	GetLogger().Debug("hosts: %s %s", fromHost, toHost)
+	sameHost := fromHost == toHost
+	safeDomain := strings.HasSuffix(fromHost, ".cloud.ibm.com") && strings.HasSuffix(toHost, ".cloud.ibm.com")
+	return sameHost || safeDomain
 }
 
 // SetEnableGzipCompression sets the service's EnableGzipCompression field
@@ -693,7 +755,7 @@ func (service *BaseService) DisableRetries() {
 // DefaultHTTPClient returns a non-retryable http client with default configuration.
 func DefaultHTTPClient() *http.Client {
 	client := cleanhttp.DefaultPooledClient()
-	setMinimumTLSVersion(client)
+	setupHTTPClient(client)
 	return client
 }
 
@@ -731,7 +793,7 @@ func NewRetryableClientWithHTTPClient(httpClient *http.Client) *retryablehttp.Cl
 		// as our embedded client used to invoke individual requests.
 		client.HTTPClient = httpClient
 	} else {
-		// Otherwise, we'll use construct a default HTTP client and use that
+		// Otherwise, we'll construct a default HTTP client and use that
 		client.HTTPClient = DefaultHTTPClient()
 	}
 
