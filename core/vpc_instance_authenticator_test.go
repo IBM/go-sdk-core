@@ -1,5 +1,4 @@
 //go:build all || auth
-// +build all auth
 
 package core
 

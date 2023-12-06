@@ -1,5 +1,4 @@
 //go:build all || fast || log
-// +build all fast log
 
 package core
 
