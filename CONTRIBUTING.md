@@ -58,7 +58,7 @@ If you want to contribute to the repository, here's a quick guide:
      ```
      The above command will run all the unit tests with the command `go test -tags=all`.
      Each unit test file contains one or more build tags as a way to classify the
-     tests into various groups (example: `// +build all fast auth`).
+     tests into various groups (example: `//go:build all || fast || auth`).
      Currently, these tags include: all, slow, fast, auth, basesvc, log and retries.
      Others might be added in the future.
      To run a specific class of tests (example 'retries'), use a command like this:
