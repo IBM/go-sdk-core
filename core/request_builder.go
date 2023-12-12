@@ -105,14 +105,14 @@ func (requestBuilder *RequestBuilder) WithContext(ctx context.Context) *RequestB
 // invalid URL string (e.g. ":<badscheme>").
 func (requestBuilder *RequestBuilder) ConstructHTTPURL(serviceURL string, pathSegments []string, pathParameters []string) (*RequestBuilder, error) {
 	if serviceURL == "" {
-		return requestBuilder, coreSDKErrorf(nil, ERRORMSG_SERVICE_URL_MISSING, "no-url", "RequestBuilder.ConstructHTTPURL")
+		return requestBuilder, SDKErrorf(nil, ERRORMSG_SERVICE_URL_MISSING, "no-url", getSystemInfo)
 	}
 	var URL *url.URL
 
 	URL, err := url.Parse(serviceURL)
 	if err != nil {
 		errMsg := fmt.Sprintf(ERRORMSG_SERVICE_URL_INVALID, err.Error())
-		return requestBuilder, coreSDKErrorf(err, errMsg, "bad-url", "RequestBuilder.ConstructHTTPURL")
+		return requestBuilder, SDKErrorf(err, errMsg, "bad-url", getSystemInfo)
 	}
 
 	for i, pathSegment := range pathSegments {
@@ -123,7 +123,7 @@ func (requestBuilder *RequestBuilder) ConstructHTTPURL(serviceURL string, pathSe
 		if pathParameters != nil && i < len(pathParameters) {
 			if pathParameters[i] == "" {
 				errMsg := fmt.Sprintf(ERRORMSG_PATH_PARAM_EMPTY, fmt.Sprintf("[%d]", i))
-				return requestBuilder, coreSDKErrorf(nil, errMsg, "empty-path-param", "RequestBuilder.ConstructHTTPURL")
+				return requestBuilder, SDKErrorf(nil, errMsg, "empty-path-param", getSystemInfo)
 			}
 			URL.Path += "/" + pathParameters[i]
 		}
@@ -157,7 +157,7 @@ func (requestBuilder *RequestBuilder) ResolveRequestURL(serviceURL string, path 
 			for k, v := range pathParams {
 				if v == "" {
 					errMsg := fmt.Sprintf(ERRORMSG_PATH_PARAM_EMPTY, k)
-					return requestBuilder, coreSDKErrorf(nil, errMsg, "empty-path-param", "RequestBuilder.ResolveRequestURL")
+					return requestBuilder, SDKErrorf(nil, errMsg, "empty-path-param", getSystemInfo)
 				}
 				encodedValue := url.PathEscape(v)
 				ref := fmt.Sprintf("{%s}", k)
@@ -187,7 +187,7 @@ func (requestBuilder *RequestBuilder) ResolveRequestURL(serviceURL string, path 
 	URL, err := url.Parse(urlString)
 	if err != nil {
 		errMsg := fmt.Sprintf(ERRORMSG_SERVICE_URL_INVALID, err.Error())
-		return requestBuilder, coreSDKErrorf(err, errMsg, "bad-url", "RequestBuilder.ResolveRequestURL")
+		return requestBuilder, SDKErrorf(err, errMsg, "bad-url", getSystemInfo)
 	}
 
 	requestBuilder.URL = URL
@@ -232,7 +232,7 @@ func (requestBuilder *RequestBuilder) SetBodyContentJSON(bodyContent interface{}
 	err := json.NewEncoder(requestBuilder.Body.(io.Writer)).Encode(bodyContent)
 	if err != nil {
 		errMsg := fmt.Sprintf("Could not encode JSON body:\n%s", err.Error())
-		err = coreSDKErrorf(err, errMsg, "bad-encode", "RequestBuilder.SetBodyContentJSON")
+		err = SDKErrorf(err, errMsg, "bad-encode", getSystemInfo)
 	}
 	return requestBuilder, err
 }
@@ -265,7 +265,7 @@ func createFormFile(formWriter *multipart.Writer, fieldname string, filename str
 
 	res, err := formWriter.CreatePart(h)
 	if err != nil {
-		err = coreSDKErrorf(err, err.Error(), "create-part-error", "createFormFile")
+		err = SDKErrorf(err, err.Error(), "create-part-error", getSystemInfo)
 	}
 	return res, err
 }
@@ -273,30 +273,63 @@ func createFormFile(formWriter *multipart.Writer, fieldname string, filename str
 // SetBodyContentForMultipart sets the body content for a part in a multi-part form.
 func (requestBuilder *RequestBuilder) SetBodyContentForMultipart(contentType string, content interface{}, writer io.Writer) error {
 	var err error
-	errorDisc := ""
 	if stream, ok := content.(io.Reader); ok {
 		_, err = io.Copy(writer, stream)
-		errorDisc = "reader-error"
+		if err != nil {
+			err = SDKErrorf(
+				err,
+				fmt.Sprintf("Could not set body content in form:\n%s", err.Error()),
+				"reader-error",
+				getSystemInfo,
+			)
+		}
 	} else if stream, ok := content.(*io.ReadCloser); ok {
 		_, err = io.Copy(writer, *stream)
-		errorDisc = "readcloser-error"
+		if err != nil {
+			err = SDKErrorf(
+				err,
+				fmt.Sprintf("Could not set body content in form:\n%s", err.Error()),
+				"readcloser-error",
+				getSystemInfo,
+			)
+		}
 	} else if IsJSONMimeType(contentType) || IsJSONPatchMimeType(contentType) {
 		err = json.NewEncoder(writer).Encode(content)
-		errorDisc = "json-error"
+		if err != nil {
+			err = SDKErrorf(
+				err,
+				fmt.Sprintf("Could not set body content in form:\n%s", err.Error()),
+				"json-error",
+				getSystemInfo,
+			)
+		}
 	} else if str, ok := content.(string); ok {
 		_, err = writer.Write([]byte(str))
-		errorDisc = "string-error"
+		if err != nil {
+			err = SDKErrorf(
+				err,
+				fmt.Sprintf("Could not set body content in form:\n%s", err.Error()),
+				"string-error",
+				getSystemInfo,
+			)
+		}
 	} else if strPtr, ok := content.(*string); ok {
 		_, err = writer.Write([]byte(*strPtr))
-		errorDisc = "string-ptr-error"
+		if err != nil {
+			err = SDKErrorf(
+				err,
+				fmt.Sprintf("Could not set body content in form:\n%s", err.Error()),
+				"string-ptr-error",
+				getSystemInfo,
+			)
+		}
 	} else {
-		err = fmt.Errorf("Error: unable to determine the type of 'content' provided")
-		errorDisc = "undetermined-type"
-	}
-
-	if err != nil {
-		errMsg := fmt.Sprintf("Could not set body content in form:\n%s", err.Error())
-		err = coreSDKErrorf(err, errMsg, errorDisc, "RequestBuilder.SetBodyContentForMultipart")
+		err = SDKErrorf(
+			err,
+			"Error: unable to determine the type of 'content' provided",
+			"undetermined-type",
+			getSystemInfo,
+		)
 	}
 
 	return err
@@ -320,7 +353,7 @@ func (requestBuilder *RequestBuilder) Build() (req *http.Request, err error) {
 			// This function cannot actually return an error but check anyway
 			_, err = requestBuilder.SetBodyContentString(data.Encode())
 			if err != nil {
-				err = rewrapSDKError(err, "RequestBuilder.Build")
+				err = RepurposeSDKError(err, "set-content-string-error")
 				return
 			}
 		} else {
@@ -328,7 +361,7 @@ func (requestBuilder *RequestBuilder) Build() (req *http.Request, err error) {
 			var formBody io.ReadCloser
 			formBody, contentType, err = requestBuilder.createMultipartFormRequestBody()
 			if err != nil {
-				err = rewrapSDKError(err, "RequestBuilder.Build")
+				err = RepurposeSDKError(err, "create-multipart-error")
 				return
 			}
 
@@ -343,7 +376,7 @@ func (requestBuilder *RequestBuilder) Build() (req *http.Request, err error) {
 		!SliceContains(requestBuilder.Header[CONTENT_ENCODING], "gzip") {
 		newBody, err := NewGzipCompressionReader(requestBuilder.Body)
 		if err != nil {
-			err = rewrapSDKError(err, "RequestBuilder.Build")
+			err = RepurposeSDKError(err, "gzip-reader-error")
 			return nil, err
 		}
 		requestBuilder.Body = newBody
@@ -353,7 +386,7 @@ func (requestBuilder *RequestBuilder) Build() (req *http.Request, err error) {
 	// Create the request
 	req, err = http.NewRequest(requestBuilder.Method, requestBuilder.URL.String(), requestBuilder.Body)
 	if err != nil {
-		err = coreSDKErrorf(err, fmt.Sprintf("Failed to build request:\n%s", err.Error()), "new-request-error", "RequestBuilder.Build")
+		err = SDKErrorf(err, fmt.Sprintf("Failed to build request:\n%s", err.Error()), "new-request-error", getSystemInfo)
 		return
 	}
 
@@ -429,7 +462,7 @@ func (requestBuilder *RequestBuilder) createMultipartFormRequestBody() (bodyRead
 
 		// We're done adding parts to the form, so close the form writer.
 		if err = formWriter.Close(); err != nil {
-			err = coreSDKErrorf(err, err.Error(), "form-close-error", "RequestBuilder.createMultipartFormRequestBody")
+			err = SDKErrorf(err, err.Error(), "form-close-error", getSystemInfo)
 			return
 		}
 
@@ -447,13 +480,13 @@ func (requestBuilder *RequestBuilder) SetBodyContent(contentType string, jsonCon
 	if !IsNil(jsonContent) {
 		builder, err = requestBuilder.SetBodyContentJSON(jsonContent)
 		if err != nil {
-			err = rewrapSDKError(err, "RequestBuilder.SetBodyContent")
+			err = RepurposeSDKError(err, "set-json-body-error")
 			return
 		}
 	} else if !IsNil(jsonPatchContent) {
 		builder, err = requestBuilder.SetBodyContentJSON(jsonPatchContent)
 		if err != nil {
-			err = rewrapSDKError(err, "RequestBuilder.SetBodyContent")
+			err = RepurposeSDKError(err, "set-json-patch-body-error")
 			return
 		}
 	} else if !IsNil(nonJSONContent) {
@@ -470,13 +503,13 @@ func (requestBuilder *RequestBuilder) SetBodyContent(contentType string, jsonCon
 		} else {
 			builder = requestBuilder
 			errMsg := fmt.Sprintf("Invalid type for non-JSON body content: %s", reflect.TypeOf(nonJSONContent).String())
-			err = coreSDKErrorf(nil, errMsg, "bad-nonjson-body-content", "RequestBuilder.SetBodyContent")
+			err = SDKErrorf(nil, errMsg, "bad-nonjson-body-content", getSystemInfo)
 		}
 	} else {
 		builder = requestBuilder
-		err = coreSDKErrorf(nil, "No body content provided", "no-body-content", "RequestBuilder.SetBodyContent")
+		err = SDKErrorf(nil, "No body content provided", "no-body-content", getSystemInfo)
 	}
-	err = rewrapSDKError(err, "RequestBuilder.SetBodyContent")
+
 	return
 }
 
@@ -486,7 +519,7 @@ func (requestBuilder *RequestBuilder) SetBodyContent(contentType string, jsonCon
 func (requestBuilder *RequestBuilder) AddQuerySlice(param string, slice interface{}) (err error) {
 	convertedSlice, err := ConvertSlice(slice)
 	if err != nil {
-		err = rewrapSDKError(err, "RequestBuilder.AddQuerySlice")
+		err = RepurposeSDKError(err, "convert-slice-error")
 		return
 	}
 

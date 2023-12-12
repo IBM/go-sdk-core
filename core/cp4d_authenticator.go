@@ -75,7 +75,7 @@ var cp4dNeedsRefreshMutex sync.Mutex
 func NewCloudPakForDataAuthenticator(url string, username string, password string,
 	disableSSLVerification bool, headers map[string]string) (*CloudPakForDataAuthenticator, error) {
 	auth, err := NewCloudPakForDataAuthenticatorUsingPassword(url, username, password, disableSSLVerification, headers)
-	return auth, rewrapSDKError(err, "NewCloudPakForDataAuthenticator")
+	return auth, RepurposeSDKError(err, "new-auth-fail")
 }
 
 // NewCloudPakForDataAuthenticatorUsingPassword constructs a new CloudPakForDataAuthenticator
@@ -83,7 +83,7 @@ func NewCloudPakForDataAuthenticator(url string, username string, password strin
 func NewCloudPakForDataAuthenticatorUsingPassword(url string, username string, password string,
 	disableSSLVerification bool, headers map[string]string) (*CloudPakForDataAuthenticator, error) {
 	auth, err := newAuthenticator(url, username, password, "", disableSSLVerification, headers)
-	return auth, rewrapSDKError(err, "NewCloudPakForDataAuthenticatorUsingPassword")
+	return auth, RepurposeSDKError(err, "new-auth-password-fail")
 }
 
 // NewCloudPakForDataAuthenticatorUsingAPIKey constructs a new CloudPakForDataAuthenticator
@@ -91,7 +91,7 @@ func NewCloudPakForDataAuthenticatorUsingPassword(url string, username string, p
 func NewCloudPakForDataAuthenticatorUsingAPIKey(url string, username string, apikey string,
 	disableSSLVerification bool, headers map[string]string) (*CloudPakForDataAuthenticator, error) {
 	auth, err := newAuthenticator(url, username, "", apikey, disableSSLVerification, headers)
-	return auth, rewrapSDKError(err, "NewCloudPakForDataAuthenticatorUsingAPIKey")
+	return auth, RepurposeSDKError(err, "new-auth-apikey-fail")
 }
 
 func newAuthenticator(url string, username string, password string, apikey string,
@@ -118,7 +118,7 @@ func newAuthenticator(url string, username string, password string, apikey strin
 // newCloudPakForDataAuthenticatorFromMap : Constructs a new CloudPakForDataAuthenticator instance from a map.
 func newCloudPakForDataAuthenticatorFromMap(properties map[string]string) (*CloudPakForDataAuthenticator, error) {
 	if properties == nil {
-		return nil, coreSDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", "newCloudPakForDataAuthenticatorFromMap")
+		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", getSystemInfo)
 	}
 
 	disableSSL, err := strconv.ParseBool(properties[PROPNAME_AUTH_DISABLE_SSL])
@@ -144,19 +144,19 @@ func (authenticator *CloudPakForDataAuthenticator) Validate() error {
 
 	if authenticator.Username == "" {
 		errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "Username")
-		return coreSDKErrorf(nil, errMsg, "no-user", "CloudPakForDataAuthenticator.Validate")
+		return SDKErrorf(nil, errMsg, "no-user", getSystemInfo)
 	}
 
 	// The user should specify exactly one of APIKey or Password.
 	if (authenticator.APIKey == "" && authenticator.Password == "") ||
 		(authenticator.APIKey != "" && authenticator.Password != "") {
 		errMsg := fmt.Sprintf(ERRORMSG_EXCLUSIVE_PROPS_ERROR, "APIKey", "Password")
-		return coreSDKErrorf(nil, errMsg, "exc-props", "CloudPakForDataAuthenticator.Validate")
+		return SDKErrorf(nil, errMsg, "exc-props", getSystemInfo)
 	}
 
 	if authenticator.URL == "" {
 		errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "URL")
-		return coreSDKErrorf(nil, errMsg, "no-url", "CloudPakForDataAuthenticator.Validate")
+		return SDKErrorf(nil, errMsg, "no-url", getSystemInfo)
 	}
 
 	return nil
@@ -191,7 +191,7 @@ func (authenticator *CloudPakForDataAuthenticator) client() *http.Client {
 func (authenticator *CloudPakForDataAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.GetToken()
 	if err != nil {
-		return rewrapSDKError(err, "CloudPakForDataAuthenticator.Authenticate")
+		return RepurposeSDKError(err, "get-token-fail")
 	}
 
 	request.Header.Set("Authorization", fmt.Sprintf(`Bearer %s`, token))
@@ -222,7 +222,7 @@ func (authenticator *CloudPakForDataAuthenticator) GetToken() (string, error) {
 		// synchronously request the token
 		err := authenticator.synchronizedRequestToken()
 		if err != nil {
-			return "", rewrapSDKError(err, "CloudPakForDataAuthenticator.GetToken")
+			return "", RepurposeSDKError(err, "request-token-fail")
 		}
 	} else if authenticator.getTokenData().needsRefresh() {
 		// If refresh needed, kick off a go routine in the background to get a new token
@@ -232,7 +232,7 @@ func (authenticator *CloudPakForDataAuthenticator) GetToken() (string, error) {
 
 	// return an error if the access token is not valid or was not fetched
 	if authenticator.getTokenData() == nil || authenticator.getTokenData().AccessToken == "" {
-		return "", coreSDKErrorf(nil, "Error while trying to get access token", "no-token", "CloudPakForDataAuthenticator.GetToken")
+		return "", SDKErrorf(nil, "Error while trying to get access token", "no-token", getSystemInfo)
 	}
 
 	return authenticator.getTokenData().AccessToken, nil
@@ -331,7 +331,7 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (tokenResponse
 	GetLogger().Debug("Invoking CP4D token service operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		err = coreSDKErrorf(err, err.Error(), "cp4d-request-error", "CloudPakForDataAuthenticator.requestToken")
+		err = SDKErrorf(err, "", "cp4d-request-error", getSystemInfo)
 		return
 	}
 	GetLogger().Debug("Returned from CP4D token service operation, received status code %d", resp.StatusCode)
@@ -357,7 +357,7 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (tokenResponse
 			RawResult:  buff.Bytes(),
 		}
 
-		err = coreAuthenticationErrorf(nil, fmt.Sprintf(buff.String()), "cp4d-get-token-fail", detailedResponse)
+		err = AuthenticationErrorf(nil, fmt.Sprintf(buff.String()), "cp4d-get-token-fail", detailedResponse, getSystemInfo)
 		return
 	}
 
@@ -366,7 +366,7 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (tokenResponse
 	defer resp.Body.Close() // #nosec G307
 	if err != nil {
 		errMsg := fmt.Sprintf(ERRORMSG_UNMARSHAL_AUTH_RESPONSE, err.Error())
-		err = coreSDKErrorf(err, errMsg, "cp4d-res-unmarshal-error", "CloudPakForDataAuthenticator.requestToken")
+		err = SDKErrorf(err, errMsg, "cp4d-res-unmarshal-error", getSystemInfo)
 		tokenResponse = nil
 		return
 	}

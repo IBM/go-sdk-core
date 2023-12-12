@@ -16,7 +16,6 @@ package core
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"reflect"
@@ -39,7 +38,7 @@ func NewFileWithMetadata(data io.ReadCloser) (model *FileWithMetadata, err error
 	model = &FileWithMetadata{
 		Data: data,
 	}
-	err = rewrapSDKError(ValidateStruct(model, "required parameters"), "NewFileWithMetadata")
+	err = RepurposeSDKError(ValidateStruct(model, "required parameters"), "validation-failed")
 	return
 }
 
@@ -53,24 +52,23 @@ func UnmarshalFileWithMetadata(m map[string]json.RawMessage, result interface{})
 	// then explicitly set the Data field to the contents of the file
 	var data io.ReadCloser
 	var pathToData string
-	err = rewrapSDKError(UnmarshalPrimitive(m, "data", &pathToData), "UnmarshalFileWithMetadata")
+	err = RepurposeSDKError(UnmarshalPrimitive(m, "data", &pathToData), "unmarshal-fail")
 	if err != nil {
 		return
 	}
 	data, err = os.Open(pathToData) // #nosec G304
 	if err != nil {
-		errMsg := fmt.Sprintf("Could not open file at path '%s':\n%s", pathToData, err.Error())
-		err = coreSDKErrorf(err, errMsg, "file-open-error", "UnmarshalFileWithMetadata")
+		err = SDKErrorf(err, "", "file-open-error", getSystemInfo)
 		return
 	}
 	obj.Data = data
 
 	// unmarshal the other fields as usual
-	err = rewrapSDKError(UnmarshalPrimitive(m, "filename", &obj.Filename), "UnmarshalFileWithMetadata")
+	err = RepurposeSDKError(UnmarshalPrimitive(m, "filename", &obj.Filename), "unmarshal-file-fail")
 	if err != nil {
 		return
 	}
-	err = rewrapSDKError(UnmarshalPrimitive(m, "content_type", &obj.ContentType), "UnmarshalFileWithMetadata")
+	err = RepurposeSDKError(UnmarshalPrimitive(m, "content_type", &obj.ContentType), "unmarshal-content-type-fail")
 	if err != nil {
 		return
 	}

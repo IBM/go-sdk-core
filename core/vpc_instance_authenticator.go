@@ -117,7 +117,7 @@ func (builder *VpcInstanceAuthenticatorBuilder) Build() (*VpcInstanceAuthenticat
 	// Make sure the config is valid.
 	err := builder.VpcInstanceAuthenticator.Validate()
 	if err != nil {
-		return nil, rewrapSDKError(err, "VpcInstanceAuthenticatorBuilder.Build")
+		return nil, RepurposeSDKError(err, "validation-failed")
 	}
 
 	return &builder.VpcInstanceAuthenticator, nil
@@ -148,7 +148,7 @@ func (authenticator *VpcInstanceAuthenticator) url() string {
 // configuration properties.
 func newVpcInstanceAuthenticatorFromMap(properties map[string]string) (authenticator *VpcInstanceAuthenticator, err error) {
 	if properties == nil {
-		return nil, coreSDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", "newVpcInstanceAuthenticatorFromMap")
+		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", getSystemInfo)
 	}
 
 	authenticator, err = NewVpcInstanceAuthenticatorBuilder().
@@ -173,7 +173,7 @@ func (*VpcInstanceAuthenticator) AuthenticationType() string {
 func (authenticator *VpcInstanceAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.GetToken()
 	if err != nil {
-		return rewrapSDKError(err, "VpcInstanceAuthenticator.Authenticate")
+		return RepurposeSDKError(err, "get-token-fail")
 	}
 
 	request.Header.Set("Authorization", "Bearer "+token)
@@ -205,7 +205,7 @@ func (authenticator *VpcInstanceAuthenticator) Validate() error {
 	// Check to make sure that at most one of IAMProfileCRN or IAMProfileID are specified.
 	if authenticator.IAMProfileCRN != "" && authenticator.IAMProfileID != "" {
 		errMsg := fmt.Sprintf(ERRORMSG_ATMOST_ONE_PROP_ERROR, "IAMProfileCRN", "IAMProfileID")
-		return coreSDKErrorf(nil, errMsg, "both-props", "VpcInstanceAuthenticator.Validate")
+		return SDKErrorf(nil, errMsg, "both-props", getSystemInfo)
 	}
 
 	return nil
@@ -220,7 +220,7 @@ func (authenticator *VpcInstanceAuthenticator) GetToken() (string, error) {
 		// synchronously request the token
 		err := authenticator.synchronizedRequestToken()
 		if err != nil {
-			return "", rewrapSDKError(err, "VpcInstanceAuthenticator.GetToken")
+			return "", RepurposeSDKError(err, "request-token-fail")
 		}
 	} else if authenticator.getTokenData().needsRefresh() {
 		GetLogger().Debug("Performing background asynchronous token fetch...")
@@ -233,7 +233,7 @@ func (authenticator *VpcInstanceAuthenticator) GetToken() (string, error) {
 
 	// return an error if the access token is not valid or was not fetched
 	if authenticator.getTokenData() == nil || authenticator.getTokenData().AccessToken == "" {
-		return "", coreSDKErrorf(nil, "Error while trying to get access token", "no-token", "VpcInstanceAuthenticator.GetToken")
+		return "", SDKErrorf(nil, "Error while trying to get access token", "no-token", getSystemInfo)
 	}
 
 	return authenticator.getTokenData().AccessToken, nil
@@ -282,14 +282,14 @@ func (authenticator *VpcInstanceAuthenticator) RequestToken() (iamTokenResponse 
 	// Retrieve the instance identity token from the VPC Instance Metadata Service.
 	instanceIdentityToken, err := authenticator.retrieveInstanceIdentityToken()
 	if err != nil {
-		err = rewrapSDKError(err, "VpcInstanceAuthenticator.RequestToken")
+		err = RepurposeSDKError(err, "get-ii-token-error")
 		return
 	}
 
 	// Next, exchange the instance identity token for an IAM access token.
 	iamTokenResponse, err = authenticator.retrieveIamAccessToken(instanceIdentityToken)
 	if err != nil {
-		err = rewrapSDKError(err, "VpcInstanceAuthenticator.RequestToken")
+		err = RepurposeSDKError(err, "get-ia-token-error")
 		return
 	}
 
@@ -323,7 +323,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 	builder := NewRequestBuilder(POST)
 	_, err = builder.ResolveRequestURL(authenticator.url(), vpcauthOperationPathCreateIamToken, nil)
 	if err != nil {
-		err = coreAuthenticationErrorf(err, err.Error(), "create-token-url-fail", &DetailedResponse{})
+		err = AuthenticationErrorf(err, err.Error(), "create-token-url-fail", &DetailedResponse{}, getSystemInfo)
 		return
 	}
 
@@ -351,7 +351,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 	// Build the request.
 	req, err := builder.Build()
 	if err != nil {
-		return nil, coreAuthenticationErrorf(err, err.Error(), "create-token-build-fail", &DetailedResponse{})
+		return nil, AuthenticationErrorf(err, err.Error(), "create-token-build-fail", &DetailedResponse{}, getSystemInfo)
 	}
 
 	// If debug is enabled, then dump the request.
@@ -367,7 +367,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 	GetLogger().Debug("Invoking VPC 'create_iam_token' operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		return nil, coreAuthenticationErrorf(err, err.Error(), "create-token-invoke-fail", &DetailedResponse{})
+		return nil, AuthenticationErrorf(err, err.Error(), "create-token-invoke-fail", &DetailedResponse{}, getSystemInfo)
 	}
 	GetLogger().Debug("Returned from VPC 'create_iam_token' operation, received status code %d", resp.StatusCode)
 
@@ -399,7 +399,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 			vpcErrorMsg = "Operation 'create_iam_token' error response not available"
 		}
 		errMsg := fmt.Sprintf(ERRORMSG_VPCMDS_OPERATION_ERROR, detailedResponse.StatusCode, builder.URL, vpcErrorMsg)
-		return nil, coreAuthenticationErrorf(nil, errMsg, "iam-token-creation-fail", detailedResponse)
+		return nil, AuthenticationErrorf(nil, errMsg, "iam-token-creation-fail", detailedResponse, getSystemInfo)
 	}
 
 	// Good response, so unmarshal the response body into a vpcTokenResponse instance.
@@ -426,7 +426,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (
 	builder := NewRequestBuilder(PUT)
 	_, err = builder.ResolveRequestURL(authenticator.url(), vpcauthOperationPathCreateAccessToken, nil)
 	if err != nil {
-		err = coreAuthenticationErrorf(err, err.Error(), "access-token-url-fail", &DetailedResponse{})
+		err = AuthenticationErrorf(err, err.Error(), "access-token-url-fail", &DetailedResponse{}, getSystemInfo)
 		return
 	}
 
@@ -442,7 +442,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (
 	// Build the request.
 	req, err := builder.Build()
 	if err != nil {
-		err = coreAuthenticationErrorf(err, err.Error(), "access-token-build-fail", &DetailedResponse{})
+		err = AuthenticationErrorf(err, err.Error(), "access-token-build-fail", &DetailedResponse{}, getSystemInfo)
 		return
 	}
 
@@ -460,7 +460,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (
 	GetLogger().Debug("Invoking VPC 'create_access_token' operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		err = coreAuthenticationErrorf(err, err.Error(), "access-token-invoke-fail", &DetailedResponse{})
+		err = AuthenticationErrorf(err, err.Error(), "access-token-invoke-fail", &DetailedResponse{}, getSystemInfo)
 		return
 	}
 	GetLogger().Debug("Returned from VPC 'create_access_token' operation, received status code %d", resp.StatusCode)
@@ -493,7 +493,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (
 			vpcErrorMsg = "Operation 'create_access_token' error response not available"
 		}
 
-		err = coreAuthenticationErrorf(nil, fmt.Sprintf(ERRORMSG_VPCMDS_OPERATION_ERROR, detailedResponse.StatusCode, builder.URL, vpcErrorMsg), "vpc-service-fail", detailedResponse)
+		err = AuthenticationErrorf(nil, fmt.Sprintf(ERRORMSG_VPCMDS_OPERATION_ERROR, detailedResponse.StatusCode, builder.URL, vpcErrorMsg), "vpc-service-fail", detailedResponse, getSystemInfo)
 		return
 	}
 

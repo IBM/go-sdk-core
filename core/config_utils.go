@@ -45,7 +45,7 @@ const (
 // will be returned in the map.
 func GetServiceProperties(serviceName string) (serviceProps map[string]string, err error) {
 	serviceProps, err = getServiceProperties(serviceName)
-	err = rewrapSDKError(err, "GetServiceProperties")
+	err = RepurposeSDKError(err, "get-props-error")
 	return
 }
 
@@ -57,7 +57,7 @@ func GetServiceProperties(serviceName string) (serviceProps map[string]string, e
 func getServiceProperties(serviceName string) (serviceProps map[string]string, err error) {
 
 	if serviceName == "" {
-		err = coreSDKErrorf(nil, "serviceName was not specified", "no-service-name", "getServiceProperties")
+		err = SDKErrorf(nil, "serviceName was not specified", "no-service-name", getSystemInfo)
 		return
 	}
 
