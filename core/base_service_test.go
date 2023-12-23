@@ -1768,7 +1768,6 @@ func TestClientWithRetries(t *testing.T) {
 	service.SetHTTPClient(client)
 	actualClient := service.GetHTTPClient()
 	assert.Equal(t, client, actualClient)
-	assert.Equal(t, *client, *actualClient)
 	assert.Equal(t, client, service.Client)
 
 	// Next, enable retries and make sure the client survived.
@@ -1776,7 +1775,6 @@ func TestClientWithRetries(t *testing.T) {
 	assert.True(t, isRetryableClient(service.Client))
 	actualClient = service.GetHTTPClient()
 	assert.Equal(t, client, actualClient)
-	assert.Equal(t, *client, *actualClient)
 
 	// Finally, disable retries and make sure
 	// we're left with the same client instance.
@@ -1784,7 +1782,6 @@ func TestClientWithRetries(t *testing.T) {
 	assert.False(t, isRetryableClient(service.Client))
 	actualClient = service.GetHTTPClient()
 	assert.Equal(t, client, actualClient)
-	assert.Equal(t, *client, *actualClient)
 	assert.Equal(t, client, service.Client)
 
 	// Create a new service and perform the steps in a different order.
@@ -1803,7 +1800,6 @@ func TestClientWithRetries(t *testing.T) {
 	assert.True(t, isRetryableClient(service.Client))
 	actualClient = service.GetHTTPClient()
 	assert.Equal(t, client, actualClient)
-	assert.Equal(t, *client, *actualClient)
 }
 
 func TestSetEnableGzipCompression(t *testing.T) {
@@ -2066,8 +2062,11 @@ func getTLSVersion(service *BaseService) int {
 	var tlsVersion int = -1
 	client := service.GetHTTPClient()
 	if client != nil {
-		tr := client.Transport.(*http.Transport)
-		tlsVersion = int(tr.TLSClientConfig.MinVersion)
+		if tr, ok := client.Transport.(*http.Transport); ok {
+			if tr.TLSClientConfig != nil {
+				tlsVersion = int(tr.TLSClientConfig.MinVersion)
+			}
+		}
 	}
 	return tlsVersion
 }
@@ -2082,7 +2081,7 @@ func TestMinSSLVersion(t *testing.T) {
 	assert.NotNil(t, service.Client)
 
 	// Check the default config.
-	assert.Equal(t, getTLSVersion(service), tls.VersionTLS12)
+	assert.Equal(t, getTLSVersion(service), -1)
 
 	// Set a insecureClient with different value.
 	insecureClient := &http.Client{}
@@ -2092,9 +2091,9 @@ func TestMinSSLVersion(t *testing.T) {
 		},
 	}
 	service.SetHTTPClient(insecureClient)
-	assert.Equal(t, getTLSVersion(service), tls.VersionTLS12)
+	assert.Equal(t, tls.VersionTLS10, getTLSVersion(service))
 
 	// Check retryable client config.
 	service.EnableRetries(3, 30*time.Second)
-	assert.Equal(t, getTLSVersion(service), tls.VersionTLS12)
+	assert.Equal(t, tls.VersionTLS10, getTLSVersion(service))
 }

@@ -16,7 +16,7 @@ test:
 
 lint:
 	${LINT} run --build-tags=all
-	DIFF=$$(${FORMATTER} -d core); if [[ -n "$$DIFF" ]]; then printf "\n$$DIFF" && exit 1; fi
+	DIFF=$$(${FORMATTER} -d core); if [ -n "$$DIFF" ]; then printf "\n$$DIFF" && exit 1; fi
 
 scan-gosec:
 	${GOSEC} ./...

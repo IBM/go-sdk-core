@@ -10,6 +10,13 @@ go:
 notifications:
   email: false
 
+addons:
+  hosts:
+    - region1.cloud.ibm.com
+    - region1.notcloud.ibm.com
+    - region2.cloud.ibm.com
+    - region2.notcloud.ibm.com
+
 env:
   global:
     - GO111MODULE=on
