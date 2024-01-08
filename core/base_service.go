@@ -381,8 +381,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	authError := service.Options.Authenticator.Authenticate(req)
 	if authError != nil {
 		err = SDKErrorf(nil, fmt.Sprintf(ERRORMSG_AUTHENTICATE_ERROR, authError.Error()), "auth-failed", getSystemInfo)
-		castErr, ok := authError.(*AuthenticationError)
-		if ok {
+		if castErr, ok := authError.(*AuthenticationError); ok {
 			detailedResponse = castErr.Response
 		}
 		return
@@ -402,20 +401,12 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	var httpResponse *http.Response
 	httpResponse, err = service.Client.Do(req)
 
-	// Start to populate the DetailedResponse.
-	if httpResponse != nil {
-		detailedResponse = &DetailedResponse{
-			StatusCode: httpResponse.StatusCode,
-			Headers:    httpResponse.Header,
-		}
-	}
-
 	if err != nil {
 		errMsg := err.Error()
 		if strings.Contains(err.Error(), SSL_CERTIFICATION_ERROR) {
 			errMsg = ERRORMSG_SSL_VERIFICATION_FAILED + "\n" + errMsg
 		}
-		err = HTTPErrorf(err, errMsg, "request-error", "", "", detailedResponse)
+		err = SDKErrorf(err, errMsg, "no-connection-made", getSystemInfo)
 		return
 	}
 
@@ -426,6 +417,14 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			GetLogger().Debug("Response:\n%s\n", RedactSecrets(string(buf)))
 		} else {
 			GetLogger().Debug("error while attempting to log inbound response: %s", dumpErr.Error())
+		}
+	}
+
+	// Start to populate the DetailedResponse.
+	if httpResponse != nil {
+		detailedResponse = &DetailedResponse{
+			StatusCode: httpResponse.StatusCode,
+			Headers:    httpResponse.Header,
 		}
 	}
 
@@ -444,14 +443,14 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			defer httpResponse.Body.Close() // #nosec G307
 			responseBody, readErr = io.ReadAll(httpResponse.Body)
 			if readErr != nil {
-				err = HTTPErrorf(readErr, ERRORMSG_READ_RESPONSE_BODY, "cant-read-error-res-body", "", "", detailedResponse)
+				err = HTTPErrorf(readErr, ERRORMSG_READ_RESPONSE_BODY, "cant-read-error-body", detailedResponse)
 				return
 			}
 		}
 
 		// If the responseBody is empty, then just return a generic error based on the status code.
 		if len(responseBody) == 0 {
-			err = HTTPErrorf(nil, http.StatusText(httpResponse.StatusCode), "no-error-res-body", "", "", detailedResponse)
+			err = HTTPErrorf(nil, http.StatusText(httpResponse.StatusCode), "no-error-body", detailedResponse)
 			return
 		}
 
@@ -463,8 +462,8 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			if decodeErr == nil {
 				detailedResponse.Result = responseMap
 				errorMsg := getErrorMessage(responseMap, detailedResponse.StatusCode)
-				errorCode := getErrorCode(responseMap)
-				err = HTTPErrorf(nil, errorMsg, "error-res", "", errorCode, detailedResponse)
+				// errorCode := getErrorCode(responseMap) // TODO: consider doing this in the SDK
+				err = HTTPErrorf(nil, errorMsg, "json-error-body", detailedResponse)
 				return
 			}
 		}
@@ -473,7 +472,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		// just return the response body byte array in the RawResult field along with
 		// an error object that contains the generic error message for the status code.
 		detailedResponse.RawResult = responseBody
-		err = HTTPErrorf(nil, http.StatusText(httpResponse.StatusCode), "non-json-error-res", "", "", detailedResponse)
+		err = HTTPErrorf(nil, http.StatusText(httpResponse.StatusCode), "non-json-error-body", detailedResponse)
 		return
 	}
 
@@ -493,7 +492,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			defer httpResponse.Body.Close() // #nosec G307
 			responseBody, readErr := io.ReadAll(httpResponse.Body)
 			if readErr != nil {
-				err = HTTPErrorf(readErr, ERRORMSG_READ_RESPONSE_BODY, "cant-read-success-res-body", "", "", detailedResponse)
+				err = SDKErrorf(readErr, ERRORMSG_READ_RESPONSE_BODY, "cant-read-success-res-body", getSystemInfo)
 				return
 			}
 
@@ -510,7 +509,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 					// Error decoding the response body.
 					// Return the response body in RawResult, along with an error.
 					errMsg := fmt.Sprintf(ERRORMSG_UNMARSHAL_RESPONSE_BODY, decodeErr.Error())
-					err = HTTPErrorf(decodeErr, errMsg, "res-body-decode-error", "", "", detailedResponse)
+					err = SDKErrorf(decodeErr, errMsg, "res-body-decode-error", getSystemInfo)
 					detailedResponse.RawResult = responseBody
 					return
 				}
@@ -541,7 +540,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 				// But make sure we save the bytes we read in the DetailedResponse for debugging purposes
 				detailedResponse.Result = responseBody
 				errMsg := fmt.Sprintf(ERRORMSG_UNEXPECTED_RESPONSE, contentType, resultType)
-				err = HTTPErrorf(nil, errMsg, "unparsable-result-field", "", "", detailedResponse)
+				err = SDKErrorf(nil, errMsg, "unparsable-result-field", getSystemInfo)
 				return
 			}
 		}

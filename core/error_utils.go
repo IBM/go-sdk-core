@@ -166,6 +166,9 @@ func getMapWithCausedBy(problem Problem, causedBy error) map[string]interface{} 
 	if causedBy != nil {
 		// Set causedBy in the map. If it is a native golang error,
 		// this will stay. Otherwise, it will be overwritten.
+
+		// TODO: consider mapifying the causedBy error in order to inlcude the .Error()
+		// message in the case of native errors.
 		errorAsMap["CausedBy"] = causedBy
 
 		// If causedBy is a Problem type, we'll update the field

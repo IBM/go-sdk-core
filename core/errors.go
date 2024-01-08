@@ -156,6 +156,13 @@ type HTTPError struct {
 	// ErrorCode is the code returned from the API
 	// in the error response, identifying the issue.
 	ErrorCode string
+
+	Errors []APIErrorModel // TODO: in progress
+}
+
+type APIErrorModel interface {
+	GetCode() string
+	GetMessage() string
 }
 
 // GetConsoleMessage returns all public fields of
@@ -282,13 +289,11 @@ func RepurposeSDKError(err error, discriminator string) error {
 }
 
 // HTTPErrorf creates and returns a new instance of `HTTPError`.
-func HTTPErrorf(err error, summary, discriminator, operationID, code string, response *DetailedResponse) *HTTPError {
+func HTTPErrorf(err error, summary, discriminator string, response *DetailedResponse) *HTTPError {
 	return &HTTPError{
 		// TODO: we don't know the system and version of the API in the core
 		ibmError: ibmErrorf(err, summary, "api", "vX", discriminator),
-		OperationID: operationID,
 		Response: response,
-		ErrorCode: code,
 	}
 }
 
