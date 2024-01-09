@@ -357,7 +357,7 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (tokenResponse
 			RawResult:  buff.Bytes(),
 		}
 
-		err = AuthenticationErrorf(nil, fmt.Sprintf(buff.String()), "cp4d-get-token-fail", detailedResponse, getSystemInfo)
+		err = AuthenticationErrorf(nil, buff.String(), "cp4d-get-token-fail", detailedResponse, getSystemInfo)
 		return
 	}
 

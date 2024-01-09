@@ -148,9 +148,13 @@ func getMapWithID(problem Problem) map[string]interface{} {
 	var errorAsMap map[string]interface{}
 	jsonBytes, err := json.Marshal(problem)
 	if err != nil {
-		// TODO: not sure what we should do here - log a message, perhaps.
+		GetLogger().Debug("Failed to parse Problem as JSON data")
 	}
-	json.Unmarshal(jsonBytes, &errorAsMap)
+	err = json.Unmarshal(jsonBytes, &errorAsMap)
+	if err != nil {
+		// TODO: rethink this message
+		GetLogger().Debug("Failed to create map from Problem data")
+	}
 
 	// Add the ID as a field to the map - it is always relevant.
 	errorAsMap["ID"] = problem.GetID()

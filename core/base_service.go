@@ -628,7 +628,7 @@ func getErrorMessage(responseMap map[string]interface{}, statusCode int) string 
 }
 
 // getErrorCode: try to retrieve an error code from the decoded response body (map).
-func getErrorCode(responseMap map[string]interface{}) string {
+/*func getErrorCode(responseMap map[string]interface{}) string {
 
 	// If the response contained the "errors" field, then try to deserialize responseMap
 	// into an array of Error structs, then return the first entry's "Message" field.
@@ -650,7 +650,7 @@ func getErrorCode(responseMap map[string]interface{}) string {
 
 	// If we couldn't find a code, return an empty string
 	return ""
-}
+}*/
 
 // isRetryableClient() will return true if and only if "client" is
 // an http.Client instance that is configured for automatic retries.
