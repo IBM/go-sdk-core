@@ -331,7 +331,7 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (tokenResponse
 	GetLogger().Debug("Invoking CP4D token service operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		err = SDKErrorf(err, "", "cp4d-request-error", getSystemInfo)
+		err = SDKErrorf(nil, err.Error(), "cp4d-request-error", getSystemInfo)
 		return
 	}
 	GetLogger().Debug("Returned from CP4D token service operation, received status code %d", resp.StatusCode)
@@ -357,7 +357,7 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (tokenResponse
 			RawResult:  buff.Bytes(),
 		}
 
-		err = AuthenticationErrorf(nil, buff.String(), "cp4d-get-token-fail", detailedResponse, getSystemInfo)
+		err = authenticationErrorf(buff.String(), "authorize", detailedResponse, authenticator.getSystemInfo)
 		return
 	}
 
@@ -366,12 +366,16 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (tokenResponse
 	defer resp.Body.Close() // #nosec G307
 	if err != nil {
 		errMsg := fmt.Sprintf(ERRORMSG_UNMARSHAL_AUTH_RESPONSE, err.Error())
-		err = SDKErrorf(err, errMsg, "cp4d-res-unmarshal-error", getSystemInfo)
+		err = SDKErrorf(nil, errMsg, "cp4d-res-unmarshal-error", getSystemInfo)
 		tokenResponse = nil
 		return
 	}
 
 	return
+}
+
+func (authenticator *CloudPakForDataAuthenticator) getSystemInfo() (string, string) {
+	return "cp4d-token-service", "v1"
 }
 
 // cp4dTokenServerResponse is a struct that models a response received from the token server.

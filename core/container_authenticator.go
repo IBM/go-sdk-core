@@ -379,14 +379,14 @@ func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResp
 		if err == nil {
 			err = fmt.Errorf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN, "reason unknown")
 		}
-		return nil, AuthenticationErrorf(err, err.Error(), "no-cr-token", &DetailedResponse{}, getSystemInfo)
+		return nil, authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
 	}
 
 	// Set up the request for the IAM "get token" invocation.
 	builder := NewRequestBuilder(POST)
 	_, err = builder.ResolveRequestURL(authenticator.url(), iamAuthOperationPathGetToken, nil)
 	if err != nil {
-		return nil, AuthenticationErrorf(err, err.Error(), "container-iam-token-url-fail", &DetailedResponse{}, getSystemInfo)
+		return nil, authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
 	}
 
 	builder.AddHeader(CONTENT_TYPE, FORM_URL_ENCODED_HEADER)
@@ -416,7 +416,7 @@ func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResp
 
 	req, err := builder.Build()
 	if err != nil {
-		return nil, AuthenticationErrorf(err, err.Error(), "container-iam-token-build-fail", &DetailedResponse{}, getSystemInfo)
+		return nil, authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
 	}
 
 	// If client id and secret were configured by the user, then set them on the request
@@ -438,7 +438,7 @@ func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResp
 	GetLogger().Debug("Invoking IAM 'get token' operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		return nil, AuthenticationErrorf(err, err.Error(), "container-iam-token-invoke-fail", &DetailedResponse{}, getSystemInfo)
+		return nil, authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
 	}
 	GetLogger().Debug("Returned from IAM 'get token' operation, received status code %d", resp.StatusCode)
 
@@ -470,7 +470,7 @@ func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResp
 			iamErrorMsg = "IAM error response not available"
 		}
 		errMsg := fmt.Sprintf(ERRORMSG_IAM_GETTOKEN_ERROR, detailedResponse.StatusCode, builder.URL, iamErrorMsg)
-		return nil, AuthenticationErrorf(err, errMsg, "container-get-token-fail", detailedResponse, getSystemInfo)
+		return nil, authenticationErrorf(errMsg, "get-token", detailedResponse, authenticator.getSystemInfo)
 	}
 
 	// Good response, so unmarshal the response body into an IamTokenServerResponse instance.
@@ -497,7 +497,7 @@ func (authenticator *ContainerAuthenticator) retrieveCRToken() (crToken string, 
 
 	if err != nil {
 		errMsg := fmt.Sprintf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN, err.Error())
-		sdkErr := SDKErrorf(err, errMsg, "no-cr-token", getSystemInfo)
+		sdkErr := SDKErrorf(nil, errMsg, "no-cr-token", getSystemInfo)
 		GetLogger().Debug(sdkErr.GetDebugMessage())
 		err = sdkErr
 		return
@@ -514,7 +514,7 @@ func (authenticator *ContainerAuthenticator) readFile(filename string) (crToken 
 	var bytes []byte
 	bytes, err = os.ReadFile(filename) // #nosec G304
 	if err != nil {
-		err = SDKErrorf(err, "", "read-file-error", getSystemInfo)
+		err = SDKErrorf(nil, err.Error(), "read-file-error", getSystemInfo)
 		GetLogger().Debug(err.Error())
 		return
 	}
@@ -524,4 +524,11 @@ func (authenticator *ContainerAuthenticator) readFile(filename string) (crToken 
 	crToken = string(bytes)
 
 	return
+}
+
+// This should only be used for AuthenticationError instances that actually deal with
+// an HTTP error (i.e. do not have a blank DetailedResponse object - they can be scoped
+// to the SDK core system).
+func (authenticator *ContainerAuthenticator) getSystemInfo() (string, string) {
+	return "iam-identity-services", ""
 }

@@ -26,35 +26,20 @@ import (
 
 // Private utility functions for our custom error system
 
-// createIDHash computes a unique ID based on a given prefix
+// CreateIDHash computes a unique ID based on a given prefix
 // and error attribute fields.
-func createIDHash(prefix string, fields ...string) string {
+func CreateIDHash(prefix string, fields ...string) string {
 	signature := strings.Join(fields, "")
 	hash := sha256.Sum256([]byte(signature))
 	return fmt.Sprintf("%s_%s", prefix, hex.EncodeToString(hash[:4]))
 }
 
-// getPreviousErrorID looks at the "causedBy" error and if it
-// is an instance of a "Problem", returns the ID.
-func getPreviousErrorID(err error) string {
-	if (err != nil) {
-		// It only makes sense to look for an ID if it is an
-		// instance of Problem and not just a basic Go error
-		if problem, ok := err.(Problem); ok {
-			return problem.GetID()
-		}
+// getPreviousErrorID returns the ID of the "causedBy" error, if it exists.
+func getPreviousErrorID(problem Problem) string {
+	if problem != nil {
+		return problem.GetID()
 	}
 	return ""
-}
-
-// getErrorInfoAsYAML formats the error data as YAML
-// for human/machine readable printing.
-func getErrorInfoAsYAML(obj interface{}) string {
-	yamlifiedStruct, err := yaml.Marshal(obj)
-	if err != nil {
-		return fmt.Sprintf("Error serializing the error information: %s", err.Error())
-	}
-	return fmt.Sprintf("---\n%s---\n", yamlifiedStruct)
 }
 
 // getSystemInfo is a convenient way to access the name of the
@@ -141,6 +126,41 @@ func formatFrames(pcs []uintptr, system string) []sdkStackFrame {
 	return result
 }
 
+// getErrorInfoAsYAML formats the mapified error data as
+// YAML for human/machine readable printing.
+func getErrorInfoAsYAML(obj map[string]interface{}) string {
+	yamlifiedStruct, err := yaml.Marshal(obj)
+	if err != nil {
+		return fmt.Sprintf("Error serializing the error information: %s", err.Error())
+	}
+	return fmt.Sprintf("---\n%s---\n", yamlifiedStruct)
+}
+
+func ComputeConsoleMessage(p Problem) string {
+	return getErrorInfoAsYAML(getMapWithID(p))
+}
+
+func ComputeDebugMessage(p, causedBy Problem, additionalInfo map[string]interface{}) string {
+	errorAsMap := getMapWithID(p)
+
+	// Copy any additional fields supplied by a specific error type into the map.
+	if additionalInfo != nil {
+		for k, v := range additionalInfo {
+			errorAsMap[k] = v
+		}
+	}
+
+	// Compute the current error map's YAML string value.
+	errorAsYAML := getErrorInfoAsYAML(errorAsMap)
+
+	// "Recursively" append the chain of causedBy errors to the message.
+	if causedBy != nil {
+		errorAsYAML = fmt.Sprintf("%sCaused by:\n%s", errorAsYAML, causedBy.GetDebugMessage())
+	}
+
+	return errorAsYAML
+}
+
 // getMapWithID converts a Problem type to a generic map and adds the computed ID
 // to it. This is used for printing out error data as YAML, especially when we want
 // to add addtional, unexported fields to the debug message.
@@ -157,30 +177,60 @@ func getMapWithID(problem Problem) map[string]interface{} {
 	}
 
 	// Add the ID as a field to the map - it is always relevant.
-	errorAsMap["ID"] = problem.GetID()
+	errorAsMap["id"] = problem.GetID()
 
 	return errorAsMap
 }
 
-// getMapWithCausedBy converts a Problem to a map and, if relevant, adds the
-// "causedBy" error, along with its ID field (if it is also a Problem).
-func getMapWithCausedBy(problem Problem, causedBy error) map[string]interface{} {
-	errorAsMap := getMapWithID(problem)
+/* TODO: things we might need to add to errors in general:
+		- A flag to determine if the chain originated from HTTP or not
+		- A "deep getter" for retrieving the underlying HTTP error from any level
+*/
 
-	if causedBy != nil {
-		// Set causedBy in the map. If it is a native golang error,
-		// this will stay. Otherwise, it will be overwritten.
-
-		// TODO: consider mapifying the causedBy error in order to inlcude the .Error()
-		// message in the case of native errors.
-		errorAsMap["CausedBy"] = causedBy
-
-		// If causedBy is a Problem type, we'll update the field
-		// so that it includes its hash ID.
-		if causedByProblem, ok := causedBy.(Problem); ok {
-			errorAsMap["CausedBy"] = getMapWithID(causedByProblem)
-		}
+// EnrichHTTPError takes an error that should be an SDKError from the core,
+// checks to see if it was caused by an HTTPError, and if so - populates the
+// fields of the HTTP error with the given service/operation information.
+func EnrichHTTPError(err error, operationID, system, version string) {
+	// Expect an SDK to call this function, passing in an SDKError instance
+	// that originated here in the core.
+	sdkErr, ok := err.(*SDKError)
+	if !ok {
+		return
 	}
 
-	return errorAsMap
+	// If the error has no causedBy error, it didn't originate from an HTTP
+	// error response, so there's nothing to do here.
+	causedBy := sdkErr.GetCausedBy()
+	if causedBy == nil {
+		return
+	}
+
+	// If the error did originate from an HTTP error response, populate the
+	// HTTPError instance with details from the SDK that weren't available
+	// in the core at error creation time.
+	if httpErr, ok := causedBy.(*HTTPError); ok {
+		httpErr.OperationID = operationID
+		httpErr.System = system
+		httpErr.Version = version
+
+		// TODO: think about how we might pull a discriminator from an API, if needed
+
+		if httpErr.Response.Result != nil {
+			// If the error response was a standard JSON body, the result will be a map
+			// and we can do a decent job of guessing the code.
+
+			// TODO: enable this once we know we can enumerate codes from an API.
+			/*if resultMap, ok := httpErr.Response.Result.(map[string]interface{}); ok {
+				httpErr.ErrorCode = getErrorCode(resultMap)
+			}*/
+		}
+	}
+}
+
+func getHTTPFromAuthenticatorError(err error) (*HTTPError, bool) {
+	if authErr, ok := err.(*AuthenticationError); ok {
+		return authErr.ConvertToHTTPError()
+	}
+
+	return nil, false
 }

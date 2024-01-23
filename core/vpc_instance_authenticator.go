@@ -323,7 +323,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 	builder := NewRequestBuilder(POST)
 	_, err = builder.ResolveRequestURL(authenticator.url(), vpcauthOperationPathCreateIamToken, nil)
 	if err != nil {
-		err = AuthenticationErrorf(err, err.Error(), "create-token-url-fail", &DetailedResponse{}, getSystemInfo)
+		err = authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
 		return
 	}
 
@@ -351,7 +351,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 	// Build the request.
 	req, err := builder.Build()
 	if err != nil {
-		return nil, AuthenticationErrorf(err, err.Error(), "create-token-build-fail", &DetailedResponse{}, getSystemInfo)
+		return nil, authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
 	}
 
 	// If debug is enabled, then dump the request.
@@ -367,7 +367,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 	GetLogger().Debug("Invoking VPC 'create_iam_token' operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		return nil, AuthenticationErrorf(err, err.Error(), "create-token-invoke-fail", &DetailedResponse{}, getSystemInfo)
+		return nil, authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
 	}
 	GetLogger().Debug("Returned from VPC 'create_iam_token' operation, received status code %d", resp.StatusCode)
 
@@ -399,7 +399,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 			vpcErrorMsg = "Operation 'create_iam_token' error response not available"
 		}
 		errMsg := fmt.Sprintf(ERRORMSG_VPCMDS_OPERATION_ERROR, detailedResponse.StatusCode, builder.URL, vpcErrorMsg)
-		return nil, AuthenticationErrorf(nil, errMsg, "iam-token-creation-fail", detailedResponse, getSystemInfo)
+		return nil, authenticationErrorf(errMsg, "create_iam_token", detailedResponse, authenticator.getSystemInfo)
 	}
 
 	// Good response, so unmarshal the response body into a vpcTokenResponse instance.
@@ -426,7 +426,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (
 	builder := NewRequestBuilder(PUT)
 	_, err = builder.ResolveRequestURL(authenticator.url(), vpcauthOperationPathCreateAccessToken, nil)
 	if err != nil {
-		err = AuthenticationErrorf(err, err.Error(), "access-token-url-fail", &DetailedResponse{}, getSystemInfo)
+		err = authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
 		return
 	}
 
@@ -442,7 +442,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (
 	// Build the request.
 	req, err := builder.Build()
 	if err != nil {
-		err = AuthenticationErrorf(err, err.Error(), "access-token-build-fail", &DetailedResponse{}, getSystemInfo)
+		err = authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
 		return
 	}
 
@@ -460,7 +460,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (
 	GetLogger().Debug("Invoking VPC 'create_access_token' operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		err = AuthenticationErrorf(err, err.Error(), "access-token-invoke-fail", &DetailedResponse{}, getSystemInfo)
+		err = authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
 		return
 	}
 	GetLogger().Debug("Returned from VPC 'create_access_token' operation, received status code %d", resp.StatusCode)
@@ -493,7 +493,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (
 			vpcErrorMsg = "Operation 'create_access_token' error response not available"
 		}
 
-		err = AuthenticationErrorf(nil, fmt.Sprintf(ERRORMSG_VPCMDS_OPERATION_ERROR, detailedResponse.StatusCode, builder.URL, vpcErrorMsg), "vpc-service-fail", detailedResponse, getSystemInfo)
+		err = authenticationErrorf(fmt.Sprintf(ERRORMSG_VPCMDS_OPERATION_ERROR, detailedResponse.StatusCode, builder.URL, vpcErrorMsg), "create_access_token", detailedResponse, authenticator.getSystemInfo)
 		return
 	}
 
@@ -507,4 +507,11 @@ func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (
 	instanceIdentityToken = *operationResponse.AccessToken
 
 	return
+}
+
+// This should only be used for AuthenticationError instances that actually deal with
+// an HTTP error (i.e. do not have a blank DetailedResponse object - they can be scoped
+// to the SDK core system).
+func (authenticator *VpcInstanceAuthenticator) getSystemInfo() (string, string) {
+	return "vpc-instance-metadata", vpcauthMetadataServiceVersion
 }

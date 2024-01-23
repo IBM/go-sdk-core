@@ -78,10 +78,10 @@ func ValidateStruct(param interface{}, paramName string) error {
 		// If there were validation errors then return an error containing the field errors
 		if fieldErrors, ok := err.(validator.ValidationErrors); ok {
 			errMsg := fmt.Sprintf("%s failed validation:\n%s", paramName, fieldErrors.Error())
-			err = SDKErrorf(err, errMsg, "struct-validation-errors", getSystemInfo)
+			err = SDKErrorf(nil, errMsg, "struct-validation-errors", getSystemInfo)
 		}
 		errMsg := fmt.Sprintf("Failed to validate %s:\n%s", paramName, err.Error())
-		return SDKErrorf(err, errMsg, "struct-validate-unknown-error", getSystemInfo)
+		return SDKErrorf(nil, errMsg, "struct-validate-unknown-error", getSystemInfo)
 	}
 
 	return nil
@@ -285,13 +285,13 @@ func GetQueryParam(urlStr *string, param string) (value *string, err error) {
 
 	urlObj, err := url.Parse(*urlStr)
 	if err != nil {
-		err = SDKErrorf(err, fmt.Sprintf(errMsgTempl, param, err.Error()), "url-parse-error", getSystemInfo)
+		err = SDKErrorf(nil, fmt.Sprintf(errMsgTempl, param, err.Error()), "url-parse-error", getSystemInfo)
 		return
 	}
 
 	query, err := url.ParseQuery(urlObj.RawQuery)
 	if err != nil {
-		err = SDKErrorf(err, fmt.Sprintf(errMsgTempl, param, err.Error()), "url-parse-query-error", getSystemInfo)
+		err = SDKErrorf(nil, fmt.Sprintf(errMsgTempl, param, err.Error()), "url-parse-query-error", getSystemInfo)
 		return
 	}
 
@@ -321,7 +321,7 @@ func GetQueryParamAsInt(urlStr *string, param string) (value *int64, err error) 
 	intValue, err := strconv.ParseInt(*strValue, 10, 64)
 	if err != nil {
 		errMsg := fmt.Sprintf("Could not read query param %s as an int:\n%s", param, err.Error())
-		err = SDKErrorf(err, errMsg, "parse-int-query-error", getSystemInfo)
+		err = SDKErrorf(nil, errMsg, "parse-int-query-error", getSystemInfo)
 		return nil, err
 	}
 

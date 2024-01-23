@@ -112,7 +112,7 @@ func (requestBuilder *RequestBuilder) ConstructHTTPURL(serviceURL string, pathSe
 	URL, err := url.Parse(serviceURL)
 	if err != nil {
 		errMsg := fmt.Sprintf(ERRORMSG_SERVICE_URL_INVALID, err.Error())
-		return requestBuilder, SDKErrorf(err, errMsg, "bad-url", getSystemInfo)
+		return requestBuilder, SDKErrorf(nil, errMsg, "bad-url", getSystemInfo)
 	}
 
 	for i, pathSegment := range pathSegments {
@@ -187,7 +187,7 @@ func (requestBuilder *RequestBuilder) ResolveRequestURL(serviceURL string, path 
 	URL, err := url.Parse(urlString)
 	if err != nil {
 		errMsg := fmt.Sprintf(ERRORMSG_SERVICE_URL_INVALID, err.Error())
-		return requestBuilder, SDKErrorf(err, errMsg, "bad-url", getSystemInfo)
+		return requestBuilder, SDKErrorf(nil, errMsg, "bad-url", getSystemInfo)
 	}
 
 	requestBuilder.URL = URL
@@ -232,7 +232,7 @@ func (requestBuilder *RequestBuilder) SetBodyContentJSON(bodyContent interface{}
 	err := json.NewEncoder(requestBuilder.Body.(io.Writer)).Encode(bodyContent)
 	if err != nil {
 		errMsg := fmt.Sprintf("Could not encode JSON body:\n%s", err.Error())
-		err = SDKErrorf(err, errMsg, "bad-encode", getSystemInfo)
+		err = SDKErrorf(nil, errMsg, "bad-encode", getSystemInfo)
 	}
 	return requestBuilder, err
 }
@@ -265,7 +265,7 @@ func createFormFile(formWriter *multipart.Writer, fieldname string, filename str
 
 	res, err := formWriter.CreatePart(h)
 	if err != nil {
-		err = SDKErrorf(err, err.Error(), "create-part-error", getSystemInfo)
+		err = SDKErrorf(nil, err.Error(), "create-part-error", getSystemInfo)
 	}
 	return res, err
 }
@@ -277,7 +277,7 @@ func (requestBuilder *RequestBuilder) SetBodyContentForMultipart(contentType str
 		_, err = io.Copy(writer, stream)
 		if err != nil {
 			err = SDKErrorf(
-				err,
+				nil,
 				fmt.Sprintf("Could not set body content in form:\n%s", err.Error()),
 				"reader-error",
 				getSystemInfo,
@@ -287,7 +287,7 @@ func (requestBuilder *RequestBuilder) SetBodyContentForMultipart(contentType str
 		_, err = io.Copy(writer, *stream)
 		if err != nil {
 			err = SDKErrorf(
-				err,
+				nil,
 				fmt.Sprintf("Could not set body content in form:\n%s", err.Error()),
 				"readcloser-error",
 				getSystemInfo,
@@ -297,7 +297,7 @@ func (requestBuilder *RequestBuilder) SetBodyContentForMultipart(contentType str
 		err = json.NewEncoder(writer).Encode(content)
 		if err != nil {
 			err = SDKErrorf(
-				err,
+				nil,
 				fmt.Sprintf("Could not set body content in form:\n%s", err.Error()),
 				"json-error",
 				getSystemInfo,
@@ -307,7 +307,7 @@ func (requestBuilder *RequestBuilder) SetBodyContentForMultipart(contentType str
 		_, err = writer.Write([]byte(str))
 		if err != nil {
 			err = SDKErrorf(
-				err,
+				nil,
 				fmt.Sprintf("Could not set body content in form:\n%s", err.Error()),
 				"string-error",
 				getSystemInfo,
@@ -317,7 +317,7 @@ func (requestBuilder *RequestBuilder) SetBodyContentForMultipart(contentType str
 		_, err = writer.Write([]byte(*strPtr))
 		if err != nil {
 			err = SDKErrorf(
-				err,
+				nil,
 				fmt.Sprintf("Could not set body content in form:\n%s", err.Error()),
 				"string-ptr-error",
 				getSystemInfo,
@@ -325,7 +325,7 @@ func (requestBuilder *RequestBuilder) SetBodyContentForMultipart(contentType str
 		}
 	} else {
 		err = SDKErrorf(
-			err,
+			nil,
 			"Error: unable to determine the type of 'content' provided",
 			"undetermined-type",
 			getSystemInfo,

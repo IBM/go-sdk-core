@@ -380,9 +380,10 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 
 	authError := service.Options.Authenticator.Authenticate(req)
 	if authError != nil {
-		err = SDKErrorf(nil, fmt.Sprintf(ERRORMSG_AUTHENTICATE_ERROR, authError.Error()), "auth-failed", getSystemInfo)
-		if castErr, ok := authError.(*AuthenticationError); ok {
-			detailedResponse = castErr.Response
+		if httpErr, ok := getHTTPFromAuthenticatorError(authError); ok {
+			err = SDKErrorf(httpErr, fmt.Sprintf(ERRORMSG_AUTHENTICATE_ERROR, authError.Error()), "auth-failed", getSystemInfo)
+		} else {
+			err = SDKErrorf(nil, fmt.Sprintf(ERRORMSG_AUTHENTICATE_ERROR, authError.Error()), "auth-failed", getSystemInfo)
 		}
 		return
 	}
@@ -406,7 +407,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		if strings.Contains(err.Error(), SSL_CERTIFICATION_ERROR) {
 			errMsg = ERRORMSG_SSL_VERIFICATION_FAILED + "\n" + errMsg
 		}
-		err = SDKErrorf(err, errMsg, "no-connection-made", getSystemInfo)
+		err = SDKErrorf(nil, errMsg, "no-connection-made", getSystemInfo)
 		return
 	}
 
@@ -443,14 +444,16 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			defer httpResponse.Body.Close() // #nosec G307
 			responseBody, readErr = io.ReadAll(httpResponse.Body)
 			if readErr != nil {
-				err = HTTPErrorf(readErr, ERRORMSG_READ_RESPONSE_BODY, "cant-read-error-body", detailedResponse)
+				httpErr := httpErrorf(http.StatusText(httpResponse.StatusCode), detailedResponse)
+				err = SDKErrorf(httpErr, fmt.Sprintf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error()), "cant-read-error-body", getSystemInfo)
 				return
 			}
 		}
 
 		// If the responseBody is empty, then just return a generic error based on the status code.
 		if len(responseBody) == 0 {
-			err = HTTPErrorf(nil, http.StatusText(httpResponse.StatusCode), "no-error-body", detailedResponse)
+			httpErr := httpErrorf(http.StatusText(httpResponse.StatusCode), detailedResponse)
+			err = SDKErrorf(httpErr, "", "no-error-body", getSystemInfo)
 			return
 		}
 
@@ -462,8 +465,8 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			if decodeErr == nil {
 				detailedResponse.Result = responseMap
 				errorMsg := getErrorMessage(responseMap, detailedResponse.StatusCode)
-				// errorCode := getErrorCode(responseMap) // TODO: consider doing this in the SDK
-				err = HTTPErrorf(nil, errorMsg, "json-error-body", detailedResponse)
+				httpErr := httpErrorf(errorMsg, detailedResponse)
+				err = SDKErrorf(httpErr, "", "json-error-body", getSystemInfo)
 				return
 			}
 		}
@@ -472,7 +475,8 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		// just return the response body byte array in the RawResult field along with
 		// an error object that contains the generic error message for the status code.
 		detailedResponse.RawResult = responseBody
-		err = HTTPErrorf(nil, http.StatusText(httpResponse.StatusCode), "non-json-error-body", detailedResponse)
+		httpErr := httpErrorf(http.StatusText(httpResponse.StatusCode), detailedResponse)
+		err = SDKErrorf(httpErr, "", "non-json-error-body", getSystemInfo)
 		return
 	}
 
@@ -492,7 +496,8 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			defer httpResponse.Body.Close() // #nosec G307
 			responseBody, readErr := io.ReadAll(httpResponse.Body)
 			if readErr != nil {
-				err = SDKErrorf(readErr, ERRORMSG_READ_RESPONSE_BODY, "cant-read-success-res-body", getSystemInfo)
+				errMsg := fmt.Sprintf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error())
+				err = SDKErrorf(nil, errMsg, "cant-read-success-res-body", getSystemInfo)
 				return
 			}
 
@@ -509,7 +514,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 					// Error decoding the response body.
 					// Return the response body in RawResult, along with an error.
 					errMsg := fmt.Sprintf(ERRORMSG_UNMARSHAL_RESPONSE_BODY, decodeErr.Error())
-					err = SDKErrorf(decodeErr, errMsg, "res-body-decode-error", getSystemInfo)
+					err = SDKErrorf(nil, errMsg, "res-body-decode-error", getSystemInfo)
 					detailedResponse.RawResult = responseBody
 					return
 				}
@@ -580,7 +585,7 @@ type Error struct {
 func decodeAsMap(byteBuffer []byte) (result map[string]interface{}, err error) {
 	err = json.NewDecoder(bytes.NewReader(byteBuffer)).Decode(&result)
 	if err != nil {
-		err = SDKErrorf(err, "", "decode-error", getSystemInfo)
+		err = SDKErrorf(nil, err.Error(), "decode-error", getSystemInfo)
 	}
 	return
 }
@@ -628,7 +633,7 @@ func getErrorMessage(responseMap map[string]interface{}, statusCode int) string 
 }
 
 // getErrorCode: try to retrieve an error code from the decoded response body (map).
-/*func getErrorCode(responseMap map[string]interface{}) string {
+func getErrorCode(responseMap map[string]interface{}) string {
 
 	// If the response contained the "errors" field, then try to deserialize responseMap
 	// into an array of Error structs, then return the first entry's "Message" field.
@@ -650,7 +655,7 @@ func getErrorMessage(responseMap map[string]interface{}, statusCode int) string 
 
 	// If we couldn't find a code, return an empty string
 	return ""
-}*/
+}
 
 // isRetryableClient() will return true if and only if "client" is
 // an http.Client instance that is configured for automatic retries.
@@ -806,17 +811,17 @@ func IBMCloudSDKRetryPolicy(ctx context.Context, resp *http.Response, err error)
 		if v, ok := err.(*url.Error); ok {
 			// Don't retry if the error was due to too many redirects.
 			if redirectsErrorRe.MatchString(v.Error()) {
-				return false, SDKErrorf(v, "", "too-many-redirects", getSystemInfo)
+				return false, SDKErrorf(nil, v.Error(), "too-many-redirects", getSystemInfo)
 			}
 
 			// Don't retry if the error was due to an invalid protocol scheme.
 			if schemeErrorRe.MatchString(v.Error()) {
-				return false, SDKErrorf(v, "", "invalid-scheme", getSystemInfo)
+				return false, SDKErrorf(nil, v.Error(), "invalid-scheme", getSystemInfo)
 			}
 
 			// Don't retry if the error was due to TLS cert verification failure.
 			if _, ok := v.Err.(x509.UnknownAuthorityError); ok {
-				return false, SDKErrorf(v, "", "cert-failure", getSystemInfo)
+				return false, SDKErrorf(nil, v.Error(), "cert-failure", getSystemInfo)
 			}
 		}
 

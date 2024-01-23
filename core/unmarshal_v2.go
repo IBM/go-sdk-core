@@ -86,7 +86,7 @@ func UnmarshalPrimitive(rawInput map[string]json.RawMessage, propertyName string
 		err = json.Unmarshal(rawMsg, result)
 		if err != nil {
 			errMsg := fmt.Sprintf(errorUnmarshalPrimitive, propertyName, err.Error())
-			err = SDKErrorf(err, errMsg, "json-unmarshal-error", getSystemInfo)
+			err = SDKErrorf(nil, errMsg, "json-unmarshal-error", getSystemInfo)
 		}
 	}
 	return
@@ -291,7 +291,7 @@ func unmarshalModelInstance(rawInput interface{}, propertyName string, result in
 	foundInput, rawMap, err = getUnmarshalInputSourceMap(rawInput, propertyName)
 	if err != nil {
 		errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName), getModelResultType(result), err.Error())
-		err = SDKErrorf(err, errMsg, "input-source-error", getSystemInfo)
+		err = SDKErrorf(nil, errMsg, "input-source-error", getSystemInfo)
 		return
 	}
 
@@ -309,7 +309,7 @@ func unmarshalModelInstance(rawInput interface{}, propertyName string, result in
 		err = unmarshaller(rawMap, result)
 		if err != nil {
 			errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName), getModelResultType(result), err.Error())
-			err = SDKErrorf(err, errMsg, "unmarshaller-error", getSystemInfo)
+			err = SDKErrorf(nil, errMsg, "unmarshaller-error", getSystemInfo)
 			return
 		}
 	}
@@ -347,7 +347,7 @@ func unmarshalModelSlice(rawInput interface{}, propertyName string, result inter
 	if err != nil {
 		errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName),
 			reflect.TypeOf(result).Elem().String(), err.Error())
-		err = SDKErrorf(err, errMsg, "input-source-error", getSystemInfo)
+		err = SDKErrorf(nil, errMsg, "input-source-error", getSystemInfo)
 		return
 	}
 
@@ -375,7 +375,7 @@ func unmarshalModelSlice(rawInput interface{}, propertyName string, result inter
 		if err != nil {
 			errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName),
 				reflect.TypeOf(result).Elem().String(), err.Error())
-			err = SDKErrorf(err, errMsg, "result-type-error", getSystemInfo)
+			err = SDKErrorf(nil, errMsg, "result-type-error", getSystemInfo)
 			return
 		}
 
@@ -386,7 +386,7 @@ func unmarshalModelSlice(rawInput interface{}, propertyName string, result inter
 			if err != nil {
 				errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName),
 					reflect.TypeOf(result).Elem().String(), err.Error())
-				err = SDKErrorf(err, errMsg, "json-unmarshal-error", getSystemInfo)
+				err = SDKErrorf(nil, errMsg, "json-unmarshal-error", getSystemInfo)
 				return
 			}
 
@@ -398,7 +398,7 @@ func unmarshalModelSlice(rawInput interface{}, propertyName string, result inter
 			if err != nil {
 				errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName),
 					reflect.TypeOf(result).Elem().String(), err.Error())
-				err = SDKErrorf(err, errMsg, "unmarshaller-error", getSystemInfo)
+				err = SDKErrorf(nil, errMsg, "unmarshaller-error", getSystemInfo)
 				return
 			}
 
@@ -440,7 +440,7 @@ func unmarshalModelSliceSlice(rawInput interface{}, propertyName string, result 
 	if err != nil {
 		errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName),
 			reflect.TypeOf(result).Elem().String(), err.Error())
-		err = SDKErrorf(err, errMsg, "input-source-error", getSystemInfo)
+		err = SDKErrorf(nil, errMsg, "input-source-error", getSystemInfo)
 		return
 	}
 
@@ -471,7 +471,7 @@ func unmarshalModelSliceSlice(rawInput interface{}, propertyName string, result 
 			if err != nil {
 				errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName),
 					reflect.TypeOf(result).Elem().String(), err.Error())
-				err = SDKErrorf(err, errMsg, "json-unmarshal-error", getSystemInfo)
+				err = SDKErrorf(nil, errMsg, "json-unmarshal-error", getSystemInfo)
 				return
 			}
 
@@ -483,7 +483,7 @@ func unmarshalModelSliceSlice(rawInput interface{}, propertyName string, result 
 			if err != nil {
 				errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName),
 					reflect.TypeOf(result).Elem().String(), err.Error())
-				err = SDKErrorf(err, errMsg, "unmarshaller-error", getSystemInfo)
+				err = SDKErrorf(nil, errMsg, "unmarshaller-error", getSystemInfo)
 				return
 			}
 
@@ -518,7 +518,7 @@ func unmarshalModelMap(rawInput interface{}, propertyName string, result interfa
 	if err != nil {
 		errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName),
 			reflect.TypeOf(result).Elem().String(), err.Error())
-		err = SDKErrorf(err, errMsg, "input-source-error", getSystemInfo)
+		err = SDKErrorf(nil, errMsg, "input-source-error", getSystemInfo)
 		return
 	}
 
@@ -539,7 +539,7 @@ func unmarshalModelMap(rawInput interface{}, propertyName string, result interfa
 		if err != nil {
 			errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName),
 				reflect.TypeOf(result).Elem().String(), err.Error())
-			err = SDKErrorf(err, errMsg, "result-type-error", getSystemInfo)
+			err = SDKErrorf(nil, errMsg, "result-type-error", getSystemInfo)
 			return
 		}
 
@@ -551,7 +551,7 @@ func unmarshalModelMap(rawInput interface{}, propertyName string, result interfa
 			if err != nil {
 				errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName),
 					reflect.TypeOf(result).Elem().String(), err.Error())
-				err = SDKErrorf(err, errMsg, "json-unmarshal-error", getSystemInfo)
+				err = SDKErrorf(nil, errMsg, "json-unmarshal-error", getSystemInfo)
 				return
 			}
 
@@ -563,7 +563,7 @@ func unmarshalModelMap(rawInput interface{}, propertyName string, result interfa
 			if err != nil {
 				errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName),
 					reflect.TypeOf(result).Elem().String(), err.Error())
-				err = SDKErrorf(err, errMsg, "unmarshaller-error", getSystemInfo)
+				err = SDKErrorf(nil, errMsg, "unmarshaller-error", getSystemInfo)
 				return
 			}
 
@@ -599,7 +599,7 @@ func unmarshalModelSliceMap(rawInput interface{}, propertyName string, result in
 	if err != nil {
 		errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName),
 			reflect.TypeOf(result).Elem().String(), err.Error())
-		err = SDKErrorf(err, errMsg, "input-source-error", getSystemInfo)
+		err = SDKErrorf(nil, errMsg, "input-source-error", getSystemInfo)
 		return
 	}
 
@@ -624,7 +624,7 @@ func unmarshalModelSliceMap(rawInput interface{}, propertyName string, result in
 				if err != nil {
 					errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName),
 						reflect.TypeOf(result).Elem().String(), err.Error())
-					err = SDKErrorf(err, errMsg, "json-unmarshal-error", getSystemInfo)
+					err = SDKErrorf(nil, errMsg, "json-unmarshal-error", getSystemInfo)
 					return
 				}
 
@@ -636,7 +636,7 @@ func unmarshalModelSliceMap(rawInput interface{}, propertyName string, result in
 				if err != nil {
 					errMsg := fmt.Sprintf(errorUnmarshalModel, propInsert(propertyName),
 						reflect.TypeOf(result).Elem().String(), err.Error())
-					err = SDKErrorf(err, errMsg, "unmarshaller-error", getSystemInfo)
+					err = SDKErrorf(nil, errMsg, "unmarshaller-error", getSystemInfo)
 					return
 				}
 
@@ -680,7 +680,7 @@ func getUnmarshalInputSourceMap(rawInput interface{}, propertyName string) (foun
 			err = json.Unmarshal(rawMsg, &rawMap)
 			if err != nil {
 				foundInput = false
-				err = SDKErrorf(err, "", "json-unmarshal-error", getSystemInfo)
+				err = SDKErrorf(nil, err.Error(), "json-unmarshal-error", getSystemInfo)
 				return
 			}
 		}
@@ -708,7 +708,7 @@ func getUnmarshalInputSourceSlice(rawInput interface{}, propertyName string) (fo
 		rawMap, ok := rawInput.(map[string]json.RawMessage)
 		if !ok {
 			errMsg := fmt.Sprintf(errorIncorrectInputType, "map[string]json.RawMessage", reflect.TypeOf(rawInput).String())
-			err = SDKErrorf(err, errMsg, "raw-input-error", getSystemInfo)
+			err = SDKErrorf(nil, errMsg, "raw-input-error", getSystemInfo)
 			return
 		}
 
@@ -724,7 +724,7 @@ func getUnmarshalInputSourceSlice(rawInput interface{}, propertyName string) (fo
 			err = json.Unmarshal(rawMsg, &rawSlice)
 			if err != nil {
 				errMsg := fmt.Sprintf(errorIncorrectInputType, "map[string][]json.RawMessage", reflect.TypeOf(rawInput).String())
-				err = SDKErrorf(err, errMsg, "json-unmarshal-error", getSystemInfo)
+				err = SDKErrorf(nil, errMsg, "json-unmarshal-error", getSystemInfo)
 				return
 			}
 
@@ -737,7 +737,7 @@ func getUnmarshalInputSourceSlice(rawInput interface{}, propertyName string) (fo
 		rawSlice, ok := rawInput.([]json.RawMessage)
 		if !ok {
 			errMsg := fmt.Sprintf(errorIncorrectInputType, "[]json.RawMessage", reflect.TypeOf(rawInput).String())
-			err = SDKErrorf(err, errMsg, "no-name-raw-input-error", getSystemInfo)
+			err = SDKErrorf(nil, errMsg, "no-name-raw-input-error", getSystemInfo)
 			return
 		}
 
@@ -778,7 +778,7 @@ func getUnmarshalResultType(result interface{}) (ptrType reflect.Type, err error
 
 	default:
 		errMsg := fmt.Sprintf(errorUnsupportedResultType, rResultType.String())
-		err = SDKErrorf(err, errMsg, "unsupported-type", getSystemInfo)
+		err = SDKErrorf(nil, errMsg, "unsupported-type", getSystemInfo)
 	}
 	return
 }

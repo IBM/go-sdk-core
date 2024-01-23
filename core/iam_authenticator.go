@@ -353,7 +353,7 @@ func (authenticator *IamAuthenticator) GetToken() (string, error) {
 		// synchronously request the token
 		err := authenticator.synchronizedRequestToken()
 		if err != nil {
-			return "", err
+			return "", RepurposeSDKError(err, "request-token-fail")
 		}
 	} else if authenticator.getTokenData().needsRefresh() {
 		// If refresh needed, kick off a go routine in the background to get a new token
@@ -363,7 +363,7 @@ func (authenticator *IamAuthenticator) GetToken() (string, error) {
 
 	// return an error if the access token is not valid or was not fetched
 	if authenticator.getTokenData() == nil || authenticator.getTokenData().AccessToken == "" {
-		return "", SDKErrorf(nil, "Error while trying to get access token", "iam-no-token", getSystemInfo)
+		return "", SDKErrorf(nil, "Error while trying to get access token", "no-token", getSystemInfo)
 	}
 
 	return authenticator.getTokenData().AccessToken, nil
@@ -464,7 +464,7 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 	GetLogger().Debug("Invoking IAM 'get token' operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		err = SDKErrorf(err, "", "iam-request-error", getSystemInfo)
+		err = SDKErrorf(nil, err.Error(), "request-error", getSystemInfo)
 		return nil, err
 	}
 	GetLogger().Debug("Returned from IAM 'get token' operation, received status code %d", resp.StatusCode)
@@ -495,13 +495,17 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 			iamErrorMsg =
 				fmt.Sprintf("unexpected status code %d received from IAM token server %s", detailedResponse.StatusCode, builder.URL)
 		}
-		return nil, AuthenticationErrorf(nil, iamErrorMsg, "iam-get-token-fail", detailedResponse, getSystemInfo)
+		return nil, authenticationErrorf(iamErrorMsg, "get-token", detailedResponse, authenticator.getSystemInfo)
 	}
 
 	tokenResponse := &IamTokenServerResponse{}
 	_ = json.NewDecoder(resp.Body).Decode(tokenResponse)
 	defer resp.Body.Close() // #nosec G307
 	return tokenResponse, nil
+}
+
+func (authenticator *IamAuthenticator) getSystemInfo() (string, string) {
+	return "iam-identity-services", ""
 }
 
 // IamTokenServerResponse : This struct models a response received from the token server.
@@ -525,7 +529,7 @@ type iamTokenData struct {
 func newIamTokenData(tokenResponse *IamTokenServerResponse) (*iamTokenData, error) {
 
 	if tokenResponse == nil {
-		return nil, SDKErrorf(nil, "Error while trying to parse access token!", "iam-token-parse", getSystemInfo)
+		return nil, SDKErrorf(nil, "Error while trying to parse access token!", "token-parse", getSystemInfo)
 	}
 	// Compute the adjusted refresh time (expiration time - 20% of timeToLive)
 	timeToLive := tokenResponse.ExpiresIn

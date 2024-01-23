@@ -24,10 +24,10 @@ import (
 type DetailedResponse struct {
 
 	// The HTTP status code associated with the response.
-	StatusCode int
+	StatusCode int `json:"status_code"`
 
 	// The HTTP headers contained in the response.
-	Headers http.Header
+	Headers http.Header `json:"headers"`
 
 	// Result - this field will contain the result of the operation (obtained from the response body).
 	//
@@ -50,13 +50,13 @@ type DetailedResponse struct {
 	// response body as a "generic" JSON object.
 	// If the JSON response for an unsuccessful operation could not be properly un-marshalled, then the
 	// RawResult field will contain the raw response body.
-	Result interface{}
+	Result interface{} `json:"result"`
 
 	// This field will contain the raw response body as a byte array under these conditions:
 	// 1) there was a problem un-marshalling a JSON response body -
 	// either for a successful or unsuccessful operation.
 	// 2) the operation was unsuccessful, and the response body contains a non-JSON response.
-	RawResult []byte
+	RawResult []byte `json:"raw_result"`
 }
 
 // GetHeaders returns the headers

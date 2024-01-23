@@ -58,7 +58,7 @@ func UnmarshalFileWithMetadata(m map[string]json.RawMessage, result interface{})
 	}
 	data, err = os.Open(pathToData) // #nosec G304
 	if err != nil {
-		err = SDKErrorf(err, "", "file-open-error", getSystemInfo)
+		err = SDKErrorf(nil, err.Error(), "file-open-error", getSystemInfo)
 		return
 	}
 	obj.Data = data
