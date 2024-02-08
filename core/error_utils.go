@@ -1,6 +1,6 @@
 package core
 
-// (C) Copyright IBM Corp. 2023.
+// (C) Copyright IBM Corp. 2024.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,9 +17,8 @@ package core
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"github.com/ghodss/yaml"
+	"github.com/go-yaml/yaml"
 	"runtime"
 	"strings"
 )
@@ -126,60 +125,23 @@ func formatFrames(pcs []uintptr, system string) []sdkStackFrame {
 	return result
 }
 
-// getErrorInfoAsYAML formats the mapified error data as
+// getErrorInfoAsYAML formats the ordered error data as
 // YAML for human/machine readable printing.
-func getErrorInfoAsYAML(obj map[string]interface{}) string {
-	yamlifiedStruct, err := yaml.Marshal(obj)
+func getErrorInfoAsYAML(orderedMaps *OrderedMaps) string {
+	asYaml, err := yaml.Marshal(orderedMaps.GetMaps())
+
 	if err != nil {
 		return fmt.Sprintf("Error serializing the error information: %s", err.Error())
 	}
-	return fmt.Sprintf("---\n%s---\n", yamlifiedStruct)
+	return fmt.Sprintf("---\n%s---\n", asYaml)
 }
 
-func ComputeConsoleMessage(p Problem) string {
-	return getErrorInfoAsYAML(getMapWithID(p))
+func ComputeConsoleMessage(o OrderableProblem) string {
+	return getErrorInfoAsYAML(o.GetConsoleOrderedMaps())
 }
 
-func ComputeDebugMessage(p, causedBy Problem, additionalInfo map[string]interface{}) string {
-	errorAsMap := getMapWithID(p)
-
-	// Copy any additional fields supplied by a specific error type into the map.
-	if additionalInfo != nil {
-		for k, v := range additionalInfo {
-			errorAsMap[k] = v
-		}
-	}
-
-	// Compute the current error map's YAML string value.
-	errorAsYAML := getErrorInfoAsYAML(errorAsMap)
-
-	// "Recursively" append the chain of causedBy errors to the message.
-	if causedBy != nil {
-		errorAsYAML = fmt.Sprintf("%sCaused by:\n%s", errorAsYAML, causedBy.GetDebugMessage())
-	}
-
-	return errorAsYAML
-}
-
-// getMapWithID converts a Problem type to a generic map and adds the computed ID
-// to it. This is used for printing out error data as YAML, especially when we want
-// to add addtional, unexported fields to the debug message.
-func getMapWithID(problem Problem) map[string]interface{} {
-	var errorAsMap map[string]interface{}
-	jsonBytes, err := json.Marshal(problem)
-	if err != nil {
-		GetLogger().Debug("Failed to parse Problem as JSON data")
-	}
-	err = json.Unmarshal(jsonBytes, &errorAsMap)
-	if err != nil {
-		// TODO: rethink this message
-		GetLogger().Debug("Failed to create map from Problem data")
-	}
-
-	// Add the ID as a field to the map - it is always relevant.
-	errorAsMap["id"] = problem.GetID()
-
-	return errorAsMap
+func ComputeDebugMessage(o OrderableProblem) string {
+	return getErrorInfoAsYAML(o.GetDebugOrderedMaps())
 }
 
 /* TODO: things we might need to add to errors in general:
@@ -220,9 +182,9 @@ func EnrichHTTPError(err error, operationID, system, version string) {
 			// and we can do a decent job of guessing the code.
 
 			// TODO: enable this once we know we can enumerate codes from an API.
-			/*if resultMap, ok := httpErr.Response.Result.(map[string]interface{}); ok {
+			if resultMap, ok := httpErr.Response.Result.(map[string]interface{}); ok {
 				httpErr.ErrorCode = getErrorCode(resultMap)
-			}*/
+			}
 		}
 	}
 }

@@ -1,6 +1,6 @@
 package core
 
-// (C) Copyright IBM Corp. 2023.
+// (C) Copyright IBM Corp. 2024.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -124,11 +124,7 @@ func (e *SDKError) GetConsoleMessage() string {
 // GetDebugMessage returns all information
 // about the error, formatted in YAML.
 func (e *SDKError) GetDebugMessage() string {
-	additionalInfo := map[string]interface{}{
-		"stack": e.stack,
-	}
-
-	return ComputeDebugMessage(e, e.causedBy, additionalInfo)
+	return ComputeDebugMessage(e)
 }
 
 // GetID returns the computed identifier, computed from the
@@ -175,7 +171,7 @@ func (e *HTTPError) GetConsoleMessage() string {
 // GetDebugMessage returns all information about
 // the error, formatted in YAML.
 func (e *HTTPError) GetDebugMessage() string {
-	return ComputeDebugMessage(e, e.causedBy, nil)
+	return ComputeDebugMessage(e)
 }
 
 // GetID returns the computed identifier, computed from the
@@ -183,7 +179,8 @@ func (e *HTTPError) GetDebugMessage() string {
 // `ErrorCode` fields, as well as the identifier of the
 // `causedBy` error, if it exists.
 func (e *HTTPError) GetID() string {
-	return CreateIDHash("http_error", e.GetBaseSignature(), e.OperationID, fmt.Sprint(e.Response.GetStatusCode()), e.ErrorCode)
+	// TODO: add the ErrorCode to the hash once we have the ability to enumerate error codes in an API.
+	return CreateIDHash("http_error", e.GetBaseSignature(), e.OperationID, fmt.Sprint(e.Response.GetStatusCode()))
 }
 
 // AuthenticationError describes the error returned when
@@ -214,7 +211,7 @@ func (e *AuthenticationError) GetConsoleMessage() string {
 // GetDebugMessage returns all information
 // about the error, formatted in YAML.
 func (e *AuthenticationError) GetDebugMessage() string {
-	return ComputeDebugMessage(e, e.causedBy, nil)
+	return ComputeDebugMessage(e)
 }
 
 // GetID returns the computed identifier, computed from the `System`,
@@ -327,8 +324,8 @@ func httpErrorf(summary string, response *DetailedResponse) *HTTPError {
 	}
 }
 
-// NewAuthenticationError is a deprecated function that was previously used for creating
-// new AuthenticationError structs. `authenticationErrorf` should be used instead.
+// NewAuthenticationError is a deprecated function that was previously used for creating new
+// AuthenticationError structs. HTTPError types should be used instead of AuthenticationError types.
 func NewAuthenticationError(response *DetailedResponse, err error) *AuthenticationError {
 	// TODO: Log a deprecation notice
 	authError := authenticationErrorf(err.Error(), "unknown", response, getSystemInfo)
@@ -338,10 +335,97 @@ func NewAuthenticationError(response *DetailedResponse, err error) *Authenticati
 
 // authenticationErrorf creates and returns a new instance of `AuthenticationError`.
 func authenticationErrorf(summary, operationID string, response *DetailedResponse, getInfo infoProvider) *AuthenticationError {
+	// TODO: try to get the error code out, try to deserialize the rawresult into the result, etc.
+	// Note: it might make more sense to do this in the authenticator code itself.
 	system, version := getInfo()
   return &AuthenticationError{
     IBMError: IBMErrorf(nil, summary, system, version, ""),
     Response: response,
     operationID: operationID,
   }
+}
+
+// TODO: document everything below
+type OrderableProblem interface {
+	GetConsoleOrderedMaps() *OrderedMaps
+	GetDebugOrderedMaps() *OrderedMaps
+}
+
+func (e *SDKError) GetConsoleOrderedMaps() *OrderedMaps {
+	orderedMaps := NewOrderedMaps()
+
+	orderedMaps.Add("id", e.GetID())
+	orderedMaps.Add("summary", e.Summary)
+	orderedMaps.Add("function", e.Function)
+	orderedMaps.Add("system", e.System)
+	orderedMaps.Add("version", e.Version)
+
+	return orderedMaps
+}
+
+func (e *SDKError) GetDebugOrderedMaps() *OrderedMaps {
+	orderedMaps := e.GetConsoleOrderedMaps()
+
+	orderedMaps.Add("stack", e.stack)
+
+	if orderableCausedBy, ok := e.causedBy.(OrderableProblem); ok {
+		orderedMaps.Add("caused_by", orderableCausedBy.GetDebugOrderedMaps().GetMaps())
+	}
+
+	return orderedMaps
+}
+
+func (e *HTTPError) GetConsoleOrderedMaps() *OrderedMaps {
+	orderedMaps := NewOrderedMaps()
+
+	orderedMaps.Add("id", e.GetID())
+	orderedMaps.Add("summary", e.Summary)
+	orderedMaps.Add("operation_id", e.OperationID)
+	orderedMaps.Add("error_code", e.ErrorCode)
+	orderedMaps.Add("system", e.System)
+	orderedMaps.Add("version", e.Version)
+
+	return orderedMaps
+}
+
+func (e *HTTPError) GetDebugOrderedMaps() *OrderedMaps {
+	orderedMaps := e.GetConsoleOrderedMaps()
+
+	// The RawResult is never helpful in the printed message. Create a hard copy
+	// (de-referenced pointer) to remove the raw result from so we don't alter
+	// the response stored in the error object.
+	printableResponse := *e.Response
+	printableResponse.RawResult = nil
+	orderedMaps.Add("response", printableResponse)
+
+	if orderableCausedBy, ok := e.causedBy.(OrderableProblem); ok {
+		orderedMaps.Add("caused_by", orderableCausedBy.GetDebugOrderedMaps().GetMaps())
+	}
+
+	return orderedMaps
+}
+
+// !!! document: for compatibility, not expected to be used.
+func (e *AuthenticationError) GetConsoleOrderedMaps() *OrderedMaps {
+	orderedMaps := NewOrderedMaps()
+
+	orderedMaps.Add("id", e.GetID())
+	orderedMaps.Add("summary", e.Summary)
+	orderedMaps.Add("system", e.System)
+	orderedMaps.Add("version", e.Version)
+
+	return orderedMaps
+}
+
+// !!! document: for compatibility, not expected to be used.
+func (e *AuthenticationError) GetDebugOrderedMaps() *OrderedMaps {
+	orderedMaps := e.GetConsoleOrderedMaps()
+
+	orderedMaps.Add("response", e.Response)
+
+	if orderableCausedBy, ok := e.causedBy.(OrderableProblem); ok {
+		orderedMaps.Add("caused_by", orderableCausedBy.GetDebugOrderedMaps().GetMaps())
+	}
+
+	return orderedMaps
 }
