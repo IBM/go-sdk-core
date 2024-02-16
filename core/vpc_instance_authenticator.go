@@ -15,7 +15,6 @@ package core
 // limitations under the License.
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -323,7 +322,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 	builder := NewRequestBuilder(POST)
 	_, err = builder.ResolveRequestURL(authenticator.url(), vpcauthOperationPathCreateIamToken, nil)
 	if err != nil {
-		err = authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
+		err = authenticationErrorf(err, &DetailedResponse{}, "noop", getSystemInfo)
 		return
 	}
 
@@ -351,7 +350,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 	// Build the request.
 	req, err := builder.Build()
 	if err != nil {
-		return nil, authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
+		return nil, authenticationErrorf(err, &DetailedResponse{}, "noop", getSystemInfo)
 	}
 
 	// If debug is enabled, then dump the request.
@@ -367,7 +366,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 	GetLogger().Debug("Invoking VPC 'create_iam_token' operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		return nil, authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
+		return nil, authenticationErrorf(err, &DetailedResponse{}, "noop", getSystemInfo)
 	}
 	GetLogger().Debug("Returned from VPC 'create_iam_token' operation, received status code %d", resp.StatusCode)
 
@@ -383,23 +382,25 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 
 	// Check for a bad status code and handle an operation error.
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		buff := new(bytes.Buffer)
-		_, _ = buff.ReadFrom(resp.Body)
-		resp.Body.Close() // #nosec G104
+		detailedResponse, responseError := processErrorResponse(resp)
 
-		// Create a DetailedResponse to be included in the error below.
-		detailedResponse := &DetailedResponse{
-			StatusCode: resp.StatusCode,
-			Headers:    resp.Header,
-			RawResult:  buff.Bytes(),
+		// TODO: consider using builder.URL as the system for the API
+		err = authenticationErrorf(responseError, detailedResponse, "create_iam_token", authenticator.getSystemInfo)
+
+		// The err Summary is typically the message computed for the HTTPError instance in
+		// processErrorResponse(). If the response body is non-JSON, the message will be generic
+		// text based on the status code but authenticators have always used the stringified
+		// RawResult, so update that here for compatilibility.
+		vpcErrorMsg := responseError.Summary
+		if detailedResponse.RawResult != nil {
+			// RawResult is only populated if the response body is
+			// non-JSON and we couldn't extract a message.
+			vpcErrorMsg = string(detailedResponse.RawResult)
 		}
 
-		vpcErrorMsg := string(detailedResponse.RawResult)
-		if vpcErrorMsg == "" {
-			vpcErrorMsg = "Operation 'create_iam_token' error response not available"
-		}
-		errMsg := fmt.Sprintf(ERRORMSG_VPCMDS_OPERATION_ERROR, detailedResponse.StatusCode, builder.URL, vpcErrorMsg)
-		return nil, authenticationErrorf(errMsg, "create_iam_token", detailedResponse, authenticator.getSystemInfo)
+		err.(*AuthenticationError).Summary = fmt.Sprintf(ERRORMSG_VPCMDS_OPERATION_ERROR, detailedResponse.StatusCode, builder.URL, vpcErrorMsg)
+
+		return
 	}
 
 	// Good response, so unmarshal the response body into a vpcTokenResponse instance.
@@ -426,7 +427,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (
 	builder := NewRequestBuilder(PUT)
 	_, err = builder.ResolveRequestURL(authenticator.url(), vpcauthOperationPathCreateAccessToken, nil)
 	if err != nil {
-		err = authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
+		err = authenticationErrorf(err, &DetailedResponse{}, "noop", getSystemInfo)
 		return
 	}
 
@@ -442,7 +443,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (
 	// Build the request.
 	req, err := builder.Build()
 	if err != nil {
-		err = authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
+		err = authenticationErrorf(err, &DetailedResponse{}, "noop", getSystemInfo)
 		return
 	}
 
@@ -460,7 +461,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (
 	GetLogger().Debug("Invoking VPC 'create_access_token' operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		err = authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
+		err = authenticationErrorf(err, &DetailedResponse{}, "noop", getSystemInfo)
 		return
 	}
 	GetLogger().Debug("Returned from VPC 'create_access_token' operation, received status code %d", resp.StatusCode)
@@ -477,23 +478,24 @@ func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (
 
 	// Check for a bad status code and handle the operation error.
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		buff := new(bytes.Buffer)
-		_, _ = buff.ReadFrom(resp.Body)
-		resp.Body.Close() // #nosec G104
+		detailedResponse, responseError := processErrorResponse(resp)
 
-		// Create a DetailedResponse to be included in the error below.
-		detailedResponse := &DetailedResponse{
-			StatusCode: resp.StatusCode,
-			Headers:    resp.Header,
-			RawResult:  buff.Bytes(),
+		// TODO: consider using builder.URL as the system for the API
+		err = authenticationErrorf(responseError, detailedResponse, "create_access_token", authenticator.getSystemInfo)
+
+		// The err Summary is typically the message computed for the HTTPError instance in
+		// processErrorResponse(). If the response body is non-JSON, the message will be generic
+		// text based on the status code but authenticators have always used the stringified
+		// RawResult, so update that here for compatilibility.
+		vpcErrorMsg := responseError.Summary
+		if detailedResponse.RawResult != nil {
+			// RawResult is only populated if the response body is
+			// non-JSON and we couldn't extract a message.
+			vpcErrorMsg = string(detailedResponse.RawResult)
 		}
 
-		vpcErrorMsg := string(detailedResponse.RawResult)
-		if vpcErrorMsg == "" {
-			vpcErrorMsg = "Operation 'create_access_token' error response not available"
-		}
+		err.(*AuthenticationError).Summary = fmt.Sprintf(ERRORMSG_VPCMDS_OPERATION_ERROR, detailedResponse.StatusCode, builder.URL, vpcErrorMsg)
 
-		err = authenticationErrorf(fmt.Sprintf(ERRORMSG_VPCMDS_OPERATION_ERROR, detailedResponse.StatusCode, builder.URL, vpcErrorMsg), "create_access_token", detailedResponse, authenticator.getSystemInfo)
 		return
 	}
 

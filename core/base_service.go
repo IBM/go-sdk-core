@@ -378,12 +378,16 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		return
 	}
 
-	authError := service.Options.Authenticator.Authenticate(req)
-	if authError != nil {
-		if httpErr, ok := getHTTPFromAuthenticatorError(authError); ok {
-			err = SDKErrorf(httpErr, fmt.Sprintf(ERRORMSG_AUTHENTICATE_ERROR, authError.Error()), "auth-failed", getSystemInfo)
+	authenticateError := service.Options.Authenticator.Authenticate(req)
+	if authenticateError != nil {
+		if authErr, ok := authenticateError.(*AuthenticationError); ok {
+			detailedResponse = authErr.Response
+			err = SDKErrorf(authErr.HTTPError, fmt.Sprintf(ERRORMSG_AUTHENTICATE_ERROR, authErr.Error()), "auth-failed", getSystemInfo)
 		} else {
-			err = SDKErrorf(nil, fmt.Sprintf(ERRORMSG_AUTHENTICATE_ERROR, authError.Error()), "auth-failed", getSystemInfo)
+			sdkErr := RepurposeSDKError(authenticateError, "auth-failed")
+			// For compatibility.
+			sdkErr.(*SDKError).Summary = fmt.Sprintf(ERRORMSG_AUTHENTICATE_ERROR, authenticateError.Error())
+			err = sdkErr
 		}
 		return
 	}
@@ -421,66 +425,16 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		}
 	}
 
-	// Start to populate the DetailedResponse.
-	if httpResponse != nil {
-		detailedResponse = &DetailedResponse{
-			StatusCode: httpResponse.StatusCode,
-			Headers:    httpResponse.Header,
-		}
-	}
-
-	contentType := httpResponse.Header.Get(CONTENT_TYPE)
-
-	// If the operation was unsuccessful, then set up the DetailedResponse
-	// and error objects appropriately.
+	// If the operation was unsuccessful, then set up and return
+	// the DetailedResponse and error objects appropriately.
 	if httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300 {
-
-		var responseBody []byte
-
-		// First, read the response body into a byte array.
-		if !IsNil(httpResponse.Body) {
-			var readErr error
-
-			defer httpResponse.Body.Close() // #nosec G307
-			responseBody, readErr = io.ReadAll(httpResponse.Body)
-			if readErr != nil {
-				httpErr := httpErrorf(http.StatusText(httpResponse.StatusCode), detailedResponse)
-				err = SDKErrorf(httpErr, fmt.Sprintf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error()), "cant-read-error-body", getSystemInfo)
-				return
-			}
-		}
-
-		// If the responseBody is empty, then just return a generic error based on the status code.
-		if len(responseBody) == 0 {
-			httpErr := httpErrorf(http.StatusText(httpResponse.StatusCode), detailedResponse)
-			err = SDKErrorf(httpErr, "", "no-error-body", getSystemInfo)
-			return
-		}
-
-		// For a JSON-based error response body, decode it into a map (generic JSON object).
-		if IsJSONMimeType(contentType) {
-			// Return the error response body as a map, along with an
-			// error object containing our best guess at an error message.
-			responseMap, decodeErr := decodeAsMap(responseBody)
-			if decodeErr == nil {
-				detailedResponse.Result = responseMap
-				errorMsg := getErrorMessage(responseMap, detailedResponse.StatusCode)
-				httpErr := httpErrorf(errorMsg, detailedResponse)
-				err = SDKErrorf(httpErr, "", "json-error-body", getSystemInfo)
-				return
-			}
-		}
-
-		// For a non-JSON response or if we tripped while decoding the JSON response,
-		// just return the response body byte array in the RawResult field along with
-		// an error object that contains the generic error message for the status code.
-		detailedResponse.RawResult = responseBody
-		httpErr := httpErrorf(http.StatusText(httpResponse.StatusCode), detailedResponse)
-		err = SDKErrorf(httpErr, "", "non-json-error-body", getSystemInfo)
+		detailedResponse, err = processErrorResponse(httpResponse)
+		err = RepurposeSDKError(err, "error-response")
 		return
 	}
 
 	// Operation was successful and we are expecting a response, so process the response.
+	detailedResponse, contentType := getDetailedResponseAndContentType(httpResponse)
 	if !IsNil(result) {
 		resultType := reflect.TypeOf(result).String()
 
@@ -555,6 +509,67 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		_ = httpResponse.Body.Close()
 	}
 
+	return
+}
+
+// getDetailedResponseAndContentType starts to populate the DetailedResponse
+// and extracts the Content-Type header value from the response.
+func getDetailedResponseAndContentType(httpResponse *http.Response) (detailedResponse *DetailedResponse, contentType string) {
+	if httpResponse != nil {
+		contentType = httpResponse.Header.Get(CONTENT_TYPE)
+		detailedResponse = &DetailedResponse{
+			StatusCode: httpResponse.StatusCode,
+			Headers:    httpResponse.Header,
+		}
+	}
+	return
+}
+
+func processErrorResponse(httpResponse *http.Response) (detailedResponse *DetailedResponse, err *SDKError) {
+	detailedResponse, contentType := getDetailedResponseAndContentType(httpResponse)
+
+	var responseBody []byte
+
+	// First, read the response body into a byte array.
+	if !IsNil(httpResponse.Body) {
+		var readErr error
+
+		defer httpResponse.Body.Close() // #nosec G307
+		responseBody, readErr = io.ReadAll(httpResponse.Body)
+		if readErr != nil {
+			httpErr := httpErrorf(http.StatusText(httpResponse.StatusCode), detailedResponse)
+			err = SDKErrorf(httpErr, fmt.Sprintf(ERRORMSG_READ_RESPONSE_BODY, readErr.Error()), "cant-read-error-body", getSystemInfo)
+			return
+		}
+	}
+
+	// If the responseBody is empty, then just return a generic error based on the status code.
+	if len(responseBody) == 0 {
+		httpErr := httpErrorf(http.StatusText(httpResponse.StatusCode), detailedResponse)
+		err = SDKErrorf(httpErr, "", "no-error-body", getSystemInfo)
+		return
+	}
+
+	// For a JSON-based error response body, decode it into a map (generic JSON object).
+	if IsJSONMimeType(contentType) {
+		// Return the error response body as a map, along with an
+		// error object containing our best guess at an error message.
+		responseMap, decodeErr := decodeAsMap(responseBody)
+		if decodeErr == nil {
+			detailedResponse.Result = responseMap
+			errorMsg := getErrorMessage(responseMap, detailedResponse.StatusCode)
+			httpErr := httpErrorf(errorMsg, detailedResponse)
+			err = SDKErrorf(httpErr, "", "json-error-body", getSystemInfo)
+			return
+		}
+	}
+
+	// For a non-JSON response or if we tripped while decoding the JSON response,
+	// just return the response body byte array in the RawResult field along with
+	// an error object that contains the generic error message for the status code.
+	detailedResponse.RawResult = responseBody
+	httpErr := httpErrorf(http.StatusText(httpResponse.StatusCode), detailedResponse)
+	err = SDKErrorf(httpErr, "", "non-json-error-body", getSystemInfo)
 	return
 }
 
@@ -647,6 +662,14 @@ func getErrorCode(responseMap map[string]interface{}) string {
 
 	// Return the "code" field if present and is a string.
 	if val, ok := responseMap["code"]; ok {
+		errorCode, ok := val.(string)
+		if ok {
+			return errorCode
+		}
+	}
+
+	// Return the "errorCode" field if present and is a string.
+	if val, ok := responseMap["errorCode"]; ok {
 		errorCode, ok := val.(string)
 		if ok {
 			return errorCode

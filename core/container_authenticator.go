@@ -15,7 +15,6 @@ package core
 // limitations under the License.
 
 import (
-	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -379,14 +378,14 @@ func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResp
 		if err == nil {
 			err = fmt.Errorf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN, "reason unknown")
 		}
-		return nil, authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
+		return nil, authenticationErrorf(err, &DetailedResponse{}, "noop", getSystemInfo)
 	}
 
 	// Set up the request for the IAM "get token" invocation.
 	builder := NewRequestBuilder(POST)
 	_, err = builder.ResolveRequestURL(authenticator.url(), iamAuthOperationPathGetToken, nil)
 	if err != nil {
-		return nil, authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
+		return nil, authenticationErrorf(err, &DetailedResponse{}, "noop", getSystemInfo)
 	}
 
 	builder.AddHeader(CONTENT_TYPE, FORM_URL_ENCODED_HEADER)
@@ -416,7 +415,7 @@ func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResp
 
 	req, err := builder.Build()
 	if err != nil {
-		return nil, authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
+		return nil, authenticationErrorf(err, &DetailedResponse{}, "noop", getSystemInfo)
 	}
 
 	// If client id and secret were configured by the user, then set them on the request
@@ -438,7 +437,7 @@ func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResp
 	GetLogger().Debug("Invoking IAM 'get token' operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		return nil, authenticationErrorf(err.Error(), "", &DetailedResponse{}, getSystemInfo)
+		return nil, authenticationErrorf(err, &DetailedResponse{}, "noop", getSystemInfo)
 	}
 	GetLogger().Debug("Returned from IAM 'get token' operation, received status code %d", resp.StatusCode)
 
@@ -454,23 +453,26 @@ func (authenticator *ContainerAuthenticator) RequestToken() (*IamTokenServerResp
 
 	// Check for a bad status code and handle an operation error.
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		buff := new(bytes.Buffer)
-		_, _ = buff.ReadFrom(resp.Body)
-		resp.Body.Close() // #nosec G104
+		detailedResponse, err := processErrorResponse(resp)
 
-		// Create a DetailedResponse to be included in the error below.
-		detailedResponse := &DetailedResponse{
-			StatusCode: resp.StatusCode,
-			Headers:    resp.Header,
-			RawResult:  buff.Bytes(),
+		// TODO: consider using builder.URL as the system for the API
+		authError := authenticationErrorf(err, detailedResponse, "get-token", authenticator.getSystemInfo)
+
+		// The err Summary is typically the message computed for the HTTPError instance in
+		// processErrorResponse(). If the response body is non-JSON, the message will be generic
+		// text based on the status code but authenticators have always used the stringified
+		// RawResult, so update that here for compatilibility.
+		iamErrorMsg := err.Summary
+		if detailedResponse.RawResult != nil {
+			// RawResult is only populated if the response body is
+			// non-JSON and we couldn't extract a message.
+			iamErrorMsg = string(detailedResponse.RawResult)
 		}
 
-		iamErrorMsg := string(detailedResponse.RawResult)
-		if iamErrorMsg == "" {
-			iamErrorMsg = "IAM error response not available"
-		}
-		errMsg := fmt.Sprintf(ERRORMSG_IAM_GETTOKEN_ERROR, detailedResponse.StatusCode, builder.URL, iamErrorMsg)
-		return nil, authenticationErrorf(errMsg, "get-token", detailedResponse, authenticator.getSystemInfo)
+		authError.Summary =
+			fmt.Sprintf(ERRORMSG_IAM_GETTOKEN_ERROR, detailedResponse.StatusCode, builder.URL, iamErrorMsg)
+
+		return nil, authError
 	}
 
 	// Good response, so unmarshal the response body into an IamTokenServerResponse instance.

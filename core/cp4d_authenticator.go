@@ -15,7 +15,6 @@ package core
 // limitations under the License.
 
 import (
-	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -347,17 +346,23 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (tokenResponse
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		buff := new(bytes.Buffer)
-		_, _ = buff.ReadFrom(resp.Body)
+		detailedResponse, responseError := processErrorResponse(resp)
+		// TODO: consider using builder.URL as the system for the API
+		err = authenticationErrorf(responseError, detailedResponse, "authorize", authenticator.getSystemInfo)
 
-		// Create a DetailedResponse to be included in the error below.
-		detailedResponse := &DetailedResponse{
-			StatusCode: resp.StatusCode,
-			Headers:    resp.Header,
-			RawResult:  buff.Bytes(),
+		// The err Summary is typically the message computed for the HTTPError instance in
+		// processErrorResponse(). If the response body is non-JSON, the message will be generic
+		// text based on the status code but authenticators have always used the stringified
+		// RawResult, so update that here for compatilibility.
+		errorMsg := responseError.Summary
+		if detailedResponse.RawResult != nil {
+			// RawResult is only populated if the response body is
+			// non-JSON and we couldn't extract a message.
+			errorMsg = string(detailedResponse.RawResult)
 		}
 
-		err = authenticationErrorf(buff.String(), "authorize", detailedResponse, authenticator.getSystemInfo)
+		err.(*AuthenticationError).Summary = errorMsg
+
 		return
 	}
 

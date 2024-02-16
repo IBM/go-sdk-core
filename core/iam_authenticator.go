@@ -15,7 +15,6 @@ package core
 // limitations under the License.
 
 import (
-	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -480,22 +479,25 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		buff := new(bytes.Buffer)
-		_, _ = buff.ReadFrom(resp.Body)
+		detailedResponse, err := processErrorResponse(resp)
 
-		// Create a DetailedResponse to be included in the error below.
-		detailedResponse := &DetailedResponse{
-			StatusCode: resp.StatusCode,
-			Headers:    resp.Header,
-			RawResult:  buff.Bytes(),
+		// TODO: consider using builder.URL as the system for the API
+		authError := authenticationErrorf(err, detailedResponse, "get-token", authenticator.getSystemInfo)
+
+		// The err Summary is typically the message computed for the HTTPError instance in
+		// processErrorResponse(). If the response body is non-JSON, the message will be generic
+		// text based on the status code but authenticators have always used the stringified
+		// RawResult, so update that here for compatilibility.
+		iamErrorMsg := err.Summary
+		if detailedResponse.RawResult != nil {
+			// RawResult is only populated if the response body is
+			// non-JSON and we couldn't extract a message.
+			iamErrorMsg = string(detailedResponse.RawResult)
 		}
 
-		iamErrorMsg := string(detailedResponse.RawResult)
-		if iamErrorMsg == "" {
-			iamErrorMsg =
-				fmt.Sprintf("unexpected status code %d received from IAM token server %s", detailedResponse.StatusCode, builder.URL)
-		}
-		return nil, authenticationErrorf(iamErrorMsg, "get-token", detailedResponse, authenticator.getSystemInfo)
+		authError.Summary = iamErrorMsg
+
+		return nil, authError
 	}
 
 	tokenResponse := &IamTokenServerResponse{}

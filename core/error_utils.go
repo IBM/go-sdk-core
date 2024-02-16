@@ -146,13 +146,12 @@ func ComputeDebugMessage(o OrderableProblem) string {
 
 /* TODO: things we might need to add to errors in general:
 		- A flag to determine if the chain originated from HTTP or not
-		- A "deep getter" for retrieving the underlying HTTP error from any level
 */
 
-// EnrichHTTPError takes an error that should be an SDKError from the core,
-// checks to see if it was caused by an HTTPError, and if so - populates the
-// fields of the HTTP error with the given service/operation information.
-func EnrichHTTPError(err error, operationID, system, version string) {
+// EnrichHTTPError takes an error that should be an SDKError and, if it originated
+// as an HTTPError, populates the fields of the underlying HTTP error with the
+// given service/operation information.
+func EnrichUnderlyingHTTPError(err error, operationID string, getInfo infoProvider) {
 	// Expect an SDK to call this function, passing in an SDKError instance
 	// that originated here in the core.
 	sdkErr, ok := err.(*SDKError)
@@ -160,39 +159,32 @@ func EnrichHTTPError(err error, operationID, system, version string) {
 		return
 	}
 
-	// If the error has no causedBy error, it didn't originate from an HTTP
-	// error response, so there's nothing to do here.
-	causedBy := sdkErr.GetCausedBy()
-	if causedBy == nil {
-		return
-	}
-
-	// If the error did originate from an HTTP error response, populate the
+	// If the error originated from an HTTP error response, populate the
 	// HTTPError instance with details from the SDK that weren't available
 	// in the core at error creation time.
-	if httpErr, ok := causedBy.(*HTTPError); ok {
-		httpErr.OperationID = operationID
-		httpErr.System = system
-		httpErr.Version = version
-
-		// TODO: think about how we might pull a discriminator from an API, if needed
-
-		if httpErr.Response.Result != nil {
-			// If the error response was a standard JSON body, the result will be a map
-			// and we can do a decent job of guessing the code.
-
-			// TODO: enable this once we know we can enumerate codes from an API.
-			if resultMap, ok := httpErr.Response.Result.(map[string]interface{}); ok {
-				httpErr.ErrorCode = getErrorCode(resultMap)
-			}
-		}
+	httpErr := sdkErr.GetHTTPError()
+	if httpErr != nil {
+		enrichHTTPError(httpErr, operationID, getInfo)
 	}
 }
 
-func getHTTPFromAuthenticatorError(err error) (*HTTPError, bool) {
-	if authErr, ok := err.(*AuthenticationError); ok {
-		return authErr.ConvertToHTTPError()
-	}
+// enrichHTTPError takes an HTTPError instance alongside information about the request
+// and adds the extra info to the instance. It also loosely deserializes the response
+// in order to set additional information, like the error code.
+func enrichHTTPError(httpErr *HTTPError, operationID string, getInfo infoProvider) {
+	system, version := getInfo()
 
-	return nil, false
+	httpErr.System = system
+	httpErr.Version = version
+	httpErr.OperationID = operationID
+
+	// TODO: think about how we might pull a discriminator from an API, if needed
+
+	if httpErr.Response.Result != nil {
+		// If the error response was a standard JSON body, the result will be a map
+		// and we can do a decent job of guessing the code.
+		if resultMap, ok := httpErr.Response.Result.(map[string]interface{}); ok {
+			httpErr.ErrorCode = getErrorCode(resultMap)
+		}
+	}
 }

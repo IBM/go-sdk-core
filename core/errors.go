@@ -134,6 +134,20 @@ func (e *SDKError) GetID() string {
 	return CreateIDHash("sdk_error", e.GetBaseSignature(), e.Function)
 }
 
+// GetHTTPError returns the root `HTTPError` instance in the "caused by" chain
+// if the error originated from an HTTP response. If not, it returns `nil`.
+func (e *SDKError) GetHTTPError() *HTTPError {
+	// TODO: consider moving this to IBMError instead, so it applies to all types.
+	switch err := e.causedBy.(type) {
+	case *HTTPError:
+		return err
+	case *SDKError:
+		return err.GetHTTPError()
+	}
+
+	return nil
+}
+
 // SDKError provides a type suited to errors that
 // occur as the result of an HTTP request. It extends
 // the base `IBMError` type with fields to store
@@ -186,55 +200,20 @@ func (e *HTTPError) GetID() string {
 // AuthenticationError describes the error returned when
 // authentication over HTTP fails.
 type AuthenticationError struct {
-	Response *DetailedResponse `json:"response,omitempty"`
 	Err      error `json:"err,omitempty"`
-
-	// For converting to an HTTP error.
-	operationID string
-	*IBMError
-}
-
-// Error implements the Error interface and returns an error message.
-func (e *AuthenticationError) Error() string {
-	if e.Err == nil {
-		return e.Summary
-	}
-	return e.Err.Error()
-}
-
-// GetConsoleMessage returns all public fields of
-// the error, formatted in YAML.
-func (e *AuthenticationError) GetConsoleMessage() string {
-  return ComputeConsoleMessage(e)
-}
-
-// GetDebugMessage returns all information
-// about the error, formatted in YAML.
-func (e *AuthenticationError) GetDebugMessage() string {
-	return ComputeDebugMessage(e)
-}
-
-// GetID returns the computed identifier, computed from the `System`,
-// `discriminator`, fields, as well as the response status code and
-// the identifier of the `causedBy` error, if it exists.
-func (e *AuthenticationError) GetID() string {
-  return CreateIDHash("auth_error", e.GetBaseSignature(), fmt.Sprint(e.Response.GetStatusCode()))
+	*HTTPError
 }
 
 func (e *AuthenticationError) ConvertToHTTPError() (*HTTPError, bool) {
-	// Not all AuthenticationError instances map back to an HTTP failure.
-	if e.Response.GetStatusCode() == 0 {
-		return nil, false
+	causedBy := e.GetCausedBy()
+	if sdkErr, ok := causedBy.(*SDKError); ok {
+		causedBy := sdkErr.GetCausedBy()
+		if httpErr, ok := causedBy.(*HTTPError); ok {
+			return httpErr, true
+		}
 	}
 
-	// TODO: try to get error code, discriminator, etc. from response body
-  newError := &HTTPError{
-  	IBMError: e.IBMError,
-  	Response: e.Response,
-  	OperationID: e.operationID,
-  }
-
-  return newError, true
+  return nil, false
 }
 
 // infoProvider is a function type that must return two strings:
@@ -313,6 +292,10 @@ func RepurposeSDKError(err error, discriminator string) error {
 	// remain as it is - it is the path to the original error origination point).
 	sdkErr.Function = computeFunctionName()
 
+	// TODO: consider computing the stack in this context and appending to the
+	// existing stack so we don't lose data but don't lose the location of the
+	// repurpose in the stack.
+
 	return sdkErr
 }
 
@@ -328,21 +311,36 @@ func httpErrorf(summary string, response *DetailedResponse) *HTTPError {
 // AuthenticationError structs. HTTPError types should be used instead of AuthenticationError types.
 func NewAuthenticationError(response *DetailedResponse, err error) *AuthenticationError {
 	// TODO: Log a deprecation notice
-	authError := authenticationErrorf(err.Error(), "unknown", response, getSystemInfo)
-	authError.Err = err
+	authError := authenticationErrorf(err, response, "unknown", func() (string, string) { return "unknown", "unknown" })
 	return authError
 }
 
 // authenticationErrorf creates and returns a new instance of `AuthenticationError`.
-func authenticationErrorf(summary, operationID string, response *DetailedResponse, getInfo infoProvider) *AuthenticationError {
-	// TODO: try to get the error code out, try to deserialize the rawresult into the result, etc.
-	// Note: it might make more sense to do this in the authenticator code itself.
-	system, version := getInfo()
-  return &AuthenticationError{
-    IBMError: IBMErrorf(nil, summary, system, version, ""),
-    Response: response,
-    operationID: operationID,
-  }
+func authenticationErrorf(err error, response *DetailedResponse, operationID string, getInfo infoProvider) *AuthenticationError {
+	if err == nil {
+		// TODO: log that an authentication error is expected to be
+		// created from an HTTP-originating error
+		return nil
+	}
+
+	var httpErr *HTTPError
+	switch e := err.(type) {
+	case *HTTPError:
+		httpErr = e
+	case *SDKError:
+		httpErr = e.GetHTTPError()
+	}
+
+	if httpErr == nil {
+		httpErr = httpErrorf(err.Error(), response)
+	}
+
+	enrichHTTPError(httpErr, operationID, getInfo)
+
+	return &AuthenticationError{
+		HTTPError: httpErr,
+		Err: err,
+	}
 }
 
 // TODO: document everything below
@@ -395,6 +393,9 @@ func (e *HTTPError) GetDebugOrderedMaps() *OrderedMaps {
 	// (de-referenced pointer) to remove the raw result from so we don't alter
 	// the response stored in the error object.
 	printableResponse := *e.Response
+	if printableResponse.Result == nil {
+		printableResponse.Result = string(printableResponse.RawResult)
+	}
 	printableResponse.RawResult = nil
 	orderedMaps.Add("response", printableResponse)
 
@@ -405,7 +406,7 @@ func (e *HTTPError) GetDebugOrderedMaps() *OrderedMaps {
 	return orderedMaps
 }
 
-// !!! document: for compatibility, not expected to be used.
+// Note: Added for compatibility - this is not intended to be used.
 func (e *AuthenticationError) GetConsoleOrderedMaps() *OrderedMaps {
 	orderedMaps := NewOrderedMaps()
 
@@ -417,7 +418,7 @@ func (e *AuthenticationError) GetConsoleOrderedMaps() *OrderedMaps {
 	return orderedMaps
 }
 
-// !!! document: for compatibility, not expected to be used.
+// Note: Added for compatibility - this is not intended to be used.
 func (e *AuthenticationError) GetDebugOrderedMaps() *OrderedMaps {
 	orderedMaps := e.GetConsoleOrderedMaps()
 
