@@ -17,6 +17,7 @@ package core
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/go-yaml/yaml"
 	"runtime"
@@ -51,12 +52,23 @@ func getSystemInfo() (string, string) {
 // skip number (aka point in the stack) of 2, which gives us the
 // information about the function the error was created in, and
 // returns the name of the function.
-func computeFunctionName() string {
+func computeFunctionName(system string) string {
 	if pc, _, _, ok := runtime.Caller(2); ok {
-		return runtime.FuncForPC(pc).Name()
+		// The function names will have the system as a prefix - to avoid
+		// redundancy, since we are including the system string with the
+		// error, trim that prefix here.
+		return strings.TrimPrefix(runtime.FuncForPC(pc).Name(), system+"/")
 	}
 
 	return ""
+}
+
+// sdkStackFrame is a convenience struct for formatting
+// frame data to be printed as YAML.
+type sdkStackFrame struct {
+	Function string `json:"function,omitempty"`
+	File string `json:"file,omitempty"`
+	Line int `json:"line,omitempty"`
 }
 
 // getStackInfo invokes helper methods to curate a limited, formatted
@@ -67,7 +79,6 @@ func getStackInfo(system string) []sdkStackFrame {
 		return formatFrames(frames, system)
 	}
 
-	// TODO: log that we not compute the stack
 	return nil
 }
 
@@ -144,26 +155,15 @@ func ComputeDebugMessage(o OrderableProblem) string {
 	return getErrorInfoAsYAML(o.GetDebugOrderedMaps())
 }
 
-/* TODO: things we might need to add to errors in general:
-		- A flag to determine if the chain originated from HTTP or not
-*/
-
 // EnrichHTTPError takes an error that should be an SDKError and, if it originated
 // as an HTTPError, populates the fields of the underlying HTTP error with the
 // given service/operation information.
 func EnrichUnderlyingHTTPError(err error, operationID string, getInfo infoProvider) {
-	// Expect an SDK to call this function, passing in an SDKError instance
-	// that originated here in the core.
-	sdkErr, ok := err.(*SDKError)
-	if !ok {
-		return
-	}
-
 	// If the error originated from an HTTP error response, populate the
 	// HTTPError instance with details from the SDK that weren't available
 	// in the core at error creation time.
-	httpErr := sdkErr.GetHTTPError()
-	if httpErr != nil {
+	var httpErr *HTTPError
+	if errors.As(err, &httpErr) {
 		enrichHTTPError(httpErr, operationID, getInfo)
 	}
 }
@@ -177,8 +177,6 @@ func enrichHTTPError(httpErr *HTTPError, operationID string, getInfo infoProvide
 	httpErr.System = system
 	httpErr.Version = version
 	httpErr.OperationID = operationID
-
-	// TODO: think about how we might pull a discriminator from an API, if needed
 
 	if httpErr.Response.Result != nil {
 		// If the error response was a standard JSON body, the result will be a map

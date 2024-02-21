@@ -347,7 +347,6 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (tokenResponse
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		detailedResponse, responseError := processErrorResponse(resp)
-		// TODO: consider using builder.URL as the system for the API
 		err = authenticationErrorf(responseError, detailedResponse, "authorize", authenticator.getSystemInfo)
 
 		// The err Summary is typically the message computed for the HTTPError instance in

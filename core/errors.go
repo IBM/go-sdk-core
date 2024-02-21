@@ -15,6 +15,7 @@ package core
 // limitations under the License.
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -38,6 +39,10 @@ type Problem interface {
 	// from the attributes of the error, so that the same errors will always
 	// have the same ID, even when encountered by different users.
 	GetID() string
+
+	// Error returns the message associated with a given error and guarantees
+	// every instance of Problem also implements the native `error` interface.
+	Error() string
 }
 
 // IBMError holds the base set of fields that all error types
@@ -89,6 +94,35 @@ func (e *IBMError) GetCausedBy() Problem {
 	return e.causedBy
 }
 
+// Unwrap implements an interface the native Go "errors" package uses to
+// check for embedded errors in a given error instance. IBM error types
+// are not embedded in the traditional sense, but they chain previous
+// error instances together with the "causedBy" field. This allows error
+// interface instances to be cast into any of the error types in the chain
+// using the native "errors.As" function. This can be useful for, as an
+// example, extracting an HTTPError from the chain if it exists.
+// Note that this Unwrap method returns only the chain of "caused by" errors;
+// it does not include the error instance the method is called on - that is
+// looked at separately by the "errors" package in functions like "As".
+func (e *IBMError) Unwrap() []error {
+	causedBy := e.GetCausedBy() 
+	if causedBy == nil {
+		return nil
+	}
+
+	errs := []error{ causedBy }
+
+	var toUnwrap interface{ Unwrap() []error }
+	if errors.As(causedBy, &toUnwrap) {
+		causedByChain := toUnwrap.Unwrap()
+		if causedByChain != nil {
+			errs = append(errs, causedByChain...)
+		}
+	}
+
+	return errs
+}
+
 // SDKError provides a type suited to errors that
 // occur in SDK projects. It extends the base
 // `IBMError` type with a field to store the
@@ -105,14 +139,6 @@ type SDKError struct {
 	// function names, files, and line numbers invoked
 	// leading up to the origination of the error.
 	stack []sdkStackFrame `json:"stack,omitempty"` // optional
-}
-
-// sdkStackFrame is a convenience struct for formatting
-// frame data to be printed as YAML.
-type sdkStackFrame struct {
-	Function string `json:"function,omitempty"`
-	File string `json:"file,omitempty"`
-	Line int `json:"line,omitempty"`
 }
 
 // GetConsoleMessage returns all public fields of
@@ -134,20 +160,6 @@ func (e *SDKError) GetID() string {
 	return CreateIDHash("sdk_error", e.GetBaseSignature(), e.Function)
 }
 
-// GetHTTPError returns the root `HTTPError` instance in the "caused by" chain
-// if the error originated from an HTTP response. If not, it returns `nil`.
-func (e *SDKError) GetHTTPError() *HTTPError {
-	// TODO: consider moving this to IBMError instead, so it applies to all types.
-	switch err := e.causedBy.(type) {
-	case *HTTPError:
-		return err
-	case *SDKError:
-		return err.GetHTTPError()
-	}
-
-	return nil
-}
-
 // SDKError provides a type suited to errors that
 // occur as the result of an HTTP request. It extends
 // the base `IBMError` type with fields to store
@@ -167,14 +179,7 @@ type HTTPError struct {
 	// ErrorCode is the code returned from the API
 	// in the error response, identifying the issue.
 	ErrorCode string `json:"error_code,omitempty"`
-
-	// Errors []APIErrorModel // TODO: in progress
 }
-
-/*type APIErrorModel interface {
-	GetCode() string
-	GetMessage() string
-}*/
 
 // GetConsoleMessage returns all public fields of
 // the error, formatted in YAML.
@@ -204,18 +209,6 @@ type AuthenticationError struct {
 	*HTTPError
 }
 
-func (e *AuthenticationError) ConvertToHTTPError() (*HTTPError, bool) {
-	causedBy := e.GetCausedBy()
-	if sdkErr, ok := causedBy.(*SDKError); ok {
-		causedBy := sdkErr.GetCausedBy()
-		if httpErr, ok := causedBy.(*HTTPError); ok {
-			return httpErr, true
-		}
-	}
-
-  return nil, false
-}
-
 // infoProvider is a function type that must return two strings:
 // first, the name of the system (e.g. "go-sdk-core")
 // and second, the semantic version number as a string (e.g. "5.1.2")
@@ -240,11 +233,9 @@ func IBMErrorf(err error, summary, system, version, discriminator string) *IBMEr
 		discriminator: discriminator,
 	}
 
-	if err != nil {
-		if causedBy, ok := err.(Problem); ok {
-			newError.causedBy = causedBy
-			// TODO: consider logging error or warning if not ok
-		}
+	var causedBy Problem
+	if errors.As(err, &causedBy) {
+		newError.causedBy = causedBy
 	}
 
 	return newError
@@ -254,9 +245,7 @@ func IBMErrorf(err error, summary, system, version, discriminator string) *IBMEr
 func SDKErrorf(err error, summary, discriminator string, getInfo infoProvider) *SDKError {
 	system, version := getInfo()
 
-	// TODO: Consider removing the "system" string from the function name for better readability.
-	//       Currently, that info is kind of duplicated.
-	function := computeFunctionName()
+	function := computeFunctionName(system)
 	stack := getStackInfo(system)
 
 	return &SDKError{
@@ -274,10 +263,9 @@ func RepurposeSDKError(err error, discriminator string) error {
 		return err
 	}
 
-	sdkErr, ok := err.(*SDKError)
-
-	if !ok {
-		// TODO: log warning: this should only be called with SDK errors
+	// It only makes sense to carry out this logic with SDK Errors.
+	var sdkErr *SDKError
+	if !errors.As(err, &sdkErr) {
 		return err
 	}
 
@@ -290,11 +278,11 @@ func RepurposeSDKError(err error, discriminator string) error {
 
 	// Recompute the function to reflect this public boundary (but let the stack
 	// remain as it is - it is the path to the original error origination point).
-	sdkErr.Function = computeFunctionName()
+	sdkErr.Function = computeFunctionName(sdkErr.System)
 
 	// TODO: consider computing the stack in this context and appending to the
 	// existing stack so we don't lose data but don't lose the location of the
-	// repurpose in the stack.
+	// re-purpose in the stack.
 
 	return sdkErr
 }
@@ -310,28 +298,21 @@ func httpErrorf(summary string, response *DetailedResponse) *HTTPError {
 // NewAuthenticationError is a deprecated function that was previously used for creating new
 // AuthenticationError structs. HTTPError types should be used instead of AuthenticationError types.
 func NewAuthenticationError(response *DetailedResponse, err error) *AuthenticationError {
-	// TODO: Log a deprecation notice
+	GetLogger().Warn("NewAuthenticationError is deprecated and should not be used.")
 	authError := authenticationErrorf(err, response, "unknown", func() (string, string) { return "unknown", "unknown" })
 	return authError
 }
 
 // authenticationErrorf creates and returns a new instance of `AuthenticationError`.
 func authenticationErrorf(err error, response *DetailedResponse, operationID string, getInfo infoProvider) *AuthenticationError {
-	if err == nil {
-		// TODO: log that an authentication error is expected to be
-		// created from an HTTP-originating error
+	// This function should always be called with non-nil
+	// error/DetailedResponse instances.
+	if err == nil || response == nil {
 		return nil
 	}
 
 	var httpErr *HTTPError
-	switch e := err.(type) {
-	case *HTTPError:
-		httpErr = e
-	case *SDKError:
-		httpErr = e.GetHTTPError()
-	}
-
-	if httpErr == nil {
+	if !errors.As(err, &httpErr) {
 		httpErr = httpErrorf(err.Error(), response)
 	}
 
@@ -343,12 +324,16 @@ func authenticationErrorf(err error, response *DetailedResponse, operationID str
 	}
 }
 
-// TODO: document everything below
+// OrderableProblem provides an interface for retrieving ordered
+// representations of errors in order to print YAML messages
+// with a controlled ordering of the fields.
 type OrderableProblem interface {
 	GetConsoleOrderedMaps() *OrderedMaps
 	GetDebugOrderedMaps() *OrderedMaps
 }
 
+// GetConsoleOrderedMaps returns an ordered-map representation
+// of an SDKError instance suited for a console message.
 func (e *SDKError) GetConsoleOrderedMaps() *OrderedMaps {
 	orderedMaps := NewOrderedMaps()
 
@@ -361,18 +346,24 @@ func (e *SDKError) GetConsoleOrderedMaps() *OrderedMaps {
 	return orderedMaps
 }
 
+// GetDebugOrderedMaps returns an ordered-map representation
+// of an SDKError instance, with additional information
+// suited for a debug message.
 func (e *SDKError) GetDebugOrderedMaps() *OrderedMaps {
 	orderedMaps := e.GetConsoleOrderedMaps()
 
 	orderedMaps.Add("stack", e.stack)
 
-	if orderableCausedBy, ok := e.causedBy.(OrderableProblem); ok {
+	var orderableCausedBy OrderableProblem
+	if errors.As(e.GetCausedBy(), &orderableCausedBy) {
 		orderedMaps.Add("caused_by", orderableCausedBy.GetDebugOrderedMaps().GetMaps())
 	}
 
 	return orderedMaps
 }
 
+// GetConsoleOrderedMaps returns an ordered-map representation
+// of an HTTPError instance suited for a console message.
 func (e *HTTPError) GetConsoleOrderedMaps() *OrderedMaps {
 	orderedMaps := NewOrderedMaps()
 
@@ -386,6 +377,9 @@ func (e *HTTPError) GetConsoleOrderedMaps() *OrderedMaps {
 	return orderedMaps
 }
 
+// GetDebugOrderedMaps returns an ordered-map representation
+// of an HTTPError instance, with additional information
+// suited for a debug message.
 func (e *HTTPError) GetDebugOrderedMaps() *OrderedMaps {
 	orderedMaps := e.GetConsoleOrderedMaps()
 
@@ -399,13 +393,16 @@ func (e *HTTPError) GetDebugOrderedMaps() *OrderedMaps {
 	printableResponse.RawResult = nil
 	orderedMaps.Add("response", printableResponse)
 
-	if orderableCausedBy, ok := e.causedBy.(OrderableProblem); ok {
+	var orderableCausedBy OrderableProblem
+	if errors.As(e.GetCausedBy(), &orderableCausedBy) {
 		orderedMaps.Add("caused_by", orderableCausedBy.GetDebugOrderedMaps().GetMaps())
 	}
 
 	return orderedMaps
 }
 
+// GetConsoleOrderedMaps returns an ordered-map representation
+// of an AuthenticationError instance suited for a console message.
 // Note: Added for compatibility - this is not intended to be used.
 func (e *AuthenticationError) GetConsoleOrderedMaps() *OrderedMaps {
 	orderedMaps := NewOrderedMaps()
@@ -418,13 +415,17 @@ func (e *AuthenticationError) GetConsoleOrderedMaps() *OrderedMaps {
 	return orderedMaps
 }
 
+// GetDebugOrderedMaps returns an ordered-map representation
+// of an AuthenticationError instance, with additional information
+// suited for a debug message.
 // Note: Added for compatibility - this is not intended to be used.
 func (e *AuthenticationError) GetDebugOrderedMaps() *OrderedMaps {
 	orderedMaps := e.GetConsoleOrderedMaps()
 
 	orderedMaps.Add("response", e.Response)
 
-	if orderableCausedBy, ok := e.causedBy.(OrderableProblem); ok {
+	var orderableCausedBy OrderableProblem
+	if errors.As(e.GetCausedBy(), &orderableCausedBy) {
 		orderedMaps.Add("caused_by", orderableCausedBy.GetDebugOrderedMaps().GetMaps())
 	}
 

@@ -383,8 +383,6 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 	// Check for a bad status code and handle an operation error.
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		detailedResponse, responseError := processErrorResponse(resp)
-
-		// TODO: consider using builder.URL as the system for the API
 		err = authenticationErrorf(responseError, detailedResponse, "create_iam_token", authenticator.getSystemInfo)
 
 		// The err Summary is typically the message computed for the HTTPError instance in
@@ -479,8 +477,6 @@ func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (
 	// Check for a bad status code and handle the operation error.
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		detailedResponse, responseError := processErrorResponse(resp)
-
-		// TODO: consider using builder.URL as the system for the API
 		err = authenticationErrorf(responseError, detailedResponse, "create_access_token", authenticator.getSystemInfo)
 
 		// The err Summary is typically the message computed for the HTTPError instance in

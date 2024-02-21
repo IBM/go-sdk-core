@@ -20,6 +20,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -380,7 +381,8 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 
 	authenticateError := service.Options.Authenticator.Authenticate(req)
 	if authenticateError != nil {
-		if authErr, ok := authenticateError.(*AuthenticationError); ok {
+		var authErr *AuthenticationError
+		if errors.As(authenticateError, &authErr) {
 			detailedResponse = authErr.Response
 			err = SDKErrorf(authErr.HTTPError, fmt.Sprintf(ERRORMSG_AUTHENTICATE_ERROR, authErr.Error()), "auth-failed", getSystemInfo)
 		} else {

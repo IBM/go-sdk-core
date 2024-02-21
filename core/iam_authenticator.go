@@ -480,8 +480,6 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		detailedResponse, err := processErrorResponse(resp)
-
-		// TODO: consider using builder.URL as the system for the API
 		authError := authenticationErrorf(err, detailedResponse, "get-token", authenticator.getSystemInfo)
 
 		// The err Summary is typically the message computed for the HTTPError instance in
