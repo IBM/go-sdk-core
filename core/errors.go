@@ -280,10 +280,6 @@ func RepurposeSDKError(err error, discriminator string) error {
 	// remain as it is - it is the path to the original error origination point).
 	sdkErr.Function = computeFunctionName(sdkErr.System)
 
-	// TODO: consider computing the stack in this context and appending to the
-	// existing stack so we don't lose data but don't lose the location of the
-	// re-purpose in the stack.
-
 	return sdkErr
 }
 
