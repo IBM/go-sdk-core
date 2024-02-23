@@ -1,3 +1,10 @@
+## [5.15.2](https://github.com/IBM/go-sdk-core/compare/v5.15.1...v5.15.2) (2024-02-23)
+
+
+### Bug Fixes
+
+* update go.sum to enable tests ([#208](https://github.com/IBM/go-sdk-core/issues/208)) ([fac6515](https://github.com/IBM/go-sdk-core/commit/fac6515179586a7facc317ad19f59aed167aa16f))
+
 ## [5.15.1](https://github.com/IBM/go-sdk-core/compare/v5.15.0...v5.15.1) (2024-01-29)
 
 
