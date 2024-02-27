@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2019, 2021.
+// (C) Copyright IBM Corp. 2019, 2024.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -388,7 +388,7 @@ func TestIamGetTokenSuccess(t *testing.T) {
 	assert.Nil(t, authenticator.synchronizedRequestToken())
 
 	// Force expiration and verify that we got the second access token.
-	authenticator.getTokenData().Expiration = GetCurrentTime() - 3600
+	authenticator.getTokenData().Expiration = GetCurrentTime() - 1
 	authenticator.ClientId = iamAuthMockClientID
 	authenticator.ClientSecret = iamAuthMockClientSecret
 	_, err = authenticator.GetToken()
@@ -401,6 +401,68 @@ func TestIamGetTokenSuccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, tokenResponse)
 	assert.Equal(t, iamAuthTestRefreshToken, tokenResponse.RefreshToken)
+}
+
+func TestIamGetTokenSuccess10SecWindow(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
+	firstCall := true
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		assert.Nil(t, err)
+		assert.Len(t, r.Form["apikey"], 1)
+		assert.Len(t, r.Form["grant_type"], 1)
+		assert.Len(t, r.Form["response_type"], 1)
+		assert.Empty(t, r.Form["scope"])
+
+		w.WriteHeader(http.StatusOK)
+		expiration := GetCurrentTime() + 3600
+		if firstCall {
+			fmt.Fprintf(w, `{
+				"access_token": "%s",
+				"token_type": "Bearer",
+				"expires_in": 3600,
+				"expiration": %d,
+				"refresh_token": "%s"
+			}`, iamAuthTestAccessToken1, expiration, iamAuthTestRefreshToken)
+			firstCall = false
+			_, _, ok := r.BasicAuth()
+			assert.False(t, ok)
+		} else {
+			fmt.Fprintf(w, `{
+				"access_token": "%s",
+				"token_type": "Bearer",
+				"expires_in": 3600,
+				"expiration": %d,
+				"refresh_token": "%s"
+			}`, iamAuthTestAccessToken2, expiration, iamAuthTestRefreshToken)
+		}
+	}))
+	defer server.Close()
+
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Nil(t, authenticator.getTokenData())
+
+	// Force the first fetch and verify we got the first access token.
+	token, err := authenticator.GetToken()
+	assert.Nil(t, err)
+	assert.Equal(t, iamAuthTestAccessToken1, token)
+	assert.NotNil(t, authenticator.getTokenData())
+
+	// Force expiration and verify that we got the second access token.
+	// We'll set expiration to be current-time + <iamExpirationWindow> (10 secs),
+	// to test the scenario where we should refresh the token when we are within 10 secs
+	// of expiration.
+	authenticator.getTokenData().Expiration = GetCurrentTime() + iamExpirationWindow
+	_, err = authenticator.GetToken()
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator.getTokenData())
+	assert.Equal(t, iamAuthTestAccessToken2, authenticator.getTokenData().AccessToken)
 }
 
 func TestIamGetTokenSuccessRT(t *testing.T) {
@@ -442,6 +504,10 @@ func TestIamGetTokenSuccessRT(t *testing.T) {
 				"expiration": %d,
 				"refresh_token": "%s"
 			}`, iamAuthTestAccessToken2, expiration, newRefreshToken)
+			username, password, ok := r.BasicAuth()
+			assert.True(t, ok)
+			assert.Equal(t, iamAuthMockClientID, username)
+			assert.Equal(t, iamAuthMockClientSecret, password)
 		}
 	}))
 	defer server.Close()

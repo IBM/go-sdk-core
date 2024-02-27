@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2021.
+// (C) Copyright IBM Corp. 2021, 2024.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -646,6 +646,52 @@ func TestVpcAuthGetTokenSuccess(t *testing.T) {
 
 	// Force expiration and verify that GetToken() fetched the second access token.
 	auth.getTokenData().Expiration = GetCurrentTime() - 1
+	accessToken, err = auth.GetToken()
+	assert.Nil(t, err)
+	assert.NotNil(t, auth.getTokenData())
+	assert.Equal(t, vpcauthTestAccessToken2, accessToken)
+	assert.Equal(t, vpcauthTestAccessToken2, auth.getTokenData().AccessToken)
+}
+
+func TestVpcAuthGetTokenSuccess10SecWindow(t *testing.T) {
+	GetLogger().SetLogLevel(vpcauthTestLogLevel)
+
+	server := startMockVPCServer(t, "profile-crn")
+	defer server.Close()
+
+	auth := &VpcInstanceAuthenticator{
+		IAMProfileCRN: vpcauthMockIAMProfileCRN,
+		URL:           server.URL,
+	}
+	err := auth.Validate()
+	assert.Nil(t, err)
+
+	// Force the first fetch and verify we got the first access token.
+	var accessToken string
+	accessToken, err = auth.GetToken()
+	assert.Nil(t, err)
+
+	// Verify that the access token was returned by GetToken() and also
+	// stored in the authenticator's tokenData field as well.
+	assert.NotNil(t, auth.getTokenData())
+	assert.Equal(t, vpcauthTestAccessToken1, accessToken)
+	assert.Equal(t, vpcauthTestAccessToken1, auth.getTokenData().AccessToken)
+
+	// Call synchronizedRequestToken() to make sure we get back a nil error response.
+	assert.True(t, auth.getTokenData().isTokenValid())
+	err = auth.synchronizedRequestToken()
+	assert.Nil(t, err)
+
+	// Call GetToken() again and verify that we get the cached value.
+	accessToken, err = auth.GetToken()
+	assert.Nil(t, err)
+	assert.Equal(t, vpcauthTestAccessToken1, accessToken)
+
+	// Force expiration and verify that GetToken() fetched the second access token.
+	// We'll set expiration to be current-time + <iamExpirationWindow> (10 secs),
+	// to test the scenario where we should refresh the token when we are within 10 secs
+	// of expiration.
+	auth.getTokenData().Expiration = GetCurrentTime() + iamExpirationWindow
 	accessToken, err = auth.GetToken()
 	assert.Nil(t, err)
 	assert.NotNil(t, auth.getTokenData())

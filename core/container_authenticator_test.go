@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2021.
+// (C) Copyright IBM Corp. 2021, 2024.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -375,7 +375,7 @@ func TestContainerAuthGetTokenSuccess(t *testing.T) {
 
 	// Call GetToken() again and verify that we get the cached value.
 	// Note: we'll Set Scope so that if the IAM operation is actually called again,
-	// we'll receive the second access token.  We don't want the IAM operation called again yet.
+	// we'll receive the second access token. We don't want the IAM operation called again yet.
 	auth.Scope = "send-second-token"
 	accessToken, err = auth.GetToken()
 	assert.Nil(t, err)
@@ -383,6 +383,56 @@ func TestContainerAuthGetTokenSuccess(t *testing.T) {
 
 	// Force expiration and verify that GetToken() fetched the second access token.
 	auth.getTokenData().Expiration = GetCurrentTime() - 1
+	auth.IAMProfileName = ""
+	auth.IAMProfileID = containerAuthMockIAMProfileID
+	accessToken, err = auth.GetToken()
+	assert.Nil(t, err)
+	assert.NotNil(t, auth.getTokenData())
+	assert.Equal(t, containerAuthTestAccessToken2, accessToken)
+	assert.Equal(t, containerAuthTestAccessToken2, auth.getTokenData().AccessToken)
+}
+
+func TestContainerAuthGetTokenSuccess10SecWindow(t *testing.T) {
+	GetLogger().SetLogLevel(containerAuthTestLogLevel)
+
+	server := startMockIAMServer(t)
+	defer server.Close()
+
+	auth := &ContainerAuthenticator{
+		CRTokenFilename: containerAuthMockCRTokenFile,
+		IAMProfileName:  containerAuthMockIAMProfileName,
+		URL:             server.URL,
+	}
+	err := auth.Validate()
+	assert.Nil(t, err)
+
+	// Verify that we initially have no token data cached on the authenticator.
+	assert.Nil(t, auth.getTokenData())
+
+	// Force the first fetch and verify we got the first access token.
+	var accessToken string
+	accessToken, err = auth.GetToken()
+	assert.Nil(t, err)
+
+	// Verify that the access token was returned by GetToken() and also
+	// stored in the authenticator's tokenData field as well.
+	assert.NotNil(t, auth.getTokenData())
+	assert.Equal(t, containerAuthTestAccessToken1, accessToken)
+	assert.Equal(t, containerAuthTestAccessToken1, auth.getTokenData().AccessToken)
+
+	// Call GetToken() again and verify that we get the cached value.
+	// Note: we'll Set Scope so that if the IAM operation is actually called again,
+	// we'll receive the second access token. We don't want the IAM operation called again yet.
+	auth.Scope = "send-second-token"
+	accessToken, err = auth.GetToken()
+	assert.Nil(t, err)
+	assert.Equal(t, containerAuthTestAccessToken1, accessToken)
+
+	// Force expiration and verify that GetToken() fetched the second access token.
+	// We'll set expiration to be current-time + <iamExpirationWindow> (10 secs),
+	// to test the scenario where we should refresh the token when we are within 10 secs
+	// of expiration.
+	auth.getTokenData().Expiration = GetCurrentTime() + iamExpirationWindow
 	auth.IAMProfileName = ""
 	auth.IAMProfileID = containerAuthMockIAMProfileID
 	accessToken, err = auth.GetToken()
