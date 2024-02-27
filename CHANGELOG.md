@@ -1,3 +1,10 @@
+## [5.15.3](https://github.com/IBM/go-sdk-core/compare/v5.15.2...v5.15.3) (2024-02-27)
+
+
+### Bug Fixes
+
+* adjust IAM token expiration time ([#209](https://github.com/IBM/go-sdk-core/issues/209)) ([0fdd924](https://github.com/IBM/go-sdk-core/commit/0fdd924889e63775c58169ed7fb8e70a524d789c))
+
 ## [5.15.2](https://github.com/IBM/go-sdk-core/compare/v5.15.1...v5.15.2) (2024-02-23)
 
 
