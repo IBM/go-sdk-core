@@ -27,37 +27,37 @@ import (
 // Private utility functions for our custom error system
 
 // CreateIDHash computes a unique ID based on a given prefix
-// and error attribute fields.
+// and problem attribute fields.
 func CreateIDHash(prefix string, fields ...string) string {
 	signature := strings.Join(fields, "")
 	hash := sha256.Sum256([]byte(signature))
 	return fmt.Sprintf("%s_%s", prefix, hex.EncodeToString(hash[:4]))
 }
 
-// getPreviousErrorID returns the ID of the "causedBy" error, if it exists.
-func getPreviousErrorID(problem Problem) string {
+// getPreviousProblemID returns the ID of the "causedBy" problem, if it exists.
+func getPreviousProblemID(problem Problem) string {
 	if problem != nil {
 		return problem.GetID()
 	}
 	return ""
 }
 
-// getSystemInfo is a convenient way to access the name of the
-// system alongside the current semantic version of the library.
-func getSystemInfo() (string, string) {
+// getComponentInfo is a convenient way to access the name of the
+// component alongside the current semantic version of the library.
+func getComponentInfo() (string, string) {
 	return "github.com/IBM/go-sdk-core/v5", __VERSION__
 }
 
 // computeFunctionName investigates the program counter at a fixed
 // skip number (aka point in the stack) of 2, which gives us the
-// information about the function the error was created in, and
+// information about the function the problem was created in, and
 // returns the name of the function.
-func computeFunctionName(system string) string {
+func computeFunctionName(component string) string {
 	if pc, _, _, ok := runtime.Caller(2); ok {
-		// The function names will have the system as a prefix - to avoid
-		// redundancy, since we are including the system string with the
-		// error, trim that prefix here.
-		return strings.TrimPrefix(runtime.FuncForPC(pc).Name(), system+"/")
+		// The function names will have the component as a prefix - to avoid
+		// redundancy, since we are including the component string with the
+		// problem, trim that prefix here.
+		return strings.TrimPrefix(runtime.FuncForPC(pc).Name(), component+"/")
 	}
 
 	return ""
@@ -72,11 +72,11 @@ type sdkStackFrame struct {
 }
 
 // getStackInfo invokes helper methods to curate a limited, formatted
-// version of the stack trace with only the system-scoped function
-// invocations that lead to the creation of the error.
-func getStackInfo(system string) []sdkStackFrame {
+// version of the stack trace with only the component-scoped function
+// invocations that lead to the creation of the problem.
+func getStackInfo(component string) []sdkStackFrame {
 	if frames, ok := makeFrames(); ok {
-		return formatFrames(frames, system)
+		return formatFrames(frames, component)
 	}
 
 	return nil
@@ -84,7 +84,7 @@ func getStackInfo(system string) []sdkStackFrame {
 
 // makeFrames populates a program counter list with data at a
 // fixed skip number (4), which gives us the stack information
-// at the point in the program that the error was created. This
+// at the point in the program that the problem was created. This
 // function adjusts the list as needed, since the necessary
 // list size is not known at first.
 func makeFrames() ([]uintptr, bool) {
@@ -103,7 +103,7 @@ func makeFrames() ([]uintptr, bool) {
 
 // formatFrames takes a program counter list and formats them
 // into a readable format for including in debug messages.
-func formatFrames(pcs []uintptr, system string) []sdkStackFrame {
+func formatFrames(pcs []uintptr, component string) []sdkStackFrame {
 	result := make([]sdkStackFrame, 0)
 
 	if len(pcs) == 0 {
@@ -116,8 +116,8 @@ func formatFrames(pcs []uintptr, system string) []sdkStackFrame {
 	for {
 		frame, more := frames.Next()
 
-		// Only the frames in the same system as the error are relevant.
-		if strings.HasPrefix(frame.Function, system) {
+		// Only the frames in the same component as the problem are relevant.
+		if strings.HasPrefix(frame.Function, component) {
 			stackFrame := sdkStackFrame{
 				Function: frame.Function,
 				File: frame.File,
@@ -136,45 +136,45 @@ func formatFrames(pcs []uintptr, system string) []sdkStackFrame {
 	return result
 }
 
-// getErrorInfoAsYAML formats the ordered error data as
+// getProblemInfoAsYAML formats the ordered problem data as
 // YAML for human/machine readable printing.
-func getErrorInfoAsYAML(orderedMaps *OrderedMaps) string {
+func getProblemInfoAsYAML(orderedMaps *OrderedMaps) string {
 	asYaml, err := yaml.Marshal(orderedMaps.GetMaps())
 
 	if err != nil {
-		return fmt.Sprintf("Error serializing the error information: %s", err.Error())
+		return fmt.Sprintf("Error serializing the problem information: %s", err.Error())
 	}
 	return fmt.Sprintf("---\n%s---\n", asYaml)
 }
 
 func ComputeConsoleMessage(o OrderableProblem) string {
-	return getErrorInfoAsYAML(o.GetConsoleOrderedMaps())
+	return getProblemInfoAsYAML(o.GetConsoleOrderedMaps())
 }
 
 func ComputeDebugMessage(o OrderableProblem) string {
-	return getErrorInfoAsYAML(o.GetDebugOrderedMaps())
+	return getProblemInfoAsYAML(o.GetDebugOrderedMaps())
 }
 
-// EnrichHTTPError takes an error that should be an SDKError and, if it originated
-// as an HTTPError, populates the fields of the underlying HTTP error with the
+// EnrichHTTPProblem takes an problem that should be an SDKProblem and, if it originated
+// as an HTTPProblem, populates the fields of the underlying HTTP problem with the
 // given service/operation information.
-func EnrichUnderlyingHTTPError(err error, operationID string, getInfo infoProvider) {
-	// If the error originated from an HTTP error response, populate the
-	// HTTPError instance with details from the SDK that weren't available
-	// in the core at error creation time.
-	var httpErr *HTTPError
+func EnrichUnderlyingHTTPProblem(err error, operationID string, getInfo infoProvider) {
+	// If the problem originated from an HTTP error response, populate the
+	// HTTPProblem instance with details from the SDK that weren't available
+	// in the core at problem creation time.
+	var httpErr *HTTPProblem
 	if errors.As(err, &httpErr) {
-		enrichHTTPError(httpErr, operationID, getInfo)
+		enrichHTTPProblem(httpErr, operationID, getInfo)
 	}
 }
 
-// enrichHTTPError takes an HTTPError instance alongside information about the request
+// enrichHTTPProblem takes an HTTPProblem instance alongside information about the request
 // and adds the extra info to the instance. It also loosely deserializes the response
 // in order to set additional information, like the error code.
-func enrichHTTPError(httpErr *HTTPError, operationID string, getInfo infoProvider) {
-	system, version := getInfo()
+func enrichHTTPProblem(httpErr *HTTPProblem, operationID string, getInfo infoProvider) {
+	component, version := getInfo()
 
-	httpErr.System = system
+	httpErr.Component = component
 	httpErr.Version = version
 	httpErr.OperationID = operationID
 

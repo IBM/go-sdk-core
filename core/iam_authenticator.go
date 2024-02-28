@@ -164,7 +164,7 @@ func (builder *IamAuthenticatorBuilder) Build() (*IamAuthenticator, error) {
 	// Make sure the config is valid.
 	err := builder.IamAuthenticator.Validate()
 	if err != nil {
-		return nil, RepurposeSDKError(err, "validation-failed")
+		return nil, RepurposeSDKProblem(err, "validation-failed")
 	}
 
 	return &builder.IamAuthenticator, nil
@@ -203,13 +203,13 @@ func NewIamAuthenticator(apiKey string, url string, clientId string, clientSecre
 		SetHeaders(headers).
 		Build()
 
-	return authenticator, RepurposeSDKError(err, "auth-builder-fail")
+	return authenticator, RepurposeSDKProblem(err, "auth-builder-fail")
 }
 
 // newIamAuthenticatorFromMap constructs a new IamAuthenticator instance from a map.
 func newIamAuthenticatorFromMap(properties map[string]string) (authenticator *IamAuthenticator, err error) {
 	if properties == nil {
-		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", getSystemInfo)
+		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", getComponentInfo)
 	}
 
 	disableSSL, err := strconv.ParseBool(properties[PROPNAME_AUTH_DISABLE_SSL])
@@ -242,7 +242,7 @@ func (*IamAuthenticator) AuthenticationType() string {
 func (authenticator *IamAuthenticator) Authenticate(request *http.Request) error {
 	token, err := authenticator.GetToken()
 	if err != nil {
-		return RepurposeSDKError(err, "get-token-fail")
+		return RepurposeSDKProblem(err, "get-token-fail")
 	}
 
 	request.Header.Set("Authorization", "Bearer "+token)
@@ -316,12 +316,12 @@ func (authenticator *IamAuthenticator) Validate() error {
 	//
 	if authenticator.ApiKey == "" && authenticator.RefreshToken == "" {
 		errMsg := fmt.Sprintf(ERRORMSG_EXCLUSIVE_PROPS_ERROR, "ApiKey", "RefreshToken")
-		return SDKErrorf(nil, errMsg, "exc-props", getSystemInfo)
+		return SDKErrorf(nil, errMsg, "exc-props", getComponentInfo)
 	}
 
 	if authenticator.ApiKey != "" && HasBadFirstOrLastChar(authenticator.ApiKey) {
 		errMsg := fmt.Sprintf(ERRORMSG_PROP_INVALID, "ApiKey")
-		return SDKErrorf(nil, errMsg, "bad-prop", getSystemInfo)
+		return SDKErrorf(nil, errMsg, "bad-prop", getComponentInfo)
 	}
 
 	// Validate ClientId and ClientSecret.
@@ -332,12 +332,12 @@ func (authenticator *IamAuthenticator) Validate() error {
 		// Since it is NOT the case that both properties are empty, make sure BOTH are specified.
 		if authenticator.ClientId == "" {
 			errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "ClientId")
-			return SDKErrorf(nil, errMsg, "missing-id", getSystemInfo)
+			return SDKErrorf(nil, errMsg, "missing-id", getComponentInfo)
 		}
 
 		if authenticator.ClientSecret == "" {
 			errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "ClientSecret")
-			return SDKErrorf(nil, errMsg, "missing-secret", getSystemInfo)
+			return SDKErrorf(nil, errMsg, "missing-secret", getComponentInfo)
 		}
 	}
 
@@ -352,7 +352,7 @@ func (authenticator *IamAuthenticator) GetToken() (string, error) {
 		// synchronously request the token
 		err := authenticator.synchronizedRequestToken()
 		if err != nil {
-			return "", RepurposeSDKError(err, "request-token-fail")
+			return "", RepurposeSDKProblem(err, "request-token-fail")
 		}
 	} else if authenticator.getTokenData().needsRefresh() {
 		// If refresh needed, kick off a go routine in the background to get a new token
@@ -362,7 +362,7 @@ func (authenticator *IamAuthenticator) GetToken() (string, error) {
 
 	// return an error if the access token is not valid or was not fetched
 	if authenticator.getTokenData() == nil || authenticator.getTokenData().AccessToken == "" {
-		return "", SDKErrorf(nil, "Error while trying to get access token", "no-token", getSystemInfo)
+		return "", SDKErrorf(nil, "Error while trying to get access token", "no-token", getComponentInfo)
 	}
 
 	return authenticator.getTokenData().AccessToken, nil
@@ -406,7 +406,7 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 	builder := NewRequestBuilder(POST)
 	_, err := builder.ResolveRequestURL(authenticator.url(), iamAuthOperationPathGetToken, nil)
 	if err != nil {
-		return nil, RepurposeSDKError(err, "url-resolve-error")
+		return nil, RepurposeSDKProblem(err, "url-resolve-error")
 	}
 
 	builder.AddHeader(CONTENT_TYPE, "application/x-www-form-urlencoded")
@@ -424,7 +424,7 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 	} else {
 		// We shouldn't ever get here due to prior validations, but just in case, let's log an error.
 		errMsg := fmt.Sprintf(ERRORMSG_EXCLUSIVE_PROPS_ERROR, "ApiKey", "RefreshToken")
-		return nil, SDKErrorf(nil, errMsg, "iam-exc-props", getSystemInfo)
+		return nil, SDKErrorf(nil, errMsg, "iam-exc-props", getComponentInfo)
 	}
 
 	// Add any optional parameters to the request.
@@ -439,7 +439,7 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 
 	req, err := builder.Build()
 	if err != nil {
-		return nil, RepurposeSDKError(err, "request-build-error")
+		return nil, RepurposeSDKProblem(err, "request-build-error")
 	}
 
 	// If client id and secret were configured by the user, then set them on the request
@@ -463,7 +463,7 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 	GetLogger().Debug("Invoking IAM 'get token' operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		err = SDKErrorf(nil, err.Error(), "request-error", getSystemInfo)
+		err = SDKErrorf(nil, err.Error(), "request-error", getComponentInfo)
 		return nil, err
 	}
 	GetLogger().Debug("Returned from IAM 'get token' operation, received status code %d", resp.StatusCode)
@@ -480,7 +480,7 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		detailedResponse, err := processErrorResponse(resp)
-		authError := authenticationErrorf(err, detailedResponse, "get-token", authenticator.getSystemInfo)
+		authError := authenticationErrorf(err, detailedResponse, "get-token", authenticator.getComponentInfo)
 
 		// The err Summary is typically the message computed for the HTTPError instance in
 		// processErrorResponse(). If the response body is non-JSON, the message will be generic
@@ -504,7 +504,7 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 	return tokenResponse, nil
 }
 
-func (authenticator *IamAuthenticator) getSystemInfo() (string, string) {
+func (authenticator *IamAuthenticator) getComponentInfo() (string, string) {
 	return "iam-identity-services", ""
 }
 
@@ -529,7 +529,7 @@ type iamTokenData struct {
 func newIamTokenData(tokenResponse *IamTokenServerResponse) (*iamTokenData, error) {
 
 	if tokenResponse == nil {
-		return nil, SDKErrorf(nil, "Error while trying to parse access token!", "token-parse", getSystemInfo)
+		return nil, SDKErrorf(nil, "Error while trying to parse access token!", "token-parse", getComponentInfo)
 	}
 	// Compute the adjusted refresh time (expiration time - 20% of timeToLive)
 	timeToLive := tokenResponse.ExpiresIn

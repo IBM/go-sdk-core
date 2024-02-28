@@ -22,7 +22,7 @@ import (
 // Type definitions
 
 // Problem is an interface that describes the common
-// behavior of custom IBM error message types.
+// behavior of custom IBM problem message types.
 type Problem interface {
 
 	// GetConsoleMessage returns a message suited to the practitioner
@@ -35,76 +35,82 @@ type Problem interface {
 	// for the developer to identify the root cause of the issue.
 	GetDebugMessage() string
 
-	// GetID returns an identifier or code for a given error. It is computed
-	// from the attributes of the error, so that the same errors will always
+	// GetID returns an identifier or code for a given problem. It is computed
+	// from the attributes of the problem, so that the same problems will always
 	// have the same ID, even when encountered by different users.
 	GetID() string
 
-	// Error returns the message associated with a given error and guarantees
+	// Error returns the message associated with a given problem and guarantees
 	// every instance of Problem also implements the native `error` interface.
 	Error() string
 }
 
-// IBMError holds the base set of fields that all error types
+// IBMProblem holds the base set of fields that all problem types
 // should include. It is geared towards embedding in other
 // structs and it should not be used on its own (so it is not exported).
-type IBMError struct {
+type IBMProblem struct {
 
 	// Summary is the informative, user-friendly message that describes
-	// the error and what caused it.
+	// the problem and what caused it.
 	Summary string `json:"summary" validate:"required"` // required
 
-	// System describes the actual component or tool that the error
-	// occurred in. For example, an error that occurs in this library
-	// will have a system value of "go-sdk-core".
-	System string `json:"system" validate:"required"` // required
+	// Component describes the actual component that the problem occurred in.
+	// Examples of components include cloud services, SDK clients, the IBM
+	// Terraform Provider, etc. For programming libraries, the Component name
+	// should match the module name for the library (i.e. the name a user
+	// would use to install it).
+	Component string `json:"component" validate:"required"` // required
 
 	// Version provides the version of the component or tool that the
-	// error occurred in.
+	// problem occurred in.
 	Version string `json:"version" validate:"required"` // required
+
+	// Severity represents the severity level of the problem, e.g.
+	// error, warning, or info.
+	Severity ProblemSeverity `json:"severity" validate:"required"` // required
 
 	// discriminator is a private property that is not ever meant to be
 	// seen by the end user. It's sole purpose is to enforce uniqueness
-	// for the computed ID of errors that would otherwise have the same
-	// ID. For example, if two SDKError instances are created with the
-	// same System and Function values, they would end up with the same
-	// ID. This property allows us to "discriminate" between such errors.
+	// for the computed ID of problems that would otherwise have the same
+	// ID. For example, if two SDKProblem instances are created with the
+	// same Component and Function values, they would end up with the same
+	// ID. This property allows us to "discriminate" between such problems.
 	discriminator string `json:"discriminator,omitempty"` // optional
 
-	// causedBy allows for the storage of an error from a previous system,
+	// causedBy allows for the storage of a problem from a previous component,
 	// if there is one.
 	causedBy Problem `json:"caused_by,omitempty"` // optional
 }
 
-// Error returns the error message and implements the native
+// Error returns the problem's message and implements the native
 // `error` interface.
-func (e *IBMError) Error() string {
+func (e *IBMProblem) Error() string {
 	return e.Summary
 }
 
 // GetBaseSignature provides a convenient way of
 // retrieving the fields needed to compute the
-// error ID that are common to every kind of error.
-func (e *IBMError) GetBaseSignature() string {
-	return fmt.Sprintf("%s%s%s", e.System, e.discriminator, getPreviousErrorID(e.causedBy))
+// hash that are common to every kind of problem.
+func (e *IBMProblem) GetBaseSignature() string {
+	return fmt.Sprintf("%s%s%s%s", e.Component, e.Severity, e.discriminator, getPreviousProblemID(e.causedBy))
 }
 
-// GetCausedBy returns the underlying `causedBy` error, if it exists.
-func (e *IBMError) GetCausedBy() Problem {
+// GetCausedBy returns the underlying `causedBy` problem, if it exists.
+func (e *IBMProblem) GetCausedBy() Problem {
 	return e.causedBy
 }
 
 // Unwrap implements an interface the native Go "errors" package uses to
-// check for embedded errors in a given error instance. IBM error types
+// check for embedded problems in a given problem instance. IBM problem types
 // are not embedded in the traditional sense, but they chain previous
-// error instances together with the "causedBy" field. This allows error
-// interface instances to be cast into any of the error types in the chain
+// problem instances together with the "causedBy" field. This allows error
+// interface instances to be cast into any of the problem types in the chain
 // using the native "errors.As" function. This can be useful for, as an
-// example, extracting an HTTPError from the chain if it exists.
-// Note that this Unwrap method returns only the chain of "caused by" errors;
+// example, extracting an HTTPProblem from the chain if it exists.
+// Note that this Unwrap method returns only the chain of "caused by" problems;
 // it does not include the error instance the method is called on - that is
 // looked at separately by the "errors" package in functions like "As".
-func (e *IBMError) Unwrap() []error {
+func (e *IBMProblem) Unwrap() []error {
 	causedBy := e.GetCausedBy() 
 	if causedBy == nil {
 		return nil
@@ -123,49 +129,49 @@ func (e *IBMError) Unwrap() []error {
 	return errs
 }
 
-// SDKError provides a type suited to errors that
+// SDKProblem provides a type suited to problems that
 // occur in SDK projects. It extends the base
-// `IBMError` type with a field to store the
-// function being called when the error occurs.
-type SDKError struct {
-	*IBMError
+// `IBMProblem` type with a field to store the
+// function being called when the problem occurs.
+type SDKProblem struct {
+	*IBMProblem
 
 	// Function provides the name of the in-code
-	// function or method in which the error
+	// function or method in which the problem
 	// occurred.
 	Function string `json:"function" validate:"required"` // required
 
 	// A computed stack trace including the relevant
 	// function names, files, and line numbers invoked
-	// leading up to the origination of the error.
+	// leading up to the origination of the problem.
 	stack []sdkStackFrame `json:"stack,omitempty"` // optional
 }
 
 // GetConsoleMessage returns all public fields of
-// the error, formatted in YAML.
-func (e *SDKError) GetConsoleMessage() string {
+// the problem, formatted in YAML.
+func (e *SDKProblem) GetConsoleMessage() string {
 	return ComputeConsoleMessage(e)
 }
 
 // GetDebugMessage returns all information
-// about the error, formatted in YAML.
-func (e *SDKError) GetDebugMessage() string {
+// about the problem, formatted in YAML.
+func (e *SDKProblem) GetDebugMessage() string {
 	return ComputeDebugMessage(e)
 }
 
 // GetID returns the computed identifier, computed from the
-// `System`, `discriminator`, and `Function` fields, as well as the
-// identifier of the `causedBy` error, if it exists.
-func (e *SDKError) GetID() string {
-	return CreateIDHash("sdk_error", e.GetBaseSignature(), e.Function)
+// `Component`, `discriminator`, and `Function` fields, as well as the
+// identifier of the `causedBy` problem, if it exists.
+func (e *SDKProblem) GetID() string {
+	return CreateIDHash("sdk_", e.GetBaseSignature(), e.Function)
 }
 
-// SDKError provides a type suited to errors that
+// SDKProblem provides a type suited to problems that
 // occur as the result of an HTTP request. It extends
-// the base `IBMError` type with fields to store
+// the base `IBMProblem` type with fields to store
 // information about the HTTP request/response.
-type HTTPError struct {
-	*IBMError
+type HTTPProblem struct {
+	*IBMProblem
 
 	// OperationID identifies the operation of an API
 	// that the failed request was made to.
@@ -182,55 +188,64 @@ type HTTPError struct {
 }
 
 // GetConsoleMessage returns all public fields of
-// the error, formatted in YAML.
-func (e *HTTPError) GetConsoleMessage() string {
+// the problem, formatted in YAML.
+func (e *HTTPProblem) GetConsoleMessage() string {
 	return ComputeConsoleMessage(e)
 }
 
 // GetDebugMessage returns all information about
-// the error, formatted in YAML.
-func (e *HTTPError) GetDebugMessage() string {
+// the problem, formatted in YAML.
+func (e *HTTPProblem) GetDebugMessage() string {
 	return ComputeDebugMessage(e)
 }
 
 // GetID returns the computed identifier, computed from the
-// `System`, `discriminator`, `OperationID`, `Response`, and
+// `Component`, `discriminator`, `OperationID`, `Response`, and
 // `ErrorCode` fields, as well as the identifier of the
-// `causedBy` error, if it exists.
-func (e *HTTPError) GetID() string {
+// `causedBy` problem, if it exists.
+func (e *HTTPProblem) GetID() string {
 	// TODO: add the ErrorCode to the hash once we have the ability to enumerate error codes in an API.
-	return CreateIDHash("http_error", e.GetBaseSignature(), e.OperationID, fmt.Sprint(e.Response.GetStatusCode()))
+	return CreateIDHash("http_", e.GetBaseSignature(), e.OperationID, fmt.Sprint(e.Response.GetStatusCode()))
 }
 
-// AuthenticationError describes the error returned when
+// AuthenticationError describes the problem returned when
 // authentication over HTTP fails.
 type AuthenticationError struct {
 	Err      error `json:"err,omitempty"`
-	*HTTPError
+	*HTTPProblem
 }
 
 // infoProvider is a function type that must return two strings:
-// first, the name of the system (e.g. "go-sdk-core")
+// first, the name of the component (e.g. "go-sdk-core")
 // and second, the semantic version number as a string (e.g. "5.1.2")
 type infoProvider func() (string, string)
 
+// ProblemSeverity simulates an enum by defining a string type that should
+// be one of a few given values. For now, ErrorSeverity is the only supported
+// value.
+type ProblemSeverity string
+
+// Note: this doesn't actually provide type safety like a real enum would but
+// it serves as helpful documentation for understanding expected values.
+const (
+	ErrorSeverity ProblemSeverity = "error"
+)
+
 // Error creation functions
 
-// IBMErrorf creates and returns a new instance of an
-// IBMError struct. It is private as it is primarily
-// meant for embedding IBMError structs in other types.
-func IBMErrorf(err error, summary, system, version, discriminator string) *IBMError {
+func ibmProblemf(err error, severity ProblemSeverity, summary, component, version, discriminator string) *IBMProblem {
 	// Leaving summary blank is a convenient way to
-	// use the message from the underlying error.
+	// use the message from the underlying problem.
 	if summary == "" {
 		summary = err.Error()
 	}
 
-	newError := &IBMError{
+	newError := &IBMProblem{
 		Summary: summary,
-		System: system,
+		Component: component,
 		Version: version,
 		discriminator: discriminator,
+		Severity: severity,
 	}
 
 	var causedBy Problem
@@ -241,58 +256,64 @@ func IBMErrorf(err error, summary, system, version, discriminator string) *IBMEr
 	return newError
 }
 
-// SDKErrorf creates and returns a new instance of `SDKError`.
-func SDKErrorf(err error, summary, discriminator string, getInfo infoProvider) *SDKError {
-	system, version := getInfo()
+// IBMErrorf creates and returns a new instance of an IBMProblem struct with "error"
+// level severity. It is primarily meant for embedding IBMProblem structs in other types.
+func IBMErrorf(err error, summary, component, version, discriminator string) *IBMProblem {
+	return ibmProblemf(err, ErrorSeverity, summary, component, version, discriminator)
+}
 
-	function := computeFunctionName(system)
-	stack := getStackInfo(system)
+// SDKErrorf creates and returns a new instance of `SDKProblem` with "error" level severity.
+func SDKErrorf(err error, summary, discriminator string, getInfo infoProvider) *SDKProblem {
+	component, version := getInfo()
 
-	return &SDKError{
-		IBMError: IBMErrorf(err, summary, system, version, discriminator),
+	function := computeFunctionName(component)
+	stack := getStackInfo(component)
+
+	return &SDKProblem{
+		IBMProblem: IBMErrorf(err, summary, component, version, discriminator),
 		Function: function,
 		stack: stack,
 	}
 }
 
-// RepurposeSDKError provides a convenient way to take an error from
-// another function in the same system and contextualize it to the current
+// RepurposeSDKProblem provides a convenient way to take a problem from
+// another function in the same component and contextualize it to the current
 // function. Should only be used in public (exported) functions.
-func RepurposeSDKError(err error, discriminator string) error {
+func RepurposeSDKProblem(err error, discriminator string) error {
 	if err == nil {
 		return err
 	}
 
 	// It only makes sense to carry out this logic with SDK Errors.
-	var sdkErr *SDKError
+	var sdkErr *SDKProblem
 	if !errors.As(err, &sdkErr) {
 		return err
 	}
 
-	// Special behavior to allow errors coming from a method that wraps a
+	// Special behavior to allow SDK problems coming from a method that wraps a
 	// "*WithContext" method to maintain the discriminator of the originating
-	// error. Otherwise, we would lose all of that data in the wrap.
+	// problem. Otherwise, we would lose all of that data in the wrap.
 	if discriminator != "" {
 		sdkErr.discriminator = discriminator
 	}
 
 	// Recompute the function to reflect this public boundary (but let the stack
-	// remain as it is - it is the path to the original error origination point).
-	sdkErr.Function = computeFunctionName(sdkErr.System)
+	// remain as it is - it is the path to the original problem origination point).
+	sdkErr.Function = computeFunctionName(sdkErr.Component)
 
 	return sdkErr
 }
 
-// httpErrorf creates and returns a new instance of `HTTPError`.
-func httpErrorf(summary string, response *DetailedResponse) *HTTPError {
-	return &HTTPError{
-		IBMError: IBMErrorf(nil, summary, "", "", ""),
+// httpErrorf creates and returns a new instance of `HTTPProblem` with "error" level severity.
+func httpErrorf(summary string, response *DetailedResponse) *HTTPProblem {
+	return &HTTPProblem{
+		IBMProblem: IBMErrorf(nil, summary, "", "", ""),
 		Response: response,
 	}
 }
 
 // NewAuthenticationError is a deprecated function that was previously used for creating new
-// AuthenticationError structs. HTTPError types should be used instead of AuthenticationError types.
+// AuthenticationError structs. HTTPProblem types should be used instead of AuthenticationError types.
 func NewAuthenticationError(response *DetailedResponse, err error) *AuthenticationError {
 	GetLogger().Warn("NewAuthenticationError is deprecated and should not be used.")
 	authError := authenticationErrorf(err, response, "unknown", func() (string, string) { return "unknown", "unknown" })
@@ -307,21 +328,21 @@ func authenticationErrorf(err error, response *DetailedResponse, operationID str
 		return nil
 	}
 
-	var httpErr *HTTPError
+	var httpErr *HTTPProblem
 	if !errors.As(err, &httpErr) {
 		httpErr = httpErrorf(err.Error(), response)
 	}
 
-	enrichHTTPError(httpErr, operationID, getInfo)
+	enrichHTTPProblem(httpErr, operationID, getInfo)
 
 	return &AuthenticationError{
-		HTTPError: httpErr,
+		HTTPProblem: httpErr,
 		Err: err,
 	}
 }
 
 // OrderableProblem provides an interface for retrieving ordered
-// representations of errors in order to print YAML messages
+// representations of problems in order to print YAML messages
 // with a controlled ordering of the fields.
 type OrderableProblem interface {
 	GetConsoleOrderedMaps() *OrderedMaps
@@ -329,23 +350,24 @@ type OrderableProblem interface {
 }
 
 // GetConsoleOrderedMaps returns an ordered-map representation
-// of an SDKError instance suited for a console message.
-func (e *SDKError) GetConsoleOrderedMaps() *OrderedMaps {
+// of an SDKProblem instance suited for a console message.
+func (e *SDKProblem) GetConsoleOrderedMaps() *OrderedMaps {
 	orderedMaps := NewOrderedMaps()
 
 	orderedMaps.Add("id", e.GetID())
 	orderedMaps.Add("summary", e.Summary)
+	orderedMaps.Add("severity", e.Severity)
 	orderedMaps.Add("function", e.Function)
-	orderedMaps.Add("system", e.System)
+	orderedMaps.Add("component", e.Component)
 	orderedMaps.Add("version", e.Version)
 
 	return orderedMaps
 }
 
 // GetDebugOrderedMaps returns an ordered-map representation
-// of an SDKError instance, with additional information
+// of an SDKProblem instance, with additional information
 // suited for a debug message.
-func (e *SDKError) GetDebugOrderedMaps() *OrderedMaps {
+func (e *SDKProblem) GetDebugOrderedMaps() *OrderedMaps {
 	orderedMaps := e.GetConsoleOrderedMaps()
 
 	orderedMaps.Add("stack", e.stack)
@@ -359,29 +381,30 @@ func (e *SDKError) GetDebugOrderedMaps() *OrderedMaps {
 }
 
 // GetConsoleOrderedMaps returns an ordered-map representation
-// of an HTTPError instance suited for a console message.
-func (e *HTTPError) GetConsoleOrderedMaps() *OrderedMaps {
+// of an HTTPProblem instance suited for a console message.
+func (e *HTTPProblem) GetConsoleOrderedMaps() *OrderedMaps {
 	orderedMaps := NewOrderedMaps()
 
 	orderedMaps.Add("id", e.GetID())
 	orderedMaps.Add("summary", e.Summary)
+	orderedMaps.Add("severity", e.Severity)
 	orderedMaps.Add("operation_id", e.OperationID)
 	orderedMaps.Add("error_code", e.ErrorCode)
-	orderedMaps.Add("system", e.System)
+	orderedMaps.Add("component", e.Component)
 	orderedMaps.Add("version", e.Version)
 
 	return orderedMaps
 }
 
 // GetDebugOrderedMaps returns an ordered-map representation
-// of an HTTPError instance, with additional information
+// of an HTTPProblem instance, with additional information
 // suited for a debug message.
-func (e *HTTPError) GetDebugOrderedMaps() *OrderedMaps {
+func (e *HTTPProblem) GetDebugOrderedMaps() *OrderedMaps {
 	orderedMaps := e.GetConsoleOrderedMaps()
 
 	// The RawResult is never helpful in the printed message. Create a hard copy
 	// (de-referenced pointer) to remove the raw result from so we don't alter
-	// the response stored in the error object.
+	// the response stored in the problem object.
 	printableResponse := *e.Response
 	if printableResponse.Result == nil {
 		printableResponse.Result = string(printableResponse.RawResult)
@@ -405,7 +428,8 @@ func (e *AuthenticationError) GetConsoleOrderedMaps() *OrderedMaps {
 
 	orderedMaps.Add("id", e.GetID())
 	orderedMaps.Add("summary", e.Summary)
-	orderedMaps.Add("system", e.System)
+	orderedMaps.Add("severity", e.Severity)
+	orderedMaps.Add("component", e.Component)
 	orderedMaps.Add("version", e.Version)
 
 	return orderedMaps

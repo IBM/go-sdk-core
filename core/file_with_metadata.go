@@ -38,7 +38,7 @@ func NewFileWithMetadata(data io.ReadCloser) (model *FileWithMetadata, err error
 	model = &FileWithMetadata{
 		Data: data,
 	}
-	err = RepurposeSDKError(ValidateStruct(model, "required parameters"), "validation-failed")
+	err = RepurposeSDKProblem(ValidateStruct(model, "required parameters"), "validation-failed")
 	return
 }
 
@@ -52,23 +52,23 @@ func UnmarshalFileWithMetadata(m map[string]json.RawMessage, result interface{})
 	// then explicitly set the Data field to the contents of the file
 	var data io.ReadCloser
 	var pathToData string
-	err = RepurposeSDKError(UnmarshalPrimitive(m, "data", &pathToData), "unmarshal-fail")
+	err = RepurposeSDKProblem(UnmarshalPrimitive(m, "data", &pathToData), "unmarshal-fail")
 	if err != nil {
 		return
 	}
 	data, err = os.Open(pathToData) // #nosec G304
 	if err != nil {
-		err = SDKErrorf(nil, err.Error(), "file-open-error", getSystemInfo)
+		err = SDKErrorf(nil, err.Error(), "file-open-error", getComponentInfo)
 		return
 	}
 	obj.Data = data
 
 	// unmarshal the other fields as usual
-	err = RepurposeSDKError(UnmarshalPrimitive(m, "filename", &obj.Filename), "unmarshal-file-fail")
+	err = RepurposeSDKProblem(UnmarshalPrimitive(m, "filename", &obj.Filename), "unmarshal-file-fail")
 	if err != nil {
 		return
 	}
-	err = RepurposeSDKError(UnmarshalPrimitive(m, "content_type", &obj.ContentType), "unmarshal-content-type-fail")
+	err = RepurposeSDKProblem(UnmarshalPrimitive(m, "content_type", &obj.ContentType), "unmarshal-content-type-fail")
 	if err != nil {
 		return
 	}
