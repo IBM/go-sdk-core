@@ -156,10 +156,9 @@ func ComputeDebugMessage(o OrderableProblem) string {
 	return getProblemInfoAsYAML(o.GetDebugOrderedMaps())
 }
 
-// EnrichHTTPProblem takes an problem that should be an SDKProblem and, if it originated
-// as an HTTPProblem, populates the fields of the underlying HTTP problem with the
-// given service/operation information.
-func EnrichUnderlyingHTTPProblem(err error, operationID string, getInfo infoProvider) {
+// EnrichHTTPProblem takes an problem and, if it originated as an HTTPProblem, populates
+// the fields of the underlying HTTP problem with the given service/operation information.
+func EnrichHTTPProblem(err error, operationID string, getInfo infoProvider) {
 	// If the problem originated from an HTTP error response, populate the
 	// HTTPProblem instance with details from the SDK that weren't available
 	// in the core at problem creation time.
