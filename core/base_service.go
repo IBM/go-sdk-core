@@ -585,7 +585,7 @@ type Errors struct {
 // response.
 type Error struct {
 	Message string `json:"message,omitempty"`
-	Code string `json:"code,omitempty"`
+	Code    string `json:"code,omitempty"`
 }
 
 // decodeAsMap: Decode the specified JSON byte-stream into a map (akin to a generic JSON object).

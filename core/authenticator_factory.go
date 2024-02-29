@@ -68,7 +68,7 @@ func GetAuthenticatorFromEnvironment(credentialKey string) (authenticator Authen
 			fmt.Sprintf(ERRORMSG_AUTHTYPE_UNKNOWN, authType),
 			"unknown-auth-type",
 			getComponentInfo,
-		);
+		)
 	}
 
 	return

@@ -30,7 +30,7 @@ type OrderedMaps struct {
 // Add appends a key/value pair to the ordered list of maps.
 func (m *OrderedMaps) Add(key string, value interface{}) {
 	m.maps = append(m.maps, yaml.MapItem{
-		Key: key,
+		Key:   key,
 		Value: value,
 	})
 }

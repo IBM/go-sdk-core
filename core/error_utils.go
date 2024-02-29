@@ -19,9 +19,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/go-yaml/yaml"
 	"runtime"
 	"strings"
+
+	"github.com/go-yaml/yaml"
 )
 
 // Private utility functions for our custom error system
@@ -67,8 +68,8 @@ func computeFunctionName(component string) string {
 // frame data to be printed as YAML.
 type sdkStackFrame struct {
 	Function string `json:"function,omitempty"`
-	File string `json:"file,omitempty"`
-	Line int `json:"line,omitempty"`
+	File     string `json:"file,omitempty"`
+	Line     int    `json:"line,omitempty"`
 }
 
 // getStackInfo invokes helper methods to curate a limited, formatted
@@ -120,8 +121,8 @@ func formatFrames(pcs []uintptr, component string) []sdkStackFrame {
 		if strings.HasPrefix(frame.Function, component) {
 			stackFrame := sdkStackFrame{
 				Function: frame.Function,
-				File: frame.File,
-				Line: frame.Line,
+				File:     frame.File,
+				Line:     frame.Line,
 			}
 
 			result = append(result, stackFrame)

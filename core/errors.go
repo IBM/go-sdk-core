@@ -75,11 +75,11 @@ type IBMProblem struct {
 	// ID. For example, if two SDKProblem instances are created with the
 	// same Component and Function values, they would end up with the same
 	// ID. This property allows us to "discriminate" between such problems.
-	discriminator string `json:"discriminator,omitempty"` // optional
+	discriminator string // optional
 
 	// causedBy allows for the storage of a problem from a previous component,
 	// if there is one.
-	causedBy Problem `json:"caused_by,omitempty"` // optional
+	causedBy Problem // optional
 }
 
 // Error returns the problem's message and implements the native
@@ -111,12 +111,12 @@ func (e *IBMProblem) GetCausedBy() Problem {
 // it does not include the error instance the method is called on - that is
 // looked at separately by the "errors" package in functions like "As".
 func (e *IBMProblem) Unwrap() []error {
-	causedBy := e.GetCausedBy() 
+	causedBy := e.GetCausedBy()
 	if causedBy == nil {
 		return nil
 	}
 
-	errs := []error{ causedBy }
+	errs := []error{causedBy}
 
 	var toUnwrap interface{ Unwrap() []error }
 	if errors.As(causedBy, &toUnwrap) {
@@ -144,7 +144,7 @@ type SDKProblem struct {
 	// A computed stack trace including the relevant
 	// function names, files, and line numbers invoked
 	// leading up to the origination of the problem.
-	stack []sdkStackFrame `json:"stack,omitempty"` // optional
+	stack []sdkStackFrame // optional
 }
 
 // GetConsoleMessage returns all public fields of
@@ -211,7 +211,7 @@ func (e *HTTPProblem) GetID() string {
 // AuthenticationError describes the problem returned when
 // authentication over HTTP fails.
 type AuthenticationError struct {
-	Err      error `json:"err,omitempty"`
+	Err error `json:"err,omitempty"`
 	*HTTPProblem
 }
 
@@ -241,11 +241,11 @@ func ibmProblemf(err error, severity ProblemSeverity, summary, component, versio
 	}
 
 	newError := &IBMProblem{
-		Summary: summary,
-		Component: component,
-		Version: version,
+		Summary:       summary,
+		Component:     component,
+		Version:       version,
 		discriminator: discriminator,
-		Severity: severity,
+		Severity:      severity,
 	}
 
 	var causedBy Problem
@@ -271,8 +271,8 @@ func SDKErrorf(err error, summary, discriminator string, getInfo infoProvider) *
 
 	return &SDKProblem{
 		IBMProblem: IBMErrorf(err, summary, component, version, discriminator),
-		Function: function,
-		stack: stack,
+		Function:   function,
+		stack:      stack,
 	}
 }
 
@@ -308,7 +308,7 @@ func RepurposeSDKProblem(err error, discriminator string) error {
 func httpErrorf(summary string, response *DetailedResponse) *HTTPProblem {
 	return &HTTPProblem{
 		IBMProblem: IBMErrorf(nil, summary, "", "", ""),
-		Response: response,
+		Response:   response,
 	}
 }
 
@@ -337,7 +337,7 @@ func authenticationErrorf(err error, response *DetailedResponse, operationID str
 
 	return &AuthenticationError{
 		HTTPProblem: httpErr,
-		Err: err,
+		Err:         err,
 	}
 }
 
