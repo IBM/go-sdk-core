@@ -225,14 +225,14 @@ type ProblemSeverity string
 
 // ProblemComponent is a structure that holds information about a given component.
 type ProblemComponent struct {
-	Name string
+	Name    string
 	Version string
 }
 
 // Note: this doesn't actually provide type safety like a real enum would but
 // it serves as helpful documentation for understanding expected values.
 const (
-	ErrorSeverity ProblemSeverity = "error"
+	ErrorSeverity   ProblemSeverity = "error"
 	WarningSeverity ProblemSeverity = "warning"
 )
 

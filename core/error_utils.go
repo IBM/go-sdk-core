@@ -186,7 +186,7 @@ func enrichHTTPProblem(httpErr *HTTPProblem, operationID string, component *Prob
 
 func NewProblemComponent(name, version string) *ProblemComponent {
 	return &ProblemComponent{
-		Name: name,
+		Name:    name,
 		Version: version,
 	}
 }
