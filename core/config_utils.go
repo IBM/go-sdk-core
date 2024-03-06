@@ -57,7 +57,7 @@ func GetServiceProperties(serviceName string) (serviceProps map[string]string, e
 func getServiceProperties(serviceName string) (serviceProps map[string]string, err error) {
 
 	if serviceName == "" {
-		err = SDKErrorf(nil, "serviceName was not specified", "no-service-name", getComponentInfo)
+		err = SDKErrorf(nil, "serviceName was not specified", "no-service-name", getComponentInfo())
 		return
 	}
 

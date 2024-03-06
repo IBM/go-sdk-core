@@ -59,7 +59,7 @@ func IsNil(object interface{}) bool {
 // ValidateNotNil returns the specified error if 'object' is nil, nil otherwise.
 func ValidateNotNil(object interface{}, errorMsg string) error {
 	if IsNil(object) {
-		return SDKErrorf(nil, errorMsg, "obj-is-nil", getComponentInfo)
+		return SDKErrorf(nil, errorMsg, "obj-is-nil", getComponentInfo())
 	}
 	return nil
 }
@@ -78,10 +78,10 @@ func ValidateStruct(param interface{}, paramName string) error {
 		// If there were validation errors then return an error containing the field errors
 		if fieldErrors, ok := err.(validator.ValidationErrors); ok {
 			errMsg := fmt.Sprintf("%s failed validation:\n%s", paramName, fieldErrors.Error())
-			err = SDKErrorf(nil, errMsg, "struct-validation-errors", getComponentInfo)
+			err = SDKErrorf(nil, errMsg, "struct-validation-errors", getComponentInfo())
 		}
 		errMsg := fmt.Sprintf("Failed to validate %s:\n%s", paramName, err.Error())
-		return SDKErrorf(nil, errMsg, "struct-validate-unknown-error", getComponentInfo)
+		return SDKErrorf(nil, errMsg, "struct-validate-unknown-error", getComponentInfo())
 	}
 
 	return nil
@@ -207,7 +207,7 @@ func ConvertSlice(slice interface{}) (s []string, err error) {
 	inputIsSlice := false
 
 	if IsNil(slice) {
-		err = SDKErrorf(nil, ERRORMSG_NIL_SLICE, "nil-slice", getComponentInfo)
+		err = SDKErrorf(nil, ERRORMSG_NIL_SLICE, "nil-slice", getComponentInfo())
 		return
 	}
 
@@ -222,7 +222,7 @@ func ConvertSlice(slice interface{}) (s []string, err error) {
 
 	// If it's not a slice, just return an error
 	if !inputIsSlice {
-		err = SDKErrorf(nil, ERRORMSG_PARAM_NOT_SLICE, "param-not-slice", getComponentInfo)
+		err = SDKErrorf(nil, ERRORMSG_PARAM_NOT_SLICE, "param-not-slice", getComponentInfo())
 		return
 	} else if reflect.ValueOf(slice).Len() == 0 {
 		s = []string{}
@@ -232,7 +232,7 @@ func ConvertSlice(slice interface{}) (s []string, err error) {
 	jsonBuffer, err := json.Marshal(slice)
 	if err != nil {
 		errMsg := fmt.Sprintf(ERRORMSG_MARSHAL_SLICE, err.Error())
-		err = SDKErrorf(nil, errMsg, "slice-marshal-error", getComponentInfo)
+		err = SDKErrorf(nil, errMsg, "slice-marshal-error", getComponentInfo())
 		return
 	}
 
@@ -261,7 +261,7 @@ func ConvertSlice(slice interface{}) (s []string, err error) {
 		return
 	}
 
-	return nil, SDKErrorf(nil, ERRORMSG_CONVERT_SLICE, "cant-convert-slice", getComponentInfo)
+	return nil, SDKErrorf(nil, ERRORMSG_CONVERT_SLICE, "cant-convert-slice", getComponentInfo())
 }
 
 // SliceContains returns true iff "contains" is an element of "slice"
@@ -285,13 +285,13 @@ func GetQueryParam(urlStr *string, param string) (value *string, err error) {
 
 	urlObj, err := url.Parse(*urlStr)
 	if err != nil {
-		err = SDKErrorf(nil, fmt.Sprintf(errMsgTempl, param, err.Error()), "url-parse-error", getComponentInfo)
+		err = SDKErrorf(nil, fmt.Sprintf(errMsgTempl, param, err.Error()), "url-parse-error", getComponentInfo())
 		return
 	}
 
 	query, err := url.ParseQuery(urlObj.RawQuery)
 	if err != nil {
-		err = SDKErrorf(nil, fmt.Sprintf(errMsgTempl, param, err.Error()), "url-parse-query-error", getComponentInfo)
+		err = SDKErrorf(nil, fmt.Sprintf(errMsgTempl, param, err.Error()), "url-parse-query-error", getComponentInfo())
 		return
 	}
 
@@ -321,7 +321,7 @@ func GetQueryParamAsInt(urlStr *string, param string) (value *int64, err error) 
 	intValue, err := strconv.ParseInt(*strValue, 10, 64)
 	if err != nil {
 		errMsg := fmt.Sprintf("Could not read query param %s as an int:\n%s", param, err.Error())
-		err = SDKErrorf(nil, errMsg, "parse-int-query-error", getComponentInfo)
+		err = SDKErrorf(nil, errMsg, "parse-int-query-error", getComponentInfo())
 		return nil, err
 	}
 

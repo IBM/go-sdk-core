@@ -117,7 +117,7 @@ func newAuthenticator(url string, username string, password string, apikey strin
 // newCloudPakForDataAuthenticatorFromMap : Constructs a new CloudPakForDataAuthenticator instance from a map.
 func newCloudPakForDataAuthenticatorFromMap(properties map[string]string) (*CloudPakForDataAuthenticator, error) {
 	if properties == nil {
-		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", getComponentInfo)
+		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", getComponentInfo())
 	}
 
 	disableSSL, err := strconv.ParseBool(properties[PROPNAME_AUTH_DISABLE_SSL])
@@ -143,19 +143,19 @@ func (authenticator *CloudPakForDataAuthenticator) Validate() error {
 
 	if authenticator.Username == "" {
 		errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "Username")
-		return SDKErrorf(nil, errMsg, "no-user", getComponentInfo)
+		return SDKErrorf(nil, errMsg, "no-user", getComponentInfo())
 	}
 
 	// The user should specify exactly one of APIKey or Password.
 	if (authenticator.APIKey == "" && authenticator.Password == "") ||
 		(authenticator.APIKey != "" && authenticator.Password != "") {
 		errMsg := fmt.Sprintf(ERRORMSG_EXCLUSIVE_PROPS_ERROR, "APIKey", "Password")
-		return SDKErrorf(nil, errMsg, "exc-props", getComponentInfo)
+		return SDKErrorf(nil, errMsg, "exc-props", getComponentInfo())
 	}
 
 	if authenticator.URL == "" {
 		errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "URL")
-		return SDKErrorf(nil, errMsg, "no-url", getComponentInfo)
+		return SDKErrorf(nil, errMsg, "no-url", getComponentInfo())
 	}
 
 	return nil
@@ -231,7 +231,7 @@ func (authenticator *CloudPakForDataAuthenticator) GetToken() (string, error) {
 
 	// return an error if the access token is not valid or was not fetched
 	if authenticator.getTokenData() == nil || authenticator.getTokenData().AccessToken == "" {
-		return "", SDKErrorf(nil, "Error while trying to get access token", "no-token", getComponentInfo)
+		return "", SDKErrorf(nil, "Error while trying to get access token", "no-token", getComponentInfo())
 	}
 
 	return authenticator.getTokenData().AccessToken, nil
@@ -330,7 +330,7 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (tokenResponse
 	GetLogger().Debug("Invoking CP4D token service operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		err = SDKErrorf(nil, err.Error(), "cp4d-request-error", getComponentInfo)
+		err = SDKErrorf(nil, err.Error(), "cp4d-request-error", getComponentInfo())
 		return
 	}
 	GetLogger().Debug("Returned from CP4D token service operation, received status code %d", resp.StatusCode)
@@ -347,7 +347,7 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (tokenResponse
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		detailedResponse, responseError := processErrorResponse(resp)
-		err = authenticationErrorf(responseError, detailedResponse, "authorize", authenticator.getComponentInfo)
+		err = authenticationErrorf(responseError, detailedResponse, "authorize", authenticator.getComponentInfo())
 
 		// The err Summary is typically the message computed for the HTTPError instance in
 		// processErrorResponse(). If the response body is non-JSON, the message will be generic
@@ -370,7 +370,7 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (tokenResponse
 	defer resp.Body.Close() // #nosec G307
 	if err != nil {
 		errMsg := fmt.Sprintf(ERRORMSG_UNMARSHAL_AUTH_RESPONSE, err.Error())
-		err = SDKErrorf(nil, errMsg, "cp4d-res-unmarshal-error", getComponentInfo)
+		err = SDKErrorf(nil, errMsg, "cp4d-res-unmarshal-error", getComponentInfo())
 		tokenResponse = nil
 		return
 	}
@@ -378,8 +378,8 @@ func (authenticator *CloudPakForDataAuthenticator) requestToken() (tokenResponse
 	return
 }
 
-func (authenticator *CloudPakForDataAuthenticator) getComponentInfo() (string, string) {
-	return "cp4d-token-service", "v1"
+func (authenticator *CloudPakForDataAuthenticator) getComponentInfo() *ProblemComponent {
+	return NewProblemComponent("cp4d_token_service", "v1")
 }
 
 // cp4dTokenServerResponse is a struct that models a response received from the token server.

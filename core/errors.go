@@ -52,22 +52,20 @@ type IBMProblem struct {
 
 	// Summary is the informative, user-friendly message that describes
 	// the problem and what caused it.
-	Summary string `json:"summary" validate:"required"` // required
+	Summary string
 
-	// Component describes the actual component that the problem occurred in.
+	// Component is a structure providing information about the actual
+	// component that the problem occurred in: the name of the component
+	// and the version of the component being used with the problem occurred.
 	// Examples of components include cloud services, SDK clients, the IBM
 	// Terraform Provider, etc. For programming libraries, the Component name
 	// should match the module name for the library (i.e. the name a user
 	// would use to install it).
-	Component string `json:"component" validate:"required"` // required
-
-	// Version provides the version of the component or tool that the
-	// problem occurred in.
-	Version string `json:"version" validate:"required"` // required
+	Component *ProblemComponent
 
 	// Severity represents the severity level of the problem, e.g.
 	// error, warning, or info.
-	Severity ProblemSeverity `json:"severity" validate:"required"` // required
+	Severity ProblemSeverity
 
 	// discriminator is a private property that is not ever meant to be
 	// seen by the end user. It's sole purpose is to enforce uniqueness
@@ -92,7 +90,7 @@ func (e *IBMProblem) Error() string {
 // retrieving the fields needed to compute the
 // hash that are common to every kind of problem.
 func (e *IBMProblem) GetBaseSignature() string {
-	return fmt.Sprintf("%s%s%s%s", e.Component, e.Severity, e.discriminator, getPreviousProblemID(e.causedBy))
+	return fmt.Sprintf("%s%s%s%s", e.Component.Name, e.Severity, e.discriminator, getPreviousProblemID(e.causedBy))
 }
 
 // GetCausedBy returns the underlying `causedBy` problem, if it exists.
@@ -163,7 +161,7 @@ func (e *SDKProblem) GetDebugMessage() string {
 // `Component`, `discriminator`, and `Function` fields, as well as the
 // identifier of the `causedBy` problem, if it exists.
 func (e *SDKProblem) GetID() string {
-	return CreateIDHash("sdk_", e.GetBaseSignature(), e.Function)
+	return CreateIDHash("sdk", e.GetBaseSignature(), e.Function)
 }
 
 // SDKProblem provides a type suited to problems that
@@ -175,16 +173,16 @@ type HTTPProblem struct {
 
 	// OperationID identifies the operation of an API
 	// that the failed request was made to.
-	OperationID string `json:"operation_id,omitempty"`
+	OperationID string
+
+	// ErrorCode is the code returned from the API
+	// in the error response, identifying the issue.
+	ErrorCode string
 
 	// Response contains the full HTTP error response
 	// returned as a result of the failed request,
 	// including the body and all headers.
-	Response *DetailedResponse `json:"response" validate:"required"`
-
-	// ErrorCode is the code returned from the API
-	// in the error response, identifying the issue.
-	ErrorCode string `json:"error_code,omitempty"`
+	Response *DetailedResponse
 }
 
 // GetConsoleMessage returns all public fields of
@@ -205,7 +203,12 @@ func (e *HTTPProblem) GetDebugMessage() string {
 // `causedBy` problem, if it exists.
 func (e *HTTPProblem) GetID() string {
 	// TODO: add the ErrorCode to the hash once we have the ability to enumerate error codes in an API.
-	return CreateIDHash("http_", e.GetBaseSignature(), e.OperationID, fmt.Sprint(e.Response.GetStatusCode()))
+	return CreateIDHash("http", e.GetBaseSignature(), e.OperationID, fmt.Sprint(e.Response.GetStatusCode()))
+}
+
+func (e *HTTPProblem) getHeader(key string) (string, bool) {
+	value := e.Response.Headers.Get(key)
+	return value, value != ""
 }
 
 // AuthenticationError describes the problem returned when
@@ -215,25 +218,27 @@ type AuthenticationError struct {
 	*HTTPProblem
 }
 
-// infoProvider is a function type that must return two strings:
-// first, the name of the component (e.g. "go-sdk-core")
-// and second, the semantic version number as a string (e.g. "5.1.2")
-type infoProvider func() (string, string)
-
 // ProblemSeverity simulates an enum by defining a string type that should
 // be one of a few given values. For now, ErrorSeverity is the only supported
 // value.
 type ProblemSeverity string
 
+// ProblemComponent is a structure that holds information about a given component.
+type ProblemComponent struct {
+	Name string
+	Version string
+}
+
 // Note: this doesn't actually provide type safety like a real enum would but
 // it serves as helpful documentation for understanding expected values.
 const (
 	ErrorSeverity ProblemSeverity = "error"
+	WarningSeverity ProblemSeverity = "warning"
 )
 
 // Error creation functions
 
-func ibmProblemf(err error, severity ProblemSeverity, summary, component, version, discriminator string) *IBMProblem {
+func ibmProblemf(err error, severity ProblemSeverity, component *ProblemComponent, summary, discriminator string) *IBMProblem {
 	// Leaving summary blank is a convenient way to
 	// use the message from the underlying problem.
 	if summary == "" {
@@ -243,7 +248,6 @@ func ibmProblemf(err error, severity ProblemSeverity, summary, component, versio
 	newError := &IBMProblem{
 		Summary:       summary,
 		Component:     component,
-		Version:       version,
 		discriminator: discriminator,
 		Severity:      severity,
 	}
@@ -258,19 +262,17 @@ func ibmProblemf(err error, severity ProblemSeverity, summary, component, versio
 
 // IBMErrorf creates and returns a new instance of an IBMProblem struct with "error"
 // level severity. It is primarily meant for embedding IBMProblem structs in other types.
-func IBMErrorf(err error, summary, component, version, discriminator string) *IBMProblem {
-	return ibmProblemf(err, ErrorSeverity, summary, component, version, discriminator)
+func IBMErrorf(err error, component *ProblemComponent, summary, discriminator string) *IBMProblem {
+	return ibmProblemf(err, ErrorSeverity, component, summary, discriminator)
 }
 
 // SDKErrorf creates and returns a new instance of `SDKProblem` with "error" level severity.
-func SDKErrorf(err error, summary, discriminator string, getInfo infoProvider) *SDKProblem {
-	component, version := getInfo()
-
-	function := computeFunctionName(component)
-	stack := getStackInfo(component)
+func SDKErrorf(err error, summary, discriminator string, component *ProblemComponent) *SDKProblem {
+	function := computeFunctionName(component.Name)
+	stack := getStackInfo(component.Name)
 
 	return &SDKProblem{
-		IBMProblem: IBMErrorf(err, summary, component, version, discriminator),
+		IBMProblem: IBMErrorf(err, component, summary, discriminator),
 		Function:   function,
 		stack:      stack,
 	}
@@ -299,7 +301,7 @@ func RepurposeSDKProblem(err error, discriminator string) error {
 
 	// Recompute the function to reflect this public boundary (but let the stack
 	// remain as it is - it is the path to the original problem origination point).
-	sdkErr.Function = computeFunctionName(sdkErr.Component)
+	sdkErr.Function = computeFunctionName(sdkErr.Component.Name)
 
 	return sdkErr
 }
@@ -307,7 +309,7 @@ func RepurposeSDKProblem(err error, discriminator string) error {
 // httpErrorf creates and returns a new instance of `HTTPProblem` with "error" level severity.
 func httpErrorf(summary string, response *DetailedResponse) *HTTPProblem {
 	return &HTTPProblem{
-		IBMProblem: IBMErrorf(nil, summary, "", "", ""),
+		IBMProblem: IBMErrorf(nil, nil, summary, ""),
 		Response:   response,
 	}
 }
@@ -316,12 +318,12 @@ func httpErrorf(summary string, response *DetailedResponse) *HTTPProblem {
 // AuthenticationError structs. HTTPProblem types should be used instead of AuthenticationError types.
 func NewAuthenticationError(response *DetailedResponse, err error) *AuthenticationError {
 	GetLogger().Warn("NewAuthenticationError is deprecated and should not be used.")
-	authError := authenticationErrorf(err, response, "unknown", func() (string, string) { return "unknown", "unknown" })
+	authError := authenticationErrorf(err, response, "unknown", NewProblemComponent("unknown", "unknown"))
 	return authError
 }
 
 // authenticationErrorf creates and returns a new instance of `AuthenticationError`.
-func authenticationErrorf(err error, response *DetailedResponse, operationID string, getInfo infoProvider) *AuthenticationError {
+func authenticationErrorf(err error, response *DetailedResponse, operationID string, component *ProblemComponent) *AuthenticationError {
 	// This function should always be called with non-nil
 	// error/DetailedResponse instances.
 	if err == nil || response == nil {
@@ -333,7 +335,7 @@ func authenticationErrorf(err error, response *DetailedResponse, operationID str
 		httpErr = httpErrorf(err.Error(), response)
 	}
 
-	enrichHTTPProblem(httpErr, operationID, getInfo)
+	enrichHTTPProblem(httpErr, operationID, component)
 
 	return &AuthenticationError{
 		HTTPProblem: httpErr,
@@ -359,7 +361,6 @@ func (e *SDKProblem) GetConsoleOrderedMaps() *OrderedMaps {
 	orderedMaps.Add("severity", e.Severity)
 	orderedMaps.Add("function", e.Function)
 	orderedMaps.Add("component", e.Component)
-	orderedMaps.Add("version", e.Version)
 
 	return orderedMaps
 }
@@ -389,9 +390,21 @@ func (e *HTTPProblem) GetConsoleOrderedMaps() *OrderedMaps {
 	orderedMaps.Add("summary", e.Summary)
 	orderedMaps.Add("severity", e.Severity)
 	orderedMaps.Add("operation_id", e.OperationID)
-	orderedMaps.Add("error_code", e.ErrorCode)
+	orderedMaps.Add("status_code", fmt.Sprint(e.Response.GetStatusCode()))
+	if e.ErrorCode != "" {
+		orderedMaps.Add("error_code", e.ErrorCode)
+	}
 	orderedMaps.Add("component", e.Component)
-	orderedMaps.Add("version", e.Version)
+
+	// Conditionally add the request ID and correlation ID header values.
+
+	if header, ok := e.getHeader("x-request-id"); ok {
+		orderedMaps.Add("request_id", header)
+	}
+
+	if header, ok := e.getHeader("x-correlation-id"); ok {
+		orderedMaps.Add("correlation_id", header)
+	}
 
 	return orderedMaps
 }
@@ -430,7 +443,6 @@ func (e *AuthenticationError) GetConsoleOrderedMaps() *OrderedMaps {
 	orderedMaps.Add("summary", e.Summary)
 	orderedMaps.Add("severity", e.Severity)
 	orderedMaps.Add("component", e.Component)
-	orderedMaps.Add("version", e.Version)
 
 	return orderedMaps
 }
