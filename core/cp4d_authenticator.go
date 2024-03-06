@@ -117,7 +117,7 @@ func newAuthenticator(url string, username string, password string, apikey strin
 // newCloudPakForDataAuthenticatorFromMap : Constructs a new CloudPakForDataAuthenticator instance from a map.
 func newCloudPakForDataAuthenticatorFromMap(properties map[string]string) (*CloudPakForDataAuthenticator, error) {
 	if properties == nil {
-		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", getComponentInfo())
+		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing-props", getComponentInfo())
 	}
 
 	disableSSL, err := strconv.ParseBool(properties[PROPNAME_AUTH_DISABLE_SSL])

@@ -36,18 +36,18 @@ type Problem interface {
 	GetDebugMessage() string
 
 	// GetID returns an identifier or code for a given problem. It is computed
-	// from the attributes of the problem, so that the same problems will always
-	// have the same ID, even when encountered by different users.
+	// from the attributes of the problem, so that the same problem scenario
+	// will always have the same ID, even when encountered by different users.
 	GetID() string
 
 	// Error returns the message associated with a given problem and guarantees
-	// every instance of Problem also implements the native `error` interface.
+	// every instance of Problem also implements the native "error" interface.
 	Error() string
 }
 
 // IBMProblem holds the base set of fields that all problem types
-// should include. It is geared towards embedding in other
-// structs and it should not be used on its own (so it is not exported).
+// should include. It is geared more towards embedding in other
+// structs than towards use on its own.
 type IBMProblem struct {
 
 	// Summary is the informative, user-friendly message that describes
@@ -63,8 +63,8 @@ type IBMProblem struct {
 	// would use to install it).
 	Component *ProblemComponent
 
-	// Severity represents the severity level of the problem, e.g.
-	// error, warning, or info.
+	// Severity represents the severity level of the problem,
+	// e.g. error, warning, or info.
 	Severity ProblemSeverity
 
 	// discriminator is a private property that is not ever meant to be
@@ -73,15 +73,15 @@ type IBMProblem struct {
 	// ID. For example, if two SDKProblem instances are created with the
 	// same Component and Function values, they would end up with the same
 	// ID. This property allows us to "discriminate" between such problems.
-	discriminator string // optional
+	discriminator string
 
 	// causedBy allows for the storage of a problem from a previous component,
 	// if there is one.
-	causedBy Problem // optional
+	causedBy Problem
 }
 
 // Error returns the problem's message and implements the native
-// `error` interface.
+// "error" interface.
 func (e *IBMProblem) Error() string {
 	return e.Summary
 }
@@ -93,7 +93,7 @@ func (e *IBMProblem) GetBaseSignature() string {
 	return fmt.Sprintf("%s%s%s%s", e.Component.Name, e.Severity, e.discriminator, getPreviousProblemID(e.causedBy))
 }
 
-// GetCausedBy returns the underlying `causedBy` problem, if it exists.
+// GetCausedBy returns the underlying "causedBy" problem, if it exists.
 func (e *IBMProblem) GetCausedBy() Problem {
 	return e.causedBy
 }
@@ -129,7 +129,7 @@ func (e *IBMProblem) Unwrap() []error {
 
 // SDKProblem provides a type suited to problems that
 // occur in SDK projects. It extends the base
-// `IBMProblem` type with a field to store the
+// "IBMProblem" type with a field to store the
 // function being called when the problem occurs.
 type SDKProblem struct {
 	*IBMProblem
@@ -137,12 +137,12 @@ type SDKProblem struct {
 	// Function provides the name of the in-code
 	// function or method in which the problem
 	// occurred.
-	Function string `json:"function" validate:"required"` // required
+	Function string
 
 	// A computed stack trace including the relevant
 	// function names, files, and line numbers invoked
 	// leading up to the origination of the problem.
-	stack []sdkStackFrame // optional
+	stack []sdkStackFrame
 }
 
 // GetConsoleMessage returns all public fields of
@@ -158,15 +158,15 @@ func (e *SDKProblem) GetDebugMessage() string {
 }
 
 // GetID returns the computed identifier, computed from the
-// `Component`, `discriminator`, and `Function` fields, as well as the
-// identifier of the `causedBy` problem, if it exists.
+// "Component", "discriminator", and "Function" fields, as well as the
+// identifier of the "causedBy" problem, if it exists.
 func (e *SDKProblem) GetID() string {
 	return CreateIDHash("sdk", e.GetBaseSignature(), e.Function)
 }
 
 // SDKProblem provides a type suited to problems that
 // occur as the result of an HTTP request. It extends
-// the base `IBMProblem` type with fields to store
+// the base "IBMProblem" type with fields to store
 // information about the HTTP request/response.
 type HTTPProblem struct {
 	*IBMProblem
@@ -198,9 +198,9 @@ func (e *HTTPProblem) GetDebugMessage() string {
 }
 
 // GetID returns the computed identifier, computed from the
-// `Component`, `discriminator`, `OperationID`, `Response`, and
-// `ErrorCode` fields, as well as the identifier of the
-// `causedBy` problem, if it exists.
+// "Component", "discriminator", "OperationID", "Response", and
+// "ErrorCode" fields, as well as the identifier of the
+// "causedBy" problem, if it exists.
 func (e *HTTPProblem) GetID() string {
 	// TODO: add the ErrorCode to the hash once we have the ability to enumerate error codes in an API.
 	return CreateIDHash("http", e.GetBaseSignature(), e.OperationID, fmt.Sprint(e.Response.GetStatusCode()))
@@ -214,7 +214,7 @@ func (e *HTTPProblem) getHeader(key string) (string, bool) {
 // AuthenticationError describes the problem returned when
 // authentication over HTTP fails.
 type AuthenticationError struct {
-	Err error `json:"err,omitempty"`
+	Err error
 	*HTTPProblem
 }
 
@@ -266,7 +266,7 @@ func IBMErrorf(err error, component *ProblemComponent, summary, discriminator st
 	return ibmProblemf(err, ErrorSeverity, component, summary, discriminator)
 }
 
-// SDKErrorf creates and returns a new instance of `SDKProblem` with "error" level severity.
+// SDKErrorf creates and returns a new instance of "SDKProblem" with "error" level severity.
 func SDKErrorf(err error, summary, discriminator string, component *ProblemComponent) *SDKProblem {
 	function := computeFunctionName(component.Name)
 	stack := getStackInfo(component.Name)
@@ -283,7 +283,7 @@ func SDKErrorf(err error, summary, discriminator string, component *ProblemCompo
 // function. Should only be used in public (exported) functions.
 func RepurposeSDKProblem(err error, discriminator string) error {
 	if err == nil {
-		return err
+		return nil
 	}
 
 	// It only makes sense to carry out this logic with SDK Errors.
@@ -306,7 +306,7 @@ func RepurposeSDKProblem(err error, discriminator string) error {
 	return sdkErr
 }
 
-// httpErrorf creates and returns a new instance of `HTTPProblem` with "error" level severity.
+// httpErrorf creates and returns a new instance of "HTTPProblem" with "error" level severity.
 func httpErrorf(summary string, response *DetailedResponse) *HTTPProblem {
 	return &HTTPProblem{
 		IBMProblem: IBMErrorf(nil, nil, summary, ""),
@@ -322,7 +322,7 @@ func NewAuthenticationError(response *DetailedResponse, err error) *Authenticati
 	return authError
 }
 
-// authenticationErrorf creates and returns a new instance of `AuthenticationError`.
+// authenticationErrorf creates and returns a new instance of "AuthenticationError".
 func authenticationErrorf(err error, response *DetailedResponse, operationID string, component *ProblemComponent) *AuthenticationError {
 	// This function should always be called with non-nil
 	// error/DetailedResponse instances.

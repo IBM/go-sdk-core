@@ -47,7 +47,7 @@ func NewBasicAuthenticator(username string, password string) (*BasicAuthenticato
 // from a map.
 func newBasicAuthenticatorFromMap(properties map[string]string) (*BasicAuthenticator, error) {
 	if properties == nil {
-		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", getComponentInfo())
+		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing-props", getComponentInfo())
 	}
 
 	return NewBasicAuthenticator(properties[PROPNAME_USERNAME], properties[PROPNAME_PASSWORD])

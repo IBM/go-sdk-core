@@ -44,7 +44,7 @@ func NewBearerTokenAuthenticator(bearerToken string) (*BearerTokenAuthenticator,
 // newBearerTokenAuthenticator : Constructs a new BearerTokenAuthenticator instance from a map.
 func newBearerTokenAuthenticatorFromMap(properties map[string]string) (*BearerTokenAuthenticator, error) {
 	if properties == nil {
-		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", getComponentInfo())
+		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing-props", getComponentInfo())
 	}
 
 	return NewBearerTokenAuthenticator(properties[PROPNAME_BEARER_TOKEN])

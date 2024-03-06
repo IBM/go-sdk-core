@@ -67,9 +67,9 @@ func computeFunctionName(componentName string) string {
 // sdkStackFrame is a convenience struct for formatting
 // frame data to be printed as YAML.
 type sdkStackFrame struct {
-	Function string `json:"function,omitempty"`
-	File     string `json:"file,omitempty"`
-	Line     int    `json:"line,omitempty"`
+	Function string
+	File     string
+	Line     int
 }
 
 // getStackInfo invokes helper methods to curate a limited, formatted

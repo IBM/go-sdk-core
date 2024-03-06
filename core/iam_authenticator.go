@@ -209,7 +209,7 @@ func NewIamAuthenticator(apiKey string, url string, clientId string, clientSecre
 // newIamAuthenticatorFromMap constructs a new IamAuthenticator instance from a map.
 func newIamAuthenticatorFromMap(properties map[string]string) (authenticator *IamAuthenticator, err error) {
 	if properties == nil {
-		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", getComponentInfo())
+		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing-props", getComponentInfo())
 	}
 
 	disableSSL, err := strconv.ParseBool(properties[PROPNAME_AUTH_DISABLE_SSL])

@@ -649,7 +649,7 @@ func getErrorMessage(responseMap map[string]interface{}, statusCode int) string 
 	return http.StatusText(statusCode)
 }
 
-// getErrorCode: try to retrieve an error code from the decoded response body (map).
+// getErrorCode tries to retrieve an error code from the decoded response body (map).
 func getErrorCode(responseMap map[string]interface{}) string {
 
 	// If the response contained the "errors" field, then try to deserialize responseMap

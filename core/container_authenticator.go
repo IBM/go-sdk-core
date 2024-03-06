@@ -203,7 +203,7 @@ func (authenticator *ContainerAuthenticator) client() *http.Client {
 // configuration properties.
 func newContainerAuthenticatorFromMap(properties map[string]string) (authenticator *ContainerAuthenticator, err error) {
 	if properties == nil {
-		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", getComponentInfo())
+		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing-props", getComponentInfo())
 	}
 
 	// Grab the AUTH_DISABLE_SSL string property and convert to a boolean value.

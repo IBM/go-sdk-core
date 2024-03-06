@@ -147,7 +147,7 @@ func (authenticator *VpcInstanceAuthenticator) url() string {
 // configuration properties.
 func newVpcInstanceAuthenticatorFromMap(properties map[string]string) (authenticator *VpcInstanceAuthenticator, err error) {
 	if properties == nil {
-		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing_props", getComponentInfo())
+		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing-props", getComponentInfo())
 	}
 
 	authenticator, err = NewVpcInstanceAuthenticatorBuilder().
