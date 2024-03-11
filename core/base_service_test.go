@@ -2038,6 +2038,48 @@ func testGetErrorMessage(t *testing.T, statusCode int, jsonString string, expect
 	assert.Equal(t, expectedErrorMsg, actualErrorMsg)
 }
 
+func TestGetErrorCode(t *testing.T) {
+	code := "invalid-value"
+	// The code is nested within a proper error container,
+	// complying with Handbook. The first code is retrieved.
+	resp := map[string]interface{}{
+		"errors": []interface{}{
+			map[string]interface{}{
+				"code":    code,
+				"message": "Failed request",
+			},
+			map[string]interface{}{
+				"code":    "something-else",
+				"message": "Another error also occurred",
+			},
+		},
+	}
+
+	assert.Equal(t, code, getErrorCode(resp))
+
+	// The code is in a top-level field called "code".
+	resp = map[string]interface{}{
+		"code": code,
+	}
+
+	assert.Equal(t, code, getErrorCode(resp))
+
+	// The code is in a top-level field called "errorCode".
+	// This is used by auth services like IAM.
+	resp = map[string]interface{}{
+		"errorCode": code,
+	}
+
+	assert.Equal(t, code, getErrorCode(resp))
+
+	// There isn't a code present in an expected location
+	resp = map[string]interface{}{
+		"this_is_the_error_code": code,
+	}
+
+	assert.Empty(t, getErrorCode(resp))
+}
+
 func TestErrorMessage(t *testing.T) {
 	testGetErrorMessage(t, http.StatusBadRequest, `{"error":"error1"}`, "error1")
 

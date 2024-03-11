@@ -15,39 +15,9 @@ package core
 // limitations under the License.
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-	"errors"
-	"fmt"
 	"runtime"
 	"strings"
-
-	"github.com/go-yaml/yaml"
 )
-
-// Private utility functions for our custom error system
-
-// CreateIDHash computes a unique ID based on a given prefix
-// and problem attribute fields.
-func CreateIDHash(prefix string, fields ...string) string {
-	signature := strings.Join(fields, "")
-	hash := sha256.Sum256([]byte(signature))
-	return fmt.Sprintf("%s-%s", prefix, hex.EncodeToString(hash[:4]))
-}
-
-// getPreviousProblemID returns the ID of the "causedBy" problem, if it exists.
-func getPreviousProblemID(problem Problem) string {
-	if problem != nil {
-		return problem.GetID()
-	}
-	return ""
-}
-
-// getComponentInfo is a convenient way to access the name of the
-// component alongside the current semantic version of the component.
-func getComponentInfo() *ProblemComponent {
-	return NewProblemComponent("github.com/IBM/go-sdk-core/v5", __VERSION__)
-}
 
 // computeFunctionName investigates the program counter at a fixed
 // skip number (aka point in the stack) of 2, which gives us the
@@ -135,58 +105,4 @@ func formatFrames(pcs []uintptr, componentName string) []sdkStackFrame {
 	}
 
 	return result
-}
-
-// getProblemInfoAsYAML formats the ordered problem data as
-// YAML for human/machine readable printing.
-func getProblemInfoAsYAML(orderedMaps *OrderedMaps) string {
-	asYaml, err := yaml.Marshal(orderedMaps.GetMaps())
-
-	if err != nil {
-		return fmt.Sprintf("Error serializing the problem information: %s", err.Error())
-	}
-	return fmt.Sprintf("---\n%s---\n", asYaml)
-}
-
-func ComputeConsoleMessage(o OrderableProblem) string {
-	return getProblemInfoAsYAML(o.GetConsoleOrderedMaps())
-}
-
-func ComputeDebugMessage(o OrderableProblem) string {
-	return getProblemInfoAsYAML(o.GetDebugOrderedMaps())
-}
-
-// EnrichHTTPProblem takes an problem and, if it originated as an HTTPProblem, populates
-// the fields of the underlying HTTP problem with the given service/operation information.
-func EnrichHTTPProblem(err error, operationID string, component *ProblemComponent) {
-	// If the problem originated from an HTTP error response, populate the
-	// HTTPProblem instance with details from the SDK that weren't available
-	// in the core at problem creation time.
-	var httpErr *HTTPProblem
-	if errors.As(err, &httpErr) {
-		enrichHTTPProblem(httpErr, operationID, component)
-	}
-}
-
-// enrichHTTPProblem takes an HTTPProblem instance alongside information about the request
-// and adds the extra info to the instance. It also loosely deserializes the response
-// in order to set additional information, like the error code.
-func enrichHTTPProblem(httpErr *HTTPProblem, operationID string, component *ProblemComponent) {
-	httpErr.Component = component
-	httpErr.OperationID = operationID
-
-	if httpErr.Response.Result != nil {
-		// If the error response was a standard JSON body, the result will be a map
-		// and we can do a decent job of guessing the code.
-		if resultMap, ok := httpErr.Response.Result.(map[string]interface{}); ok {
-			httpErr.ErrorCode = getErrorCode(resultMap)
-		}
-	}
-}
-
-func NewProblemComponent(name, version string) *ProblemComponent {
-	return &ProblemComponent{
-		Name:    name,
-		Version: version,
-	}
 }
