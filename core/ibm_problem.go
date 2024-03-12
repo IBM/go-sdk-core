@@ -130,7 +130,7 @@ func (e *IBMProblem) Unwrap() []error {
 func ibmProblemf(err error, severity problemSeverity, component *ProblemComponent, summary, discriminator string) *IBMProblem {
 	// Leaving summary blank is a convenient way to
 	// use the message from the underlying problem.
-	if summary == "" {
+	if summary == "" && err != nil {
 		summary = err.Error()
 	}
 
