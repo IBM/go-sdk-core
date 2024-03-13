@@ -8,6 +8,9 @@ COV_OPTS=-coverprofile=coverage.txt -covermode=atomic
 
 all: tidy test lint
 
+build:
+	${GO} build ./...
+
 testcov:
 	${GO} test -tags=all ${COV_OPTS} ./...
 
