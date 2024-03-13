@@ -1,3 +1,10 @@
+# [5.16.0](https://github.com/IBM/go-sdk-core/compare/v5.15.3...v5.16.0) (2024-03-13)
+
+
+### Features
+
+* **errors:** augment errors with new "Problem" types ([#199](https://github.com/IBM/go-sdk-core/issues/199)) ([6ec86dd](https://github.com/IBM/go-sdk-core/commit/6ec86ddee70f7f7d0da8fe2ec23081e409ce53fa))
+
 ## [5.15.3](https://github.com/IBM/go-sdk-core/compare/v5.15.2...v5.15.3) (2024-02-27)
 
 
