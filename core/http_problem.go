@@ -130,7 +130,7 @@ func (e *HTTPProblem) GetDebugOrderedMaps() *OrderedMaps {
 // httpErrorf creates and returns a new instance of "HTTPProblem" with "error" level severity.
 func httpErrorf(summary string, response *DetailedResponse) *HTTPProblem {
 	httpProb := &HTTPProblem{
-		IBMProblem: IBMErrorf(nil, nil, summary, ""),
+		IBMProblem: IBMErrorf(nil, NewProblemComponent("", ""), summary, ""),
 		Response:   response,
 	}
 
