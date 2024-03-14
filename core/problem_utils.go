@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-yaml/yaml"
+	"gopkg.in/yaml.v2"
 )
 
 func ComputeConsoleMessage(o OrderableProblem) string {

@@ -5,12 +5,12 @@ go 1.20
 require (
 	github.com/go-openapi/strfmt v0.22.1
 	github.com/go-playground/validator/v10 v10.18.0
-	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.27.6
 	github.com/stretchr/testify v1.8.4
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (

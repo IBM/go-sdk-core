@@ -15,7 +15,7 @@ package core
 // limitations under the License.
 
 import (
-	"github.com/go-yaml/yaml"
+	"gopkg.in/yaml.v2"
 )
 
 // OrderedMaps provides a wrapper around the yaml package's
