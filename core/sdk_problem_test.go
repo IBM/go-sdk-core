@@ -17,8 +17,8 @@ package core
 import (
 	"testing"
 
-	"github.com/go-yaml/yaml"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 )
 
 func TestSDKProblemEmbedsIBMProblem(t *testing.T) {
