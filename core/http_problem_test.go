@@ -15,6 +15,7 @@ package core
 // limitations under the License.
 
 import (
+	"errors"
 	"net/http"
 	"testing"
 
@@ -218,6 +219,17 @@ func TestHTTPProblemGetErrorCodeEmpty(t *testing.T) {
 func TestHTTPProblemGetErrorCode(t *testing.T) {
 	httpProb := httpErrorf("Bad request", getPopulatedDetailedResponse())
 	assert.Equal(t, "invalid-input", httpProb.getErrorCode())
+}
+
+func TestHTTPProblemIsWithProblem(t *testing.T) {
+	firstProb := httpErrorf("Bad request", getPopulatedDetailedResponse())
+	EnrichHTTPProblem(firstProb, "create_resource", NewProblemComponent("service", "1.0.0"))
+
+	secondProb := httpErrorf("Invalid input", getPopulatedDetailedResponse())
+	EnrichHTTPProblem(secondProb, "create_resource", NewProblemComponent("service", "1.2.3"))
+
+	assert.NotEqual(t, firstProb, secondProb)
+	assert.True(t, errors.Is(firstProb, secondProb))
 }
 
 func TestHTTPErrorf(t *testing.T) {

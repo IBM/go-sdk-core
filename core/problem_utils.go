@@ -17,6 +17,7 @@ package core
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -54,4 +55,13 @@ func getProblemInfoAsYAML(orderedMaps *OrderedMaps) string {
 // component alongside the current semantic version of the component.
 func getComponentInfo() *ProblemComponent {
 	return NewProblemComponent(MODULE_NAME, __VERSION__)
+}
+
+// is provides a simple utility function that assists problem types
+// implement an "Is" function for checking error equality. Error types
+// are treated as equivalent if they are both Problem types and their
+// IDs match.
+func is(target error, id string) bool {
+	var problem Problem
+	return errors.As(target, &problem) && problem.GetID() == id
 }

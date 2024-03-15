@@ -74,6 +74,13 @@ type IBMProblem struct {
 	// causedBy allows for the storage of a problem from a previous component,
 	// if there is one.
 	causedBy Problem
+
+	// nativeCausedBy allows for the storage of an error that is the cause of
+	// the problem instance but is not a part of the official chain of problem
+	// types. By including these errors in the "Unwrap" chain, the problem type
+	// changes become compatible with downstream code that uses error checking
+	// methods like "Is" and "As".
+	nativeCausedBy error
 }
 
 // Error returns the problem's message and implements the native
@@ -109,12 +116,21 @@ func (e *IBMProblem) GetCausedBy() Problem {
 // it does not include the error instance the method is called on - that is
 // looked at separately by the "errors" package in functions like "As".
 func (e *IBMProblem) Unwrap() []error {
-	causedBy := e.GetCausedBy()
-	if causedBy == nil {
-		return nil
+	var errs []error
+
+	// Include native (i.e. non-Problem) caused by errors in the
+	// chain for compatibility with respect to downstream methods
+	// like "errors.Is" or "errors.As".
+	if e.nativeCausedBy != nil {
+		errs = append(errs, e.nativeCausedBy)
 	}
 
-	errs := []error{causedBy}
+	causedBy := e.GetCausedBy()
+	if causedBy == nil {
+		return errs
+	}
+
+	errs = append(errs, causedBy)
 
 	var toUnwrap interface{ Unwrap() []error }
 	if errors.As(causedBy, &toUnwrap) {
@@ -144,6 +160,8 @@ func ibmProblemf(err error, severity problemSeverity, component *ProblemComponen
 	var causedBy Problem
 	if errors.As(err, &causedBy) {
 		newError.causedBy = causedBy
+	} else {
+		newError.nativeCausedBy = err
 	}
 
 	return newError

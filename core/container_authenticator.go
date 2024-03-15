@@ -496,8 +496,8 @@ func (authenticator *ContainerAuthenticator) retrieveCRToken() (crToken string, 
 	}
 
 	if err != nil {
-		errMsg := fmt.Sprintf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN, err.Error())
-		sdkErr := SDKErrorf(nil, errMsg, "no-cr-token", getComponentInfo())
+		err = fmt.Errorf(ERRORMSG_UNABLE_RETRIEVE_CRTOKEN, err.Error())
+		sdkErr := SDKErrorf(err, "", "no-cr-token", getComponentInfo())
 		GetLogger().Debug(sdkErr.GetDebugMessage())
 		err = sdkErr
 		return
@@ -514,8 +514,8 @@ func (authenticator *ContainerAuthenticator) readFile(filename string) (crToken 
 	var bytes []byte
 	bytes, err = os.ReadFile(filename) // #nosec G304
 	if err != nil {
-		err = SDKErrorf(nil, err.Error(), "read-file-error", getComponentInfo())
-		GetLogger().Debug(err.Error())
+		err = SDKErrorf(err, "", "read-file-error", getComponentInfo())
+		GetLogger().Debug(err.(*SDKProblem).GetDebugMessage())
 		return
 	}
 

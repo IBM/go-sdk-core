@@ -77,11 +77,10 @@ func ValidateStruct(param interface{}, paramName string) error {
 	if err != nil {
 		// If there were validation errors then return an error containing the field errors
 		if fieldErrors, ok := err.(validator.ValidationErrors); ok {
-			errMsg := fmt.Sprintf("%s failed validation:\n%s", paramName, fieldErrors.Error())
-			err = SDKErrorf(nil, errMsg, "struct-validation-errors", getComponentInfo())
+			err = fmt.Errorf("%s failed validation:\n%s", paramName, fieldErrors.Error())
+			return SDKErrorf(err, "", "struct-validation-errors", getComponentInfo())
 		}
-		errMsg := fmt.Sprintf("Failed to validate %s:\n%s", paramName, err.Error())
-		return SDKErrorf(nil, errMsg, "struct-validate-unknown-error", getComponentInfo())
+		return SDKErrorf(err, "", "struct-validate-unknown-error", getComponentInfo())
 	}
 
 	return nil
@@ -231,8 +230,8 @@ func ConvertSlice(slice interface{}) (s []string, err error) {
 
 	jsonBuffer, err := json.Marshal(slice)
 	if err != nil {
-		errMsg := fmt.Sprintf(ERRORMSG_MARSHAL_SLICE, err.Error())
-		err = SDKErrorf(nil, errMsg, "slice-marshal-error", getComponentInfo())
+		err = fmt.Errorf(ERRORMSG_MARSHAL_SLICE, err.Error())
+		err = SDKErrorf(err, "", "slice-marshal-error", getComponentInfo())
 		return
 	}
 
@@ -281,17 +280,15 @@ func GetQueryParam(urlStr *string, param string) (value *string, err error) {
 		return
 	}
 
-	errMsgTempl := "Could not read query param %s from URL:\n%s"
-
 	urlObj, err := url.Parse(*urlStr)
 	if err != nil {
-		err = SDKErrorf(nil, fmt.Sprintf(errMsgTempl, param, err.Error()), "url-parse-error", getComponentInfo())
+		err = SDKErrorf(err, "", "url-parse-error", getComponentInfo())
 		return
 	}
 
 	query, err := url.ParseQuery(urlObj.RawQuery)
 	if err != nil {
-		err = SDKErrorf(nil, fmt.Sprintf(errMsgTempl, param, err.Error()), "url-parse-query-error", getComponentInfo())
+		err = SDKErrorf(err, "", "url-parse-query-error", getComponentInfo())
 		return
 	}
 
@@ -320,8 +317,7 @@ func GetQueryParamAsInt(urlStr *string, param string) (value *int64, err error) 
 
 	intValue, err := strconv.ParseInt(*strValue, 10, 64)
 	if err != nil {
-		errMsg := fmt.Sprintf("Could not read query param %s as an int:\n%s", param, err.Error())
-		err = SDKErrorf(nil, errMsg, "parse-int-query-error", getComponentInfo())
+		err = SDKErrorf(err, "", "parse-int-query-error", getComponentInfo())
 		return nil, err
 	}
 

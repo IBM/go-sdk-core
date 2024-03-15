@@ -55,6 +55,13 @@ func (e *SDKProblem) GetID() string {
 	return CreateIDHash("sdk", e.GetBaseSignature(), e.Function)
 }
 
+// Is allows an SDKProblem instance to be compared against another error for equality.
+// An SDKProblem is considered equal to another error if 1) the error is also a Problem and
+// 2) it has the same ID (i.e. it is the same problem scenario).
+func (e *SDKProblem) Is(target error) bool {
+	return is(target, e.GetID())
+}
+
 // GetConsoleOrderedMaps returns an ordered-map representation
 // of an SDKProblem instance suited for a console message.
 func (e *SDKProblem) GetConsoleOrderedMaps() *OrderedMaps {

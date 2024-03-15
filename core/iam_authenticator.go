@@ -463,7 +463,7 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 	GetLogger().Debug("Invoking IAM 'get token' operation: %s", builder.URL)
 	resp, err := authenticator.client().Do(req)
 	if err != nil {
-		err = SDKErrorf(nil, err.Error(), "request-error", getComponentInfo())
+		err = SDKErrorf(err, "", "request-error", getComponentInfo())
 		return nil, err
 	}
 	GetLogger().Debug("Returned from IAM 'get token' operation, received status code %d", resp.StatusCode)
