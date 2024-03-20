@@ -1,3 +1,10 @@
+## [5.16.2](https://github.com/IBM/go-sdk-core/compare/v5.16.1...v5.16.2) (2024-03-20)
+
+
+### Bug Fixes
+
+* **errors:** support error checking methods for new problem structures ([#212](https://github.com/IBM/go-sdk-core/issues/212)) ([65eb01d](https://github.com/IBM/go-sdk-core/commit/65eb01df2c2030704eaa980e26b249c91069eaf5))
+
 ## [5.16.1](https://github.com/IBM/go-sdk-core/compare/v5.16.0...v5.16.1) (2024-03-14)
 
 
