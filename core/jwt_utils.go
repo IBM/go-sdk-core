@@ -47,7 +47,8 @@ func parseJWT(tokenString string) (claims *coreJWTClaims, err error) {
 	claims = &coreJWTClaims{}
 	err = json.Unmarshal(claimBytes, claims)
 	if err != nil {
-		err = SDKErrorf(nil, fmt.Sprintf("error unmarshalling token: %s", err.Error()), "bad-token", getComponentInfo())
+		err = fmt.Errorf("error unmarshalling token: %s", err.Error())
+		err = SDKErrorf(err, "", "bad-token", getComponentInfo())
 		return
 	}
 
@@ -63,7 +64,7 @@ func decodeSegment(seg string) ([]byte, error) {
 
 	res, err := base64.URLEncoding.DecodeString(seg)
 	if err != nil {
-		err = SDKErrorf(nil, fmt.Sprintf("error decoding claims segment: %s", err.Error()), "bad-claim-seg", getComponentInfo())
+		err = SDKErrorf(err, fmt.Sprintf("error decoding claims segment: %s", err.Error()), "bad-claim-seg", getComponentInfo())
 	}
 	return res, err
 }

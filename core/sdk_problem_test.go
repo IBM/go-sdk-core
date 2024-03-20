@@ -15,6 +15,8 @@ package core
 // limitations under the License.
 
 import (
+	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -168,7 +170,7 @@ func TestSDKErrorf(t *testing.T) {
 	assert.Equal(t, "github.com/IBM/go-sdk-core/v5/core.TestSDKErrorf", stack[0].Function)
 	assert.Contains(t, stack[0].File, "core/sdk_problem_test.go")
 	// This might be too fragile. If it becomes an issue, we can remove it.
-	assert.Equal(t, 156, stack[0].Line)
+	assert.Equal(t, 158, stack[0].Line)
 }
 
 func TestSDKErrorfNoCausedBy(t *testing.T) {
@@ -237,6 +239,19 @@ func TestRepurposeSDKProblemNonSDKProblem(t *testing.T) {
 	mockProb := mockProblem{}
 	err := RepurposeSDKProblem(mockProb, "new-disc")
 	assert.Equal(t, mockProb, err)
+}
+
+func TestSDKProblemIsWithProblem(t *testing.T) {
+	firstProb := SDKErrorf(nil, "Some error", "disc", getComponentInfo())
+	secondProb := SDKErrorf(nil, "Same error, different message", "disc", getComponentInfo())
+	assert.NotEqual(t, firstProb, secondProb)
+	assert.True(t, errors.Is(firstProb, secondProb))
+}
+
+func TestSDKProblemIsWithNative(t *testing.T) {
+	firstProb := SDKErrorf(context.Canceled, "Some error", "disc", getComponentInfo())
+	secondProb := SDKErrorf(firstProb, "Wrapping error", "disc", getComponentInfo())
+	assert.True(t, errors.Is(secondProb, context.Canceled))
 }
 
 func getPopulatedSDKProblem() *SDKProblem {

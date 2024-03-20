@@ -83,7 +83,7 @@ func ParseDate(dateString string) (fmtDate strfmt.Date, err error) {
 	if err == nil {
 		fmtDate = strfmt.Date(formattedTime)
 	} else {
-		err = SDKErrorf(nil, err.Error(), "date-parse-error", getComponentInfo())
+		err = SDKErrorf(err, "", "date-parse-error", getComponentInfo())
 	}
 	return
 }
@@ -93,7 +93,7 @@ func ParseDate(dateString string) (fmtDate strfmt.Date, err error) {
 func ParseDateTime(dateString string) (strfmt.DateTime, error) {
 	dt, err := strfmt.ParseDateTime(dateString)
 	if err != nil {
-		err = SDKErrorf(nil, err.Error(), "datetime-parse-error", getComponentInfo())
+		err = SDKErrorf(err, "", "datetime-parse-error", getComponentInfo())
 	}
 	return dt, err
 }

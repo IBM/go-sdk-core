@@ -42,7 +42,7 @@ func NewGzipCompressionReader(uncompressedReader io.Reader) (io.Reader, error) {
 		// to the pipe only when the pipe reader is called to retrieve more bytes.
 		_, err := io.Copy(compressedWriter, uncompressedReader)
 		if err != nil {
-			sdkErr := SDKErrorf(nil, err.Error(), "compression-failed", getComponentInfo())
+			sdkErr := SDKErrorf(err, "", "compression-failed", getComponentInfo())
 			_ = pipeWriter.CloseWithError(sdkErr)
 		}
 	}()
@@ -54,7 +54,7 @@ func NewGzipCompressionReader(uncompressedReader io.Reader) (io.Reader, error) {
 func NewGzipDecompressionReader(compressedReader io.Reader) (io.Reader, error) {
 	res, err := gzip.NewReader(compressedReader)
 	if err != nil {
-		err = SDKErrorf(nil, err.Error(), "decompress-read-error", getComponentInfo())
+		err = SDKErrorf(err, "", "decompress-read-error", getComponentInfo())
 	}
 	return res, err
 }

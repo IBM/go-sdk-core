@@ -57,6 +57,13 @@ func (e *HTTPProblem) GetID() string {
 	return CreateIDHash("http", e.GetBaseSignature(), e.OperationID, fmt.Sprint(e.Response.GetStatusCode()))
 }
 
+// Is allows an HTTPProblem instance to be compared against another error for equality.
+// An HTTPProblem is considered equal to another error if 1) the error is also a Problem and
+// 2) it has the same ID (i.e. it is the same problem scenario).
+func (e *HTTPProblem) Is(target error) bool {
+	return is(target, e.GetID())
+}
+
 func (e *HTTPProblem) getErrorCode() string {
 	// If the error response was a standard JSON body, the result will
 	// be a map and we can do a decent job of guessing the code.
