@@ -203,7 +203,8 @@ func (authenticator *ContainerAuthenticator) client() *http.Client {
 // configuration properties.
 func newContainerAuthenticatorFromMap(properties map[string]string) (authenticator *ContainerAuthenticator, err error) {
 	if properties == nil {
-		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing-props", getComponentInfo())
+		err = fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
+		return nil, SDKErrorf(err, "", "missing-props", getComponentInfo())
 	}
 
 	// Grab the AUTH_DISABLE_SSL string property and convert to a boolean value.
@@ -283,8 +284,8 @@ func (authenticator *ContainerAuthenticator) Validate() error {
 
 	// Check to make sure that one of IAMProfileName or IAMProfileID are specified.
 	if authenticator.IAMProfileName == "" && authenticator.IAMProfileID == "" {
-		errMsg := fmt.Sprintf(ERRORMSG_ATLEAST_ONE_PROP_ERROR, "IAMProfileName", "IAMProfileID")
-		return SDKErrorf(nil, errMsg, "both-props", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_ATLEAST_ONE_PROP_ERROR, "IAMProfileName", "IAMProfileID")
+		return SDKErrorf(err, "", "both-props", getComponentInfo())
 	}
 
 	// Validate ClientId and ClientSecret.  They must both be specified togther or neither should be specified.
@@ -293,13 +294,13 @@ func (authenticator *ContainerAuthenticator) Validate() error {
 	} else {
 		// Since it is NOT the case that both properties are empty, make sure BOTH are specified.
 		if authenticator.ClientID == "" {
-			errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "ClientID")
-			return SDKErrorf(nil, errMsg, "missing-id", getComponentInfo())
+			err := fmt.Errorf(ERRORMSG_PROP_MISSING, "ClientID")
+			return SDKErrorf(err, "", "missing-id", getComponentInfo())
 		}
 
 		if authenticator.ClientSecret == "" {
-			errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "ClientSecret")
-			return SDKErrorf(nil, errMsg, "missing-secret", getComponentInfo())
+			err := fmt.Errorf(ERRORMSG_PROP_MISSING, "ClientSecret")
+			return SDKErrorf(err, "", "missing-secret", getComponentInfo())
 		}
 	}
 
@@ -328,7 +329,8 @@ func (authenticator *ContainerAuthenticator) GetToken() (string, error) {
 
 	// return an error if the access token is not valid or was not fetched
 	if authenticator.getTokenData() == nil || authenticator.getTokenData().AccessToken == "" {
-		return "", SDKErrorf(nil, "Error while trying to get access token", "no-token", getComponentInfo())
+		err := fmt.Errorf("Error while trying to get access token")
+		return "", SDKErrorf(err, "", "no-token", getComponentInfo())
 	}
 
 	return authenticator.getTokenData().AccessToken, nil

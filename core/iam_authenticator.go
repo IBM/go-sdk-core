@@ -209,7 +209,8 @@ func NewIamAuthenticator(apiKey string, url string, clientId string, clientSecre
 // newIamAuthenticatorFromMap constructs a new IamAuthenticator instance from a map.
 func newIamAuthenticatorFromMap(properties map[string]string) (authenticator *IamAuthenticator, err error) {
 	if properties == nil {
-		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing-props", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
+		return nil, SDKErrorf(err, "", "missing-props", getComponentInfo())
 	}
 
 	disableSSL, err := strconv.ParseBool(properties[PROPNAME_AUTH_DISABLE_SSL])
@@ -315,13 +316,13 @@ func (authenticator *IamAuthenticator) Validate() error {
 	// normal use.
 	//
 	if authenticator.ApiKey == "" && authenticator.RefreshToken == "" {
-		errMsg := fmt.Sprintf(ERRORMSG_EXCLUSIVE_PROPS_ERROR, "ApiKey", "RefreshToken")
-		return SDKErrorf(nil, errMsg, "exc-props", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_EXCLUSIVE_PROPS_ERROR, "ApiKey", "RefreshToken")
+		return SDKErrorf(err, "", "exc-props", getComponentInfo())
 	}
 
 	if authenticator.ApiKey != "" && HasBadFirstOrLastChar(authenticator.ApiKey) {
-		errMsg := fmt.Sprintf(ERRORMSG_PROP_INVALID, "ApiKey")
-		return SDKErrorf(nil, errMsg, "bad-prop", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_PROP_INVALID, "ApiKey")
+		return SDKErrorf(err, "", "bad-prop", getComponentInfo())
 	}
 
 	// Validate ClientId and ClientSecret.
@@ -331,13 +332,13 @@ func (authenticator *IamAuthenticator) Validate() error {
 	} else {
 		// Since it is NOT the case that both properties are empty, make sure BOTH are specified.
 		if authenticator.ClientId == "" {
-			errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "ClientId")
-			return SDKErrorf(nil, errMsg, "missing-id", getComponentInfo())
+			err := fmt.Errorf(ERRORMSG_PROP_MISSING, "ClientId")
+			return SDKErrorf(err, "", "missing-id", getComponentInfo())
 		}
 
 		if authenticator.ClientSecret == "" {
-			errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "ClientSecret")
-			return SDKErrorf(nil, errMsg, "missing-secret", getComponentInfo())
+			err := fmt.Errorf(ERRORMSG_PROP_MISSING, "ClientSecret")
+			return SDKErrorf(err, "", "missing-secret", getComponentInfo())
 		}
 	}
 
@@ -362,7 +363,8 @@ func (authenticator *IamAuthenticator) GetToken() (string, error) {
 
 	// return an error if the access token is not valid or was not fetched
 	if authenticator.getTokenData() == nil || authenticator.getTokenData().AccessToken == "" {
-		return "", SDKErrorf(nil, "Error while trying to get access token", "no-token", getComponentInfo())
+		err := fmt.Errorf("Error while trying to get access token")
+		return "", SDKErrorf(err, "", "no-token", getComponentInfo())
 	}
 
 	return authenticator.getTokenData().AccessToken, nil
@@ -423,8 +425,8 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 		builder.AddFormData("refresh_token", "", "", authenticator.RefreshToken)
 	} else {
 		// We shouldn't ever get here due to prior validations, but just in case, let's log an error.
-		errMsg := fmt.Sprintf(ERRORMSG_EXCLUSIVE_PROPS_ERROR, "ApiKey", "RefreshToken")
-		return nil, SDKErrorf(nil, errMsg, "iam-exc-props", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_EXCLUSIVE_PROPS_ERROR, "ApiKey", "RefreshToken")
+		return nil, SDKErrorf(err, "", "iam-exc-props", getComponentInfo())
 	}
 
 	// Add any optional parameters to the request.
@@ -529,7 +531,8 @@ type iamTokenData struct {
 func newIamTokenData(tokenResponse *IamTokenServerResponse) (*iamTokenData, error) {
 
 	if tokenResponse == nil {
-		return nil, SDKErrorf(nil, "Error while trying to parse access token!", "token-parse", getComponentInfo())
+		err := fmt.Errorf("Error while trying to parse access token!")
+		return nil, SDKErrorf(err, "", "token-parse", getComponentInfo())
 	}
 	// Compute the adjusted refresh time (expiration time - 20% of timeToLive)
 	timeToLive := tokenResponse.ExpiresIn

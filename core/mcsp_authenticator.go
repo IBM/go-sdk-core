@@ -139,7 +139,8 @@ func (authenticator *MCSPAuthenticator) client() *http.Client {
 // newMCSPAuthenticatorFromMap constructs a new MCSPAuthenticator instance from a map.
 func newMCSPAuthenticatorFromMap(properties map[string]string) (authenticator *MCSPAuthenticator, err error) {
 	if properties == nil {
-		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing-props", getComponentInfo())
+		err = fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
+		return nil, SDKErrorf(err, "", "missing-props", getComponentInfo())
 	}
 
 	disableSSL, err := strconv.ParseBool(properties[PROPNAME_AUTH_DISABLE_SSL])
@@ -197,13 +198,13 @@ func (authenticator *MCSPAuthenticator) setTokenData(tokenData *mcspTokenData) {
 func (authenticator *MCSPAuthenticator) Validate() error {
 
 	if authenticator.ApiKey == "" {
-		errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "ApiKey")
-		return SDKErrorf(nil, errMsg, "missing-api-key", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_PROP_MISSING, "ApiKey")
+		return SDKErrorf(err, "", "missing-api-key", getComponentInfo())
 	}
 
 	if authenticator.URL == "" {
-		errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "URL")
-		return SDKErrorf(nil, errMsg, "missing-url", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_PROP_MISSING, "URL")
+		return SDKErrorf(err, "", "missing-url", getComponentInfo())
 	}
 
 	return nil
@@ -227,7 +228,8 @@ func (authenticator *MCSPAuthenticator) GetToken() (string, error) {
 
 	// return an error if the access token is not valid or was not fetched
 	if authenticator.getTokenData() == nil || authenticator.getTokenData().AccessToken == "" {
-		return "", SDKErrorf(nil, "Error while trying to get access token", "no-token", getComponentInfo())
+		err := fmt.Errorf("Error while trying to get access token")
+		return "", SDKErrorf(err, "", "no-token", getComponentInfo())
 	}
 
 	return authenticator.getTokenData().AccessToken, nil
@@ -368,7 +370,8 @@ type mcspTokenData struct {
 // MCSPTokenServerResponse instance.
 func newMCSPTokenData(tokenResponse *MCSPTokenServerResponse) (*mcspTokenData, error) {
 	if tokenResponse == nil || tokenResponse.Token == "" {
-		return nil, SDKErrorf(nil, "Error while trying to parse access token!", "token-parse", getComponentInfo())
+		err := fmt.Errorf("Error while trying to parse access token!")
+		return nil, SDKErrorf(err, "", "token-parse", getComponentInfo())
 	}
 
 	// Need to crack open the access token (a JWT) to get the expiration and issued-at times

@@ -117,7 +117,8 @@ func newAuthenticator(url string, username string, password string, apikey strin
 // newCloudPakForDataAuthenticatorFromMap : Constructs a new CloudPakForDataAuthenticator instance from a map.
 func newCloudPakForDataAuthenticatorFromMap(properties map[string]string) (*CloudPakForDataAuthenticator, error) {
 	if properties == nil {
-		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing-props", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
+		return nil, SDKErrorf(err, "", "missing-props", getComponentInfo())
 	}
 
 	disableSSL, err := strconv.ParseBool(properties[PROPNAME_AUTH_DISABLE_SSL])
@@ -142,20 +143,20 @@ func (*CloudPakForDataAuthenticator) AuthenticationType() string {
 func (authenticator *CloudPakForDataAuthenticator) Validate() error {
 
 	if authenticator.Username == "" {
-		errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "Username")
-		return SDKErrorf(nil, errMsg, "no-user", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_PROP_MISSING, "Username")
+		return SDKErrorf(err, "", "no-user", getComponentInfo())
 	}
 
 	// The user should specify exactly one of APIKey or Password.
 	if (authenticator.APIKey == "" && authenticator.Password == "") ||
 		(authenticator.APIKey != "" && authenticator.Password != "") {
-		errMsg := fmt.Sprintf(ERRORMSG_EXCLUSIVE_PROPS_ERROR, "APIKey", "Password")
-		return SDKErrorf(nil, errMsg, "exc-props", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_EXCLUSIVE_PROPS_ERROR, "APIKey", "Password")
+		return SDKErrorf(err, "", "exc-props", getComponentInfo())
 	}
 
 	if authenticator.URL == "" {
-		errMsg := fmt.Sprintf(ERRORMSG_PROP_MISSING, "URL")
-		return SDKErrorf(nil, errMsg, "no-url", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_PROP_MISSING, "URL")
+		return SDKErrorf(err, "", "no-url", getComponentInfo())
 	}
 
 	return nil
@@ -231,7 +232,8 @@ func (authenticator *CloudPakForDataAuthenticator) GetToken() (string, error) {
 
 	// return an error if the access token is not valid or was not fetched
 	if authenticator.getTokenData() == nil || authenticator.getTokenData().AccessToken == "" {
-		return "", SDKErrorf(nil, "Error while trying to get access token", "no-token", getComponentInfo())
+		err := fmt.Errorf("Error while trying to get access token")
+		return "", SDKErrorf(err, "", "no-token", getComponentInfo())
 	}
 
 	return authenticator.getTokenData().AccessToken, nil

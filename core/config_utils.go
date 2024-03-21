@@ -17,6 +17,7 @@ package core
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -57,7 +58,8 @@ func GetServiceProperties(serviceName string) (serviceProps map[string]string, e
 func getServiceProperties(serviceName string) (serviceProps map[string]string, err error) {
 
 	if serviceName == "" {
-		err = SDKErrorf(nil, "serviceName was not specified", "no-service-name", getComponentInfo())
+		err = fmt.Errorf("serviceName was not specified")
+		err = SDKErrorf(err, "", "no-service-name", getComponentInfo())
 		return
 	}
 

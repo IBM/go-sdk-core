@@ -105,7 +105,7 @@ func (requestBuilder *RequestBuilder) WithContext(ctx context.Context) *RequestB
 // invalid URL string (e.g. ":<badscheme>").
 func (requestBuilder *RequestBuilder) ConstructHTTPURL(serviceURL string, pathSegments []string, pathParameters []string) (*RequestBuilder, error) {
 	if serviceURL == "" {
-		return requestBuilder, SDKErrorf(nil, ERRORMSG_SERVICE_URL_MISSING, "no-url", getComponentInfo())
+		return requestBuilder, SDKErrorf(fmt.Errorf(ERRORMSG_SERVICE_URL_MISSING), "", "no-url", getComponentInfo())
 	}
 	var URL *url.URL
 
@@ -143,7 +143,8 @@ func (requestBuilder *RequestBuilder) ConstructHTTPURL(serviceURL string, pathSe
 // The resulting request URL: "https://myservice.cloud.ibm.com/resource/res-123-456-789-abc/type/type-1"
 func (requestBuilder *RequestBuilder) ResolveRequestURL(serviceURL string, path string, pathParams map[string]string) (*RequestBuilder, error) {
 	if serviceURL == "" {
-		return requestBuilder, fmt.Errorf(ERRORMSG_SERVICE_URL_MISSING)
+		err := fmt.Errorf(ERRORMSG_SERVICE_URL_MISSING)
+		return requestBuilder, SDKErrorf(err, "", "service-url-missing", getComponentInfo())
 	}
 
 	urlString := serviceURL
@@ -156,8 +157,8 @@ func (requestBuilder *RequestBuilder) ResolveRequestURL(serviceURL string, path 
 		if len(pathParams) > 0 {
 			for k, v := range pathParams {
 				if v == "" {
-					errMsg := fmt.Sprintf(ERRORMSG_PATH_PARAM_EMPTY, k)
-					return requestBuilder, SDKErrorf(nil, errMsg, "empty-path-param", getComponentInfo())
+					err := fmt.Errorf(ERRORMSG_PATH_PARAM_EMPTY, k)
+					return requestBuilder, SDKErrorf(err, "", "empty-path-param", getComponentInfo())
 				}
 				encodedValue := url.PathEscape(v)
 				ref := fmt.Sprintf("{%s}", k)
@@ -506,12 +507,13 @@ func (requestBuilder *RequestBuilder) SetBodyContent(contentType string, jsonCon
 			err = RepurposeSDKProblem(err, "set-body-readerptr-error")
 		} else {
 			builder = requestBuilder
-			errMsg := fmt.Sprintf("Invalid type for non-JSON body content: %s", reflect.TypeOf(nonJSONContent).String())
-			err = SDKErrorf(nil, errMsg, "bad-nonjson-body-content", getComponentInfo())
+			err = fmt.Errorf("Invalid type for non-JSON body content: %s", reflect.TypeOf(nonJSONContent).String())
+			err = SDKErrorf(err, "", "bad-nonjson-body-content", getComponentInfo())
 		}
 	} else {
 		builder = requestBuilder
-		err = SDKErrorf(nil, "No body content provided", "no-body-content", getComponentInfo())
+		err = fmt.Errorf("No body content provided")
+		err = SDKErrorf(err, "", "no-body-content", getComponentInfo())
 	}
 
 	return

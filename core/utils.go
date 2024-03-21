@@ -59,7 +59,8 @@ func IsNil(object interface{}) bool {
 // ValidateNotNil returns the specified error if 'object' is nil, nil otherwise.
 func ValidateNotNil(object interface{}, errorMsg string) error {
 	if IsNil(object) {
-		return SDKErrorf(nil, errorMsg, "obj-is-nil", getComponentInfo())
+		err := fmt.Errorf(errorMsg)
+		return SDKErrorf(err, "", "obj-is-nil", getComponentInfo())
 	}
 	return nil
 }
@@ -206,7 +207,8 @@ func ConvertSlice(slice interface{}) (s []string, err error) {
 	inputIsSlice := false
 
 	if IsNil(slice) {
-		err = SDKErrorf(nil, ERRORMSG_NIL_SLICE, "nil-slice", getComponentInfo())
+		err = fmt.Errorf(ERRORMSG_NIL_SLICE)
+		err = SDKErrorf(err, "", "nil-slice", getComponentInfo())
 		return
 	}
 
@@ -221,7 +223,8 @@ func ConvertSlice(slice interface{}) (s []string, err error) {
 
 	// If it's not a slice, just return an error
 	if !inputIsSlice {
-		err = SDKErrorf(nil, ERRORMSG_PARAM_NOT_SLICE, "param-not-slice", getComponentInfo())
+		err = fmt.Errorf(ERRORMSG_PARAM_NOT_SLICE)
+		err = SDKErrorf(err, "", "param-not-slice", getComponentInfo())
 		return
 	} else if reflect.ValueOf(slice).Len() == 0 {
 		s = []string{}
@@ -260,7 +263,8 @@ func ConvertSlice(slice interface{}) (s []string, err error) {
 		return
 	}
 
-	return nil, SDKErrorf(nil, ERRORMSG_CONVERT_SLICE, "cant-convert-slice", getComponentInfo())
+	err = fmt.Errorf(ERRORMSG_CONVERT_SLICE)
+	return nil, SDKErrorf(err, "", "cant-convert-slice", getComponentInfo())
 }
 
 // SliceContains returns true iff "contains" is an element of "slice"
