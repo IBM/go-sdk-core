@@ -147,7 +147,8 @@ func (authenticator *VpcInstanceAuthenticator) url() string {
 // configuration properties.
 func newVpcInstanceAuthenticatorFromMap(properties map[string]string) (authenticator *VpcInstanceAuthenticator, err error) {
 	if properties == nil {
-		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing-props", getComponentInfo())
+		err = fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
+		return nil, SDKErrorf(err, "", "missing-props", getComponentInfo())
 	}
 
 	authenticator, err = NewVpcInstanceAuthenticatorBuilder().
@@ -203,8 +204,8 @@ func (authenticator *VpcInstanceAuthenticator) Validate() error {
 
 	// Check to make sure that at most one of IAMProfileCRN or IAMProfileID are specified.
 	if authenticator.IAMProfileCRN != "" && authenticator.IAMProfileID != "" {
-		errMsg := fmt.Sprintf(ERRORMSG_ATMOST_ONE_PROP_ERROR, "IAMProfileCRN", "IAMProfileID")
-		return SDKErrorf(nil, errMsg, "both-props", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_ATMOST_ONE_PROP_ERROR, "IAMProfileCRN", "IAMProfileID")
+		return SDKErrorf(err, "", "both-props", getComponentInfo())
 	}
 
 	return nil
@@ -232,7 +233,8 @@ func (authenticator *VpcInstanceAuthenticator) GetToken() (string, error) {
 
 	// return an error if the access token is not valid or was not fetched
 	if authenticator.getTokenData() == nil || authenticator.getTokenData().AccessToken == "" {
-		return "", SDKErrorf(nil, "Error while trying to get access token", "no-token", getComponentInfo())
+		err := fmt.Errorf("Error while trying to get access token")
+		return "", SDKErrorf(err, "", "no-token", getComponentInfo())
 	}
 
 	return authenticator.getTokenData().AccessToken, nil

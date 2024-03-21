@@ -85,11 +85,13 @@ type BaseService struct {
 // parameters and service options will be performed before instance creation.
 func NewBaseService(options *ServiceOptions) (*BaseService, error) {
 	if HasBadFirstOrLastChar(options.URL) {
-		return nil, SDKErrorf(nil, fmt.Sprintf(ERRORMSG_PROP_INVALID, "URL"), "bad-char", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
+		return nil, SDKErrorf(err, "", "bad-char", getComponentInfo())
 	}
 
 	if IsNil(options.Authenticator) {
-		return nil, SDKErrorf(nil, ERRORMSG_NO_AUTHENTICATOR, "missing-auth", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_NO_AUTHENTICATOR)
+		return nil, SDKErrorf(err, "", "missing-auth", getComponentInfo())
 	}
 
 	if err := options.Authenticator.Validate(); err != nil {
@@ -214,7 +216,8 @@ func (service *BaseService) SetURL(url string) error {
 // SetServiceURL sets the service URL.
 func (service *BaseService) SetServiceURL(url string) error {
 	if HasBadFirstOrLastChar(url) {
-		return SDKErrorf(nil, fmt.Sprintf(ERRORMSG_PROP_INVALID, "URL"), "bad-char", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_PROP_INVALID, "URL")
+		return SDKErrorf(err, "", "bad-char", getComponentInfo())
 	}
 
 	service.Options.URL = url
@@ -375,7 +378,8 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 
 	// Add authentication to the outbound request.
 	if IsNil(service.Options.Authenticator) {
-		err = SDKErrorf(nil, ERRORMSG_NO_AUTHENTICATOR, "missing-auth", getComponentInfo())
+		err = fmt.Errorf(ERRORMSG_NO_AUTHENTICATOR)
+		err = SDKErrorf(err, "", "missing-auth", getComponentInfo())
 		return
 	}
 

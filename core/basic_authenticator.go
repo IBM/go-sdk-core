@@ -47,7 +47,8 @@ func NewBasicAuthenticator(username string, password string) (*BasicAuthenticato
 // from a map.
 func newBasicAuthenticatorFromMap(properties map[string]string) (*BasicAuthenticator, error) {
 	if properties == nil {
-		return nil, SDKErrorf(nil, ERRORMSG_PROPS_MAP_NIL, "missing-props", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_PROPS_MAP_NIL)
+		return nil, SDKErrorf(err, "", "missing-props", getComponentInfo())
 	}
 
 	return NewBasicAuthenticator(properties[PROPNAME_USERNAME], properties[PROPNAME_PASSWORD])
@@ -74,19 +75,23 @@ func (this *BasicAuthenticator) Authenticate(request *http.Request) error {
 // they do not contain invalid characters.
 func (this BasicAuthenticator) Validate() error {
 	if this.Username == "" {
-		return SDKErrorf(nil, fmt.Sprintf(ERRORMSG_PROP_MISSING, "Username"), "no-user", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_PROP_MISSING, "Username")
+		return SDKErrorf(err, "", "no-user", getComponentInfo())
 	}
 
 	if this.Password == "" {
-		return SDKErrorf(nil, fmt.Sprintf(ERRORMSG_PROP_MISSING, "Password"), "no-pass", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_PROP_MISSING, "Password")
+		return SDKErrorf(err, "", "no-pass", getComponentInfo())
 	}
 
 	if HasBadFirstOrLastChar(this.Username) {
-		return SDKErrorf(nil, fmt.Sprintf(ERRORMSG_PROP_INVALID, "Username"), "bad-user", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_PROP_INVALID, "Username")
+		return SDKErrorf(err, "", "bad-user", getComponentInfo())
 	}
 
 	if HasBadFirstOrLastChar(this.Password) {
-		return SDKErrorf(nil, fmt.Sprintf(ERRORMSG_PROP_INVALID, "Password"), "bad-pass", getComponentInfo())
+		err := fmt.Errorf(ERRORMSG_PROP_INVALID, "Password")
+		return SDKErrorf(err, "", "bad-pass", getComponentInfo())
 	}
 
 	return nil

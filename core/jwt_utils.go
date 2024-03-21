@@ -32,7 +32,8 @@ func parseJWT(tokenString string) (claims *coreJWTClaims, err error) {
 	// A JWT consists of three .-separated segments
 	segments := strings.Split(tokenString, ".")
 	if len(segments) != 3 {
-		err = SDKErrorf(nil, "token contains an invalid number of segments", "need-3-segs", getComponentInfo())
+		err = fmt.Errorf("token contains an invalid number of segments")
+		err = SDKErrorf(err, "", "need-3-segs", getComponentInfo())
 		return
 	}
 
