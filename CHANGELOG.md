@@ -1,3 +1,10 @@
+## [5.16.3](https://github.com/IBM/go-sdk-core/compare/v5.16.2...v5.16.3) (2024-03-21)
+
+
+### Bug Fixes
+
+* **errors:** restore matching against all original errors ([#213](https://github.com/IBM/go-sdk-core/issues/213)) ([005fdb8](https://github.com/IBM/go-sdk-core/commit/005fdb81f15b02816ed9164dc1ebcccd08b3254d))
+
 ## [5.16.2](https://github.com/IBM/go-sdk-core/compare/v5.16.1...v5.16.2) (2024-03-20)
 
 
