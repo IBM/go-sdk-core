@@ -1,3 +1,10 @@
+## [5.16.4](https://github.com/IBM/go-sdk-core/compare/v5.16.3...v5.16.4) (2024-04-08)
+
+
+### Bug Fixes
+
+* **errors:** wrap errors from external authenticators to use new system ([#214](https://github.com/IBM/go-sdk-core/issues/214)) ([c74778e](https://github.com/IBM/go-sdk-core/commit/c74778eb5607c37e280afad749d803ab1d05f9a2))
+
 ## [5.16.3](https://github.com/IBM/go-sdk-core/compare/v5.16.2...v5.16.3) (2024-03-21)
 
 
