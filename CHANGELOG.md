@@ -1,3 +1,10 @@
+## [5.16.5](https://github.com/IBM/go-sdk-core/compare/v5.16.4...v5.16.5) (2024-04-10)
+
+
+### Bug Fixes
+
+* bump golang.org/x/net to avoid  CVE-2023-45288 ([#215](https://github.com/IBM/go-sdk-core/issues/215)) ([b9287d2](https://github.com/IBM/go-sdk-core/commit/b9287d298dd4f95148601a4f5bcac5fc5b790209))
+
 ## [5.16.4](https://github.com/IBM/go-sdk-core/compare/v5.16.3...v5.16.4) (2024-04-08)
 
 
