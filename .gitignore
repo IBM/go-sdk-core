@@ -15,6 +15,5 @@ core/coverage.out
 
 # ignore detect secrets files
 .pre-commit-config.yaml
-.secrets.baseline
 /.settings/
 /.vscode/
