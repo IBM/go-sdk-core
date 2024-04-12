@@ -965,6 +965,8 @@ func TestIamUserHeaders(t *testing.T) {
 		assert.False(t, ok)
 		assert.Equal(t, "Value1", r.Header.Get("Header1"))
 		assert.Equal(t, "Value2", r.Header.Get("Header2"))
+		assert.True(t, strings.HasPrefix(r.Header.Get(headerNameUserAgent),
+			fmt.Sprintf("%s/%s", sdkName, "iam-authenticator")))
 		assert.Equal(t, "iam.cloud.ibm.com", r.Host)
 	}))
 	defer server.Close()
