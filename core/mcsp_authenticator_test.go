@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2023.
+// (C) Copyright IBM Corp. 2023, 2024.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -467,6 +467,8 @@ func TestMCSPUserHeaders(t *testing.T) {
 		fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in":7200}`, mcspAuthTestAccessToken1)
 		assert.Equal(t, "Value1", r.Header.Get("Header1"))
 		assert.Equal(t, "Value2", r.Header.Get("Header2"))
+		assert.True(t, strings.HasPrefix(r.Header.Get(headerNameUserAgent),
+			fmt.Sprintf("%s/%s", sdkName, "mcsp-authenticator")))
 		assert.Equal(t, "mcsp.cloud.ibm.com", r.Host)
 	}))
 	defer server.Close()

@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 
 	"testing"
 	"time"
@@ -257,6 +258,8 @@ func startMockIAMServer(t *testing.T) *httptest.Server {
 			// then validate it a bit and then send back a good response.
 			assert.Equal(t, APPLICATION_JSON, req.Header.Get("Accept"))
 			assert.Equal(t, FORM_URL_ENCODED_HEADER, req.Header.Get("Content-Type"))
+			assert.True(t, strings.HasPrefix(req.Header.Get(headerNameUserAgent),
+				fmt.Sprintf("%s/%s", sdkName, "container-authenticator")))
 			assert.Equal(t, containerAuthTestCRToken1, req.FormValue("cr_token"))
 			assert.Equal(t, iamGrantTypeCRToken, req.FormValue("grant_type"))
 

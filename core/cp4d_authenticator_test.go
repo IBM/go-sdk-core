@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2019, 2021.
+// (C) Copyright IBM Corp. 2019, 2024.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -585,6 +585,8 @@ func TestCp4dUserHeaders(t *testing.T) {
 		assert.Equal(t, "Value1", r.Header.Get("Header1"))
 		assert.Equal(t, "Value2", r.Header.Get("Header2"))
 		assert.Equal(t, "cp4d.cloud.ibm.com", r.Host)
+		assert.True(t, strings.HasPrefix(r.Header.Get(headerNameUserAgent),
+			fmt.Sprintf("%s/%s", sdkName, "cp4d-authenticator")))
 
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `{ "_messageCode_":"200", "message":"success", "token":"%s"}`, cp4dUsernameApikey1)

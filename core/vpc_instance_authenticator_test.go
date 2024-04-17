@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"time"
 
 	"github.com/go-openapi/strfmt"
@@ -293,6 +294,8 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 			assert.NotEmpty(t, req.URL.Query().Get("version"))
 			assert.Equal(t, APPLICATION_JSON, req.Header.Get("Accept"))
 			assert.Equal(t, APPLICATION_JSON, req.Header.Get("Content-Type"))
+			assert.True(t, strings.HasPrefix(req.Header.Get(headerNameUserAgent),
+				fmt.Sprintf("%s/%s", sdkName, "vpc-instance-authenticator")))
 			assert.Equal(t, expectedAuthorizationHeader, req.Header.Get("Authorization"))
 
 			// Models a trusted profile (includes both CRN and ID fields).
