@@ -1,3 +1,10 @@
+# [5.17.0](https://github.com/IBM/go-sdk-core/compare/v5.16.5...v5.17.0) (2024-04-17)
+
+
+### Features
+
+* send user-agent header with auth token requests ([#216](https://github.com/IBM/go-sdk-core/issues/216)) ([90f0ba5](https://github.com/IBM/go-sdk-core/commit/90f0ba5b67107f1b40eb82646b2a3493b20891aa))
+
 ## [5.16.5](https://github.com/IBM/go-sdk-core/compare/v5.16.4...v5.16.5) (2024-04-10)
 
 
