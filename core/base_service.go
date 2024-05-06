@@ -398,7 +398,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		} else {
 			// External authenticators that implement the core interface might return a standard error.
 			// Handle that by wrapping it here.
-			err = SDKErrorf(err, fmt.Sprintf(ERRORMSG_AUTHENTICATE_ERROR, authErr.Error()), "custom-auth-failed", getComponentInfo())
+			err = SDKErrorf(err, fmt.Sprintf(ERRORMSG_AUTHENTICATE_ERROR, authenticateError.Error()), "custom-auth-failed", getComponentInfo())
 		}
 		return
 	}
