@@ -1,3 +1,10 @@
+## [5.17.1](https://github.com/IBM/go-sdk-core/compare/v5.17.0...v5.17.1) (2024-05-06)
+
+
+### Bug Fixes
+
+* use correct error variable in external auth case ([#217](https://github.com/IBM/go-sdk-core/issues/217)) ([0b70d7d](https://github.com/IBM/go-sdk-core/commit/0b70d7d0ceae54ded6379627a180b86273880add))
+
 # [5.17.0](https://github.com/IBM/go-sdk-core/compare/v5.16.5...v5.17.0) (2024-04-17)
 
 
