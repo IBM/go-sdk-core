@@ -1,3 +1,10 @@
+## [5.17.2](https://github.com/IBM/go-sdk-core/compare/v5.17.1...v5.17.2) (2024-05-08)
+
+
+### Bug Fixes
+
+* **errors:** flatten sdk problem chains to reduce hash complexity ([#218](https://github.com/IBM/go-sdk-core/issues/218)) ([9fc1ebc](https://github.com/IBM/go-sdk-core/commit/9fc1ebcf8c0b6068da13307adca2cfbac5fd5cea))
+
 ## [5.17.1](https://github.com/IBM/go-sdk-core/compare/v5.17.0...v5.17.1) (2024-05-06)
 
 
