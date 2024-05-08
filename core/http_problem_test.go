@@ -274,6 +274,23 @@ func TestPublicEnrichHTTPProblemWithinSDKProblem(t *testing.T) {
 	assert.Equal(t, "delete_resource", httpProb.OperationID)
 }
 
+func TestPublicEnrichHTTPProblemWithinCoreProblem(t *testing.T) {
+	httpProb := httpErrorf("Bad request", &DetailedResponse{})
+	assert.Empty(t, httpProb.Component)
+	assert.Empty(t, httpProb.OperationID)
+
+	sdkProb := SDKErrorf(httpProb, "Wrong!", "disc", getComponentInfo())
+	assert.Nil(t, sdkProb.causedBy)
+	assert.NotNil(t, sdkProb.httpProblem)
+
+	EnrichHTTPProblem(sdkProb, "delete_resource", NewProblemComponent("test", "v2"))
+
+	assert.NotEmpty(t, httpProb.Component)
+	assert.Equal(t, "test", httpProb.Component.Name)
+	assert.Equal(t, "v2", httpProb.Component.Version)
+	assert.Equal(t, "delete_resource", httpProb.OperationID)
+}
+
 func TestPrivateEnrichHTTPProblem(t *testing.T) {
 	httpProb := httpErrorf("Bad request", &DetailedResponse{})
 	assert.Empty(t, httpProb.Component)
@@ -284,6 +301,19 @@ func TestPrivateEnrichHTTPProblem(t *testing.T) {
 	assert.Equal(t, "test", httpProb.Component.Name)
 	assert.Equal(t, "v2", httpProb.Component.Version)
 	assert.Equal(t, "delete_resource", httpProb.OperationID)
+}
+
+func TestPrivateEnrichHTTPProblemWithPopulatedProblem(t *testing.T) {
+	httpProb := httpErrorf("Bad request", &DetailedResponse{})
+	httpProb.Component = NewProblemComponent("some-api", "v3")
+	httpProb.OperationID = "get_resource"
+	assert.NotEmpty(t, httpProb.Component)
+	assert.NotEmpty(t, httpProb.OperationID)
+
+	enrichHTTPProblem(httpProb, "delete_resource", NewProblemComponent("test", "v2"))
+	assert.Equal(t, "some-api", httpProb.Component.Name)
+	assert.Equal(t, "v3", httpProb.Component.Version)
+	assert.Equal(t, "get_resource", httpProb.OperationID)
 }
 
 func getPopulatedHTTPProblem() *HTTPProblem {

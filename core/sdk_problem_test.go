@@ -73,6 +73,27 @@ caused_by:
 	assert.Equal(t, expected, message)
 }
 
+func TestSDKProblemGetDebugMessageWithCoreProblem(t *testing.T) {
+	coreProb := SDKErrorf(nil, "", "", getComponentInfo())
+	sdkProb := SDKErrorf(coreProb, "Wrong!", "disc", NewProblemComponent("a", "b"))
+	message := sdkProb.GetDebugMessage()
+	expected := `---
+id: sdk-1518356c
+summary: Wrong!
+severity: error
+function: github.com/IBM/go-sdk-core/v5/core.TestSDKProblemGetDebugMessageWithCoreProblem
+component:
+  name: a
+  version: b
+stack: []
+core_problem:
+  id: sdk-fd790a1d
+  function: core.TestSDKProblemGetDebugMessageWithCoreProblem
+---
+`
+	assert.Equal(t, expected, message)
+}
+
 func TestSDKProblemGetID(t *testing.T) {
 	sdkProb := getPopulatedSDKProblem()
 	assert.Equal(t, "sdk-32d4ac5e", sdkProb.GetID())
@@ -170,7 +191,7 @@ func TestSDKErrorf(t *testing.T) {
 	assert.Equal(t, "github.com/IBM/go-sdk-core/v5/core.TestSDKErrorf", stack[0].Function)
 	assert.Contains(t, stack[0].File, "core/sdk_problem_test.go")
 	// This might be too fragile. If it becomes an issue, we can remove it.
-	assert.Equal(t, 158, stack[0].Line)
+	assert.Equal(t, 179, stack[0].Line)
 }
 
 func TestSDKErrorfNoCausedBy(t *testing.T) {
@@ -217,6 +238,51 @@ func TestSDKErrorfNoSummary(t *testing.T) {
 	assert.Contains(t, stack[0].File, "core/sdk_problem_test.go")
 }
 
+func TestSDKErrorfDoesntUseSDKCausedBy(t *testing.T) {
+	sdkProb := getPopulatedSDKProblem();
+	newSDKProb := SDKErrorf(sdkProb, "", "", NewProblemComponent("a", "b"))
+	assert.Nil(t, newSDKProb.causedBy)
+	assert.NotNil(t, newSDKProb.nativeCausedBy)
+	assert.Equal(t, sdkProb, newSDKProb.nativeCausedBy)
+	assert.Nil(t, newSDKProb.coreProblem)
+}
+
+func TestSDKErrorfStoreCoreProblem(t *testing.T) {
+	coreProb := SDKErrorf(nil, "", "", getComponentInfo())
+	sdkProb := SDKErrorf(coreProb, "", "", NewProblemComponent("a", "b"))
+	assert.Nil(t, sdkProb.causedBy)
+	assert.NotNil(t, sdkProb.nativeCausedBy)
+	assert.Equal(t, coreProb, sdkProb.nativeCausedBy)
+	assert.NotNil(t, sdkProb.coreProblem)
+	assert.Equal(t, coreProb.GetID(), sdkProb.coreProblem.ID)
+	assert.Equal(t, coreProb.Function, sdkProb.coreProblem.Function)
+}
+
+func TestSDKErrorfHTTPCausedByNotSetForCoreProblem(t *testing.T) {
+	httpProb := getPopulatedHTTPProblem()
+	coreProb := SDKErrorf(httpProb, "", "", getComponentInfo())
+	assert.Nil(t, coreProb.causedBy)
+	assert.Nil(t, coreProb.nativeCausedBy)
+	assert.NotNil(t, coreProb.httpProblem)
+	assert.Equal(t, httpProb, coreProb.httpProblem)
+}
+
+func TestSDKErrorfGetHTTPCausedByFromCoreProblem(t *testing.T) {
+	httpProb := getPopulatedHTTPProblem()
+
+	coreProb := SDKErrorf(httpProb, "", "", getComponentInfo())
+	assert.Nil(t, coreProb.causedBy)
+	assert.NotNil(t, coreProb.httpProblem)
+	assert.Equal(t, httpProb, coreProb.httpProblem)
+
+	sdkProb := SDKErrorf(coreProb, "", "", NewProblemComponent("a", "b"))
+	assert.NotNil(t, sdkProb.causedBy)
+	assert.Equal(t, httpProb, sdkProb.causedBy)
+
+	assert.NotNil(t, sdkProb.nativeCausedBy)
+	assert.Equal(t, coreProb, sdkProb.nativeCausedBy)
+}
+
 func TestRepurposeSDKProblem(t *testing.T) {
 	sdkProb := getPopulatedSDKProblem()
 	assert.Equal(t, "some-issue", sdkProb.discriminator)
@@ -252,6 +318,25 @@ func TestSDKProblemIsWithNative(t *testing.T) {
 	firstProb := SDKErrorf(context.Canceled, "Some error", "disc", getComponentInfo())
 	secondProb := SDKErrorf(firstProb, "Wrapping error", "disc", getComponentInfo())
 	assert.True(t, errors.Is(secondProb, context.Canceled))
+}
+
+func TestSDKProblemIsWithCoreProblem(t *testing.T) {
+	firstProb := SDKErrorf(nil, "msg", "disc", getComponentInfo())
+	secondProb := SDKErrorf(firstProb, "", "other-disc", NewProblemComponent("a", "b"))
+	assert.False(t, errors.Is(firstProb, secondProb))
+	assert.True(t, errors.Is(secondProb, firstProb))
+}
+
+func TestNewSparseSDKProblem(t *testing.T) {
+	sparse := newSparseSDKProblem(getPopulatedSDKProblem())
+	assert.NotNil(t, sparse)
+	assert.Equal(t, "sdk-32d4ac5e", sparse.ID)
+	assert.Equal(t, "mysdk.(*MySdkV1).GetResource", sparse.Function)
+}
+
+func TestIsCoreProblem(t *testing.T) {
+	assert.False(t, isCoreProblem(getPopulatedSDKProblem()))
+	assert.True(t, isCoreProblem(SDKErrorf(nil, "", "", getComponentInfo())))
 }
 
 func getPopulatedSDKProblem() *SDKProblem {

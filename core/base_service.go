@@ -389,7 +389,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 		var sdkErr *SDKProblem
 		if errors.As(authenticateError, &authErr) {
 			detailedResponse = authErr.Response
-			err = SDKErrorf(authErr.HTTPProblem, fmt.Sprintf(ERRORMSG_AUTHENTICATE_ERROR, authErr.Error()), "auth-failed", getComponentInfo())
+			err = SDKErrorf(authErr.HTTPProblem, fmt.Sprintf(ERRORMSG_AUTHENTICATE_ERROR, authErr.Error()), "auth-request-failed", getComponentInfo())
 		} else if errors.As(authenticateError, &sdkErr) {
 			sdkErr := RepurposeSDKProblem(authenticateError, "auth-failed")
 			// For compatibility.
