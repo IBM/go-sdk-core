@@ -239,7 +239,7 @@ func TestSDKErrorfNoSummary(t *testing.T) {
 }
 
 func TestSDKErrorfDoesntUseSDKCausedBy(t *testing.T) {
-	sdkProb := getPopulatedSDKProblem();
+	sdkProb := getPopulatedSDKProblem()
 	newSDKProb := SDKErrorf(sdkProb, "", "", NewProblemComponent("a", "b"))
 	assert.Nil(t, newSDKProb.causedBy)
 	assert.NotNil(t, newSDKProb.nativeCausedBy)
