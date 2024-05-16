@@ -1,3 +1,10 @@
+## [5.17.3](https://github.com/IBM/go-sdk-core/compare/v5.17.2...v5.17.3) (2024-05-16)
+
+
+### Bug Fixes
+
+* **request_builder:** encode unresolved path string prior to path parameter insertion ([#219](https://github.com/IBM/go-sdk-core/issues/219)) ([5f567da](https://github.com/IBM/go-sdk-core/commit/5f567da5e3cad27e5d3ea66d5bb5bc0b7b3cc602))
+
 ## [5.17.2](https://github.com/IBM/go-sdk-core/compare/v5.17.1...v5.17.2) (2024-05-08)
 
 
