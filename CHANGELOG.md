@@ -1,3 +1,10 @@
+## [5.17.4](https://github.com/IBM/go-sdk-core/compare/v5.17.3...v5.17.4) (2024-06-25)
+
+
+### Bug Fixes
+
+* tidy Go modules ([#221](https://github.com/IBM/go-sdk-core/issues/221)) ([5da6409](https://github.com/IBM/go-sdk-core/commit/5da6409a41ef0e6a57f6a1e1fb4cfced8ef6df55))
+
 ## [5.17.3](https://github.com/IBM/go-sdk-core/compare/v5.17.2...v5.17.3) (2024-05-16)
 
 
