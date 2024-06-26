@@ -4,6 +4,7 @@
 ### Bug Fixes
 
 * tidy Go modules ([#221](https://github.com/IBM/go-sdk-core/issues/221)) ([5da6409](https://github.com/IBM/go-sdk-core/commit/5da6409a41ef0e6a57f6a1e1fb4cfced8ef6df55))
+* This also includes the change to bump go-retryablehttp from v0.7.5 to v0.7.7 to avoid a vulnerability.
 
 ## [5.17.3](https://github.com/IBM/go-sdk-core/compare/v5.17.2...v5.17.3) (2024-05-16)
 
