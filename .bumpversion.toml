@@ -1,0 +1,21 @@
+[tool.bumpversion]
+current_version = "5.17.4"
+commit = true
+message = "Update version {current_version} -> {new_version} [skip ci]"
+
+[[tool.bumpversion.files]]
+filename = "core/version.go"
+search = "__VERSION__ = \"{current_version}\""
+replace = "__VERSION__ = \"{new_version}\""
+
+[[tool.bumpversion.files]]
+filename = "README.md"
+search = "{current_version}"
+replace = "{new_version}"
+
+[[tool.bumpversion.files]]
+filename = "Authentication.md"
+parse = "(?P<major>\\d+)"
+serialize = ["{major}"]
+search = "v{current_version}/core"
+replace = "v{new_version}/core"
