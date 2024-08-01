@@ -1760,7 +1760,7 @@ func TestClientWithRetries(t *testing.T) {
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
 				MinVersion:         tls.VersionTLS13,
-				InsecureSkipVerify: true,
+				InsecureSkipVerify: true, // #nosec
 			},
 		},
 	}
@@ -2129,7 +2129,7 @@ func TestMinSSLVersion(t *testing.T) {
 	// Set a insecureClient with different value.
 	insecureClient := &http.Client{}
 	insecureClient.Transport = &http.Transport{
-		TLSClientConfig: &tls.Config{
+		TLSClientConfig: &tls.Config{ // #nosec
 			MinVersion: tls.VersionTLS10,
 		},
 	}

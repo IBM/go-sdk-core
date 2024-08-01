@@ -60,7 +60,7 @@ func TestUnmarshalFileWithMetadata(t *testing.T) {
 	assert.Nil(t, err)
 
 	message := []byte("test")
-	err = os.WriteFile("tempdir/test-file.txt", message, 0644)
+	err = os.WriteFile("tempdir/test-file.txt", message, 0644) // #nosec:G306
 	assert.Nil(t, err)
 
 	// mock what user input would look like - a map converted from a JSON string
