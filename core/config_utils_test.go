@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2019.
+// (C) Copyright IBM Corp. 2019, 2024.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	// To enable debug logging during test execution, set this to "LevelDebug"
+	configUtilsTestLogLevel LogLevel = LevelError
+)
+
 const vcapServicesKey = "VCAP_SERVICES"
 
 // Sets a test VCAP_SERVICES value in the environment for testing.
@@ -36,17 +41,20 @@ func setTestVCAP(t *testing.T) {
 }
 
 func TestGetServicePropertiesError(t *testing.T) {
+	GetLogger().SetLogLevel(configUtilsTestLogLevel)
 	_, err := getServiceProperties("")
 	assert.NotNil(t, err)
 }
 
 func TestGetServicePropertiesNoConfig(t *testing.T) {
+	GetLogger().SetLogLevel(configUtilsTestLogLevel)
 	props, err := getServiceProperties("not_a_service")
 	assert.Nil(t, err)
 	assert.Nil(t, props)
 }
 
 func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
+	GetLogger().SetLogLevel(configUtilsTestLogLevel)
 	pwd, _ := os.Getwd()
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
 	t.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
@@ -106,6 +114,7 @@ func TestGetServicePropertiesFromCredentialFile(t *testing.T) {
 }
 
 func TestGetServicePropertiesFromEnvironment(t *testing.T) {
+	GetLogger().SetLogLevel(configUtilsTestLogLevel)
 	setTestEnvironment(t)
 
 	props, err := GetServiceProperties("service-1")
@@ -162,6 +171,7 @@ func TestGetServicePropertiesFromEnvironment(t *testing.T) {
 }
 
 func TestGetServicePropertiesFromVCAP(t *testing.T) {
+	GetLogger().SetLogLevel(configUtilsTestLogLevel)
 	setTestVCAP(t)
 
 	props, err := getServiceProperties("service-1")
@@ -193,6 +203,7 @@ func TestGetServicePropertiesFromVCAP(t *testing.T) {
 }
 
 func TestLoadFromVCAPServicesWithServiceEntries(t *testing.T) {
+	GetLogger().SetLogLevel(configUtilsTestLogLevel)
 	setTestVCAP(t)
 	// Verify we checked service entry names first
 	credential1 := loadFromVCAPServices("service_entry_key_and_key_to_service_entries")
@@ -222,6 +233,7 @@ func TestLoadFromVCAPServicesWithServiceEntries(t *testing.T) {
 }
 
 func TestLoadFromVCAPServicesEmptyService(t *testing.T) {
+	GetLogger().SetLogLevel(configUtilsTestLogLevel)
 	setTestVCAP(t)
 	// Verify we checked service entry names first
 	credential := loadFromVCAPServices("empty_service")
@@ -229,6 +241,7 @@ func TestLoadFromVCAPServicesEmptyService(t *testing.T) {
 }
 
 func TestLoadFromVCAPServicesNoCredentials(t *testing.T) {
+	GetLogger().SetLogLevel(configUtilsTestLogLevel)
 	setTestVCAP(t)
 	// Verify we checked service entry names first
 	credential := loadFromVCAPServices("no-creds-service")
@@ -236,11 +249,13 @@ func TestLoadFromVCAPServicesNoCredentials(t *testing.T) {
 }
 
 func TestLoadFromVCAPServicesWithEmptyString(t *testing.T) {
+	GetLogger().SetLogLevel(configUtilsTestLogLevel)
 	credential := loadFromVCAPServices("watson")
 	assert.Nil(t, credential, "Credentials should nil")
 }
 
 func TestLoadFromVCAPServicesWithInvalidJSON(t *testing.T) {
+	GetLogger().SetLogLevel(configUtilsTestLogLevel)
 	vcapServicesFail := `{
 		"watson": [
 			"credentials": {

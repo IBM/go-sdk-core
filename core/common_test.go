@@ -1,4 +1,4 @@
-//go:build all || fast || basesvc
+//go:build all || fast || basesvc || retries
 
 package core
 
@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// (C) Copyright IBM Corp. 2020.
+// (C) Copyright IBM Corp. 2020, 2024.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

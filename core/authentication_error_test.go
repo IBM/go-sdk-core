@@ -1,3 +1,5 @@
+//go:build all || slow || auth
+
 package core
 
 // (C) Copyright IBM Corp. 2024.

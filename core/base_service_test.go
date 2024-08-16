@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2019, 2022.
+// (C) Copyright IBM Corp. 2019, 2024.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	// To enable debug logging during test execution, set this to "LevelDebug"
+	basesvcAuthTestLogLevel LogLevel = LevelError
+)
+
 // getRetryableHTTPClient returns the "retryable" Client hidden inside the specified http.Client instance
 // or nil if "client" is not hiding a retryable Client instance.
 func getRetryableHTTPClient(client *http.Client) *retryablehttp.Client {
@@ -50,6 +55,7 @@ func getRetryableHTTPClient(client *http.Client) *retryablehttp.Client {
 }
 
 func TestClone(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	var service *BaseService = nil
 	var err error
 
@@ -77,7 +83,8 @@ func TestClone(t *testing.T) {
 }
 
 // Test a normal JSON-based response.
-func TestRequestGoodResponseJSON(t *testing.T) {
+func TestCloneRequestGoodResponseJSON(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -121,7 +128,8 @@ func TestRequestGoodResponseJSON(t *testing.T) {
 }
 
 // Test a normal JSON-based response using a vendor-specific Content-Type
-func TestRequestGoodResponseCustomJSONContentType(t *testing.T) {
+func TestCloneRequestGoodResponseCustomJSONContentType(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	customContentType := "application/vnd.sdksquad.custom.semantics+json;charset=UTF8"
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", customContentType)
@@ -166,7 +174,8 @@ func TestRequestGoodResponseCustomJSONContentType(t *testing.T) {
 }
 
 // Test a JSON-based response that should be returned as a stream (io.ReadCloser).
-func TestRequestGoodResponseJSONStream(t *testing.T) {
+func TestCloneRequestGoodResponseJSONStream(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -219,7 +228,8 @@ func TestRequestGoodResponseJSONStream(t *testing.T) {
 }
 
 // Verify that extra fields in result are silently ignored.
-func TestRequestGoodResponseJSONExtraFields(t *testing.T) {
+func TestCloneRequestGoodResponseJSONExtraFields(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -251,6 +261,7 @@ func TestRequestGoodResponseJSONExtraFields(t *testing.T) {
 
 // Test a binary response.
 func TestRequestGoodResponseStream(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	expectedResponse := []byte("This is an octet stream response.")
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/octet-stream")
@@ -291,6 +302,7 @@ func TestRequestGoodResponseStream(t *testing.T) {
 
 // Test a text response.
 func TestRequestGoodResponseText(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	expectedResponse := "This is a text response."
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "text/plain")
@@ -327,6 +339,7 @@ func TestRequestGoodResponseText(t *testing.T) {
 
 // Test a string response.
 func TestRequestGoodResponseString(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	expectedBytes := []byte("This is a string response.")
 	expectedResponse := string(expectedBytes)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -370,6 +383,7 @@ func TestRequestGoodResponseString(t *testing.T) {
 
 // Test a non-JSON response with no Content-Type set.
 func TestRequestGoodResponseNonJSONNoContentType(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	expectedResponse := []byte("This is a non-json response.")
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "")
@@ -410,6 +424,7 @@ func TestRequestGoodResponseNonJSONNoContentType(t *testing.T) {
 
 // Test a JSON response with no Content-Type set.
 func TestRequestGoodResponseByteSliceNoContentType(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	expectedResponse := []byte("This is a non-json response.")
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "")
@@ -445,6 +460,7 @@ func TestRequestGoodResponseByteSliceNoContentType(t *testing.T) {
 
 // Test unexpected response content.
 func TestRequestUnexpectedResponse(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	expectedResponse := []byte("This is an unexpected response.")
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "")
@@ -478,6 +494,7 @@ func TestRequestUnexpectedResponse(t *testing.T) {
 
 // Test a JSON response that causes a deserialization error.
 func TestRequestGoodResponseJSONDeserFailure(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		fmt.Fprint(w, `{"name": {"unknown_object_id": "abc123"}}`)
@@ -508,6 +525,7 @@ func TestRequestGoodResponseJSONDeserFailure(t *testing.T) {
 }
 
 func TestRequestNoAuthenticatorFailure(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	builder := NewRequestBuilder("GET")
 	_, err := builder.ResolveRequestURL("https://myservice.ibm.com/api", "", nil)
 	assert.Nil(t, err)
@@ -529,6 +547,7 @@ func TestRequestNoAuthenticatorFailure(t *testing.T) {
 
 // Test a good response with no response body.
 func TestRequestGoodResponseNoBody(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 	}))
@@ -563,6 +582,7 @@ func TestRequestGoodResponseNoBody(t *testing.T) {
 
 // Test a good response with unexpected response body.
 func TestRequestGoodResponseUnexpectedBody(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -598,6 +618,7 @@ func TestRequestGoodResponseUnexpectedBody(t *testing.T) {
 
 // Test request with result that receives a good response with no response body.
 func TestRequestWithResultGoodResponseNoBody(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 	}))
@@ -634,6 +655,7 @@ func TestRequestWithResultGoodResponseNoBody(t *testing.T) {
 
 // Test request with result that receives a good response with no response body and JSON content-type.
 func TestRequestWithResultGoodResponseNoBodyJSONObject(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -670,6 +692,7 @@ func TestRequestWithResultGoodResponseNoBodyJSONObject(t *testing.T) {
 
 // Test request with result that receives a good response with no response body and JSON content-type.
 func TestRequestWithResultGoodResponseNoBodyJSONArray(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -706,6 +729,7 @@ func TestRequestWithResultGoodResponseNoBodyJSONArray(t *testing.T) {
 
 // Test request with result that receives a good response with no response body and JSON content-type.
 func TestRequestWithResultGoodResponseNoBodyString(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
@@ -742,6 +766,7 @@ func TestRequestWithResultGoodResponseNoBodyString(t *testing.T) {
 
 // Test request with result that receives a good response with an empty object body.
 func TestRequestWithResultGoodResponseEmptyObjectBody(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -779,6 +804,7 @@ func TestRequestWithResultGoodResponseEmptyObjectBody(t *testing.T) {
 
 // Test request with result that receives a good response with an empty array body and JSON content-type.
 func TestRequestGoodResponseEmptyArrayBody(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -855,6 +881,7 @@ var nonJSONErrorResponse string = `This is a non-JSON error response body.`
 
 // Test an error response with a JSON response body.
 func TestRequestErrorResponseJSON(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -890,6 +917,7 @@ func TestRequestErrorResponseJSON(t *testing.T) {
 
 // Test an error response with an invalid JSON response body.
 func TestRequestErrorResponseJSONDeserError(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	var expectedResponse = []byte(`"{"this is a malformed": "json object".......`)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
@@ -923,6 +951,7 @@ func TestRequestErrorResponseJSONDeserError(t *testing.T) {
 
 // Test error response with a non-JSON response body.
 func TestRequestErrorResponseNotJSON(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "text/plain")
 		w.WriteHeader(http.StatusBadRequest)
@@ -957,6 +986,7 @@ func TestRequestErrorResponseNotJSON(t *testing.T) {
 
 // Test an error response with no response body.
 func TestRequestErrorResponseNoBody(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}))
@@ -994,6 +1024,7 @@ func TestRequestErrorResponseNoBody(t *testing.T) {
 }
 
 func TestClient(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	mockClient := http.Client{}
 	authenticator, _ := NewBasicAuthenticator("username", "password")
 	service, _ := NewBaseService(&ServiceOptions{Authenticator: authenticator})
@@ -1002,6 +1033,7 @@ func TestClient(t *testing.T) {
 }
 
 func TestRequestForDefaultUserAgent(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		fmt.Fprint(w, `{"name": "wonder woman"}`)
@@ -1028,6 +1060,7 @@ func TestRequestForDefaultUserAgent(t *testing.T) {
 }
 
 func TestRequestForProvidedUserAgent(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		fmt.Fprint(w, `{"name": "wonder woman"}`)
@@ -1057,6 +1090,7 @@ func TestRequestForProvidedUserAgent(t *testing.T) {
 }
 
 func TestRequestHostHeaderDefault(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		fmt.Fprint(w, `{"name": "wonder woman"}`)
@@ -1086,6 +1120,7 @@ func TestRequestHostHeaderDefault(t *testing.T) {
 }
 
 func TestIncorrectURL(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	authenticator, _ := NewNoAuthAuthenticator()
 	options := &ServiceOptions{
 		URL:           "{xxx}",
@@ -1097,6 +1132,7 @@ func TestIncorrectURL(t *testing.T) {
 }
 
 func TestDisableSSLVerification(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	options := &ServiceOptions{
 		URL:           "test.com",
 		Authenticator: &NoAuthAuthenticator{},
@@ -1116,6 +1152,7 @@ func TestDisableSSLVerification(t *testing.T) {
 }
 
 func TestDisableSSLVerificationWithRetries(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	options := &ServiceOptions{
 		URL:           "test.com",
 		Authenticator: &NoAuthAuthenticator{},
@@ -1160,6 +1197,7 @@ func TestDisableSSLVerificationWithRetries(t *testing.T) {
 }
 
 func TestRequestBasicAuth1(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
@@ -1193,6 +1231,7 @@ func TestRequestBasicAuth1(t *testing.T) {
 }
 
 func TestRequestBasicAuth2(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	firstTime := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -1242,6 +1281,7 @@ func TestRequestBasicAuth2(t *testing.T) {
 }
 
 func TestBasicAuthConfigError(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	options := &ServiceOptions{
 		URL: "https://myservice",
 		Authenticator: &BasicAuthenticator{
@@ -1256,6 +1296,7 @@ func TestBasicAuthConfigError(t *testing.T) {
 }
 
 func TestRequestNoAuth1(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		assert.Equal(t, "", r.Header.Get("Authorization"))
@@ -1284,6 +1325,7 @@ func TestRequestNoAuth1(t *testing.T) {
 }
 
 func TestRequestNoAuth2(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		assert.Equal(t, "", r.Header.Get("Authorization"))
@@ -1319,6 +1361,7 @@ func TestRequestNoAuth2(t *testing.T) {
 }
 
 func TestRequestIAMAuth(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -1375,6 +1418,7 @@ func TestRequestIAMAuth(t *testing.T) {
 }
 
 func TestRequestIAMFailure(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		_, _ = w.Write([]byte("Sorry you are forbidden"))
@@ -1411,6 +1455,7 @@ func TestRequestIAMFailure(t *testing.T) {
 }
 
 func TestRequestIAMFailureRetryAfter(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Retry-After", "20")
 		w.WriteHeader(http.StatusTooManyRequests)
@@ -1450,6 +1495,7 @@ func TestRequestIAMFailureRetryAfter(t *testing.T) {
 }
 
 func TestRequestIAMWithIdSecret(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		body, _ := io.ReadAll(r.Body)
@@ -1496,6 +1542,7 @@ func TestRequestIAMWithIdSecret(t *testing.T) {
 }
 
 func TestIAMErrorClientIdOnly(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	_, err := NewBaseService(
 		&ServiceOptions{
 			URL: "don't care",
@@ -1508,6 +1555,7 @@ func TestIAMErrorClientIdOnly(t *testing.T) {
 }
 
 func TestIAMErrorClientSecretOnly(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	_, err := NewBaseService(
 		&ServiceOptions{
 			URL: "don't care",
@@ -1520,6 +1568,7 @@ func TestIAMErrorClientSecretOnly(t *testing.T) {
 }
 
 func TestRequestIAMNoApiKey(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	_, err := NewBaseService(
 		&ServiceOptions{
 			URL: "don't care",
@@ -1538,6 +1587,7 @@ const (
 )
 
 func TestRequestCP4DAuth(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if strings.HasSuffix(r.URL.String(), "/v1/authorize") {
@@ -1573,6 +1623,7 @@ func TestRequestCP4DAuth(t *testing.T) {
 }
 
 func TestRequestCP4DFail(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		_, _ = w.Write([]byte("Sorry you are forbidden"))
@@ -1610,6 +1661,7 @@ func TestRequestCP4DFail(t *testing.T) {
 }
 
 func TestRequestCp4dFailureRetryAfter(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Retry-After", "20")
 		w.WriteHeader(http.StatusTooManyRequests)
@@ -1651,6 +1703,7 @@ func TestRequestCp4dFailureRetryAfter(t *testing.T) {
 
 // Test for the deprecated SetURL method.
 func TestSetURL(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	service, err := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &IamAuthenticator{
@@ -1665,6 +1718,7 @@ func TestSetURL(t *testing.T) {
 }
 
 func TestSetServiceURL(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	service, err := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
@@ -1687,6 +1741,7 @@ func TestSetServiceURL(t *testing.T) {
 }
 
 func TestSetUserAgent(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	service, err := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
@@ -1712,6 +1767,7 @@ func getRetriesConfig(service *BaseService) (int, time.Duration) {
 }
 
 func TestEnableRetries(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	options := &ServiceOptions{
 		Authenticator: &NoAuthAuthenticator{},
 	}
@@ -1747,6 +1803,7 @@ func TestEnableRetries(t *testing.T) {
 }
 
 func TestClientWithRetries(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	options := &ServiceOptions{
 		Authenticator: &NoAuthAuthenticator{},
 	}
@@ -1807,6 +1864,7 @@ func TestClientWithRetries(t *testing.T) {
 }
 
 func TestSetEnableGzipCompression(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	service, err := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
@@ -1822,6 +1880,7 @@ func TestSetEnableGzipCompression(t *testing.T) {
 }
 
 func TestExtConfigFromCredentialFile(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	pwd, _ := os.Getwd()
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
 	t.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
@@ -1891,6 +1950,7 @@ func TestExtConfigFromCredentialFile(t *testing.T) {
 }
 
 func TestExtConfigError(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	pwd, _ := os.Getwd()
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
 	t.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
@@ -1905,6 +1965,7 @@ func TestExtConfigError(t *testing.T) {
 }
 
 func TestExtConfigFromEnvironment(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	setTestEnvironment(t)
 
 	service, _ := NewBaseService(
@@ -1921,6 +1982,7 @@ func TestExtConfigFromEnvironment(t *testing.T) {
 }
 
 func TestExtConfigFromVCAP(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	setTestVCAP(t)
 
 	service, _ := NewBaseService(
@@ -1936,6 +1998,7 @@ func TestExtConfigFromVCAP(t *testing.T) {
 }
 
 func TestConfigureServiceFromCredFile(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	service, err := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
@@ -1959,6 +2022,7 @@ func TestConfigureServiceFromCredFile(t *testing.T) {
 }
 
 func TestConfigureServiceFromVCAP(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	service, err := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
@@ -1977,6 +2041,7 @@ func TestConfigureServiceFromVCAP(t *testing.T) {
 }
 
 func TestConfigureServiceFromEnv(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	service, err := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
@@ -1996,6 +2061,7 @@ func TestConfigureServiceFromEnv(t *testing.T) {
 }
 
 func TestConfigureServiceError(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	pwd, _ := os.Getwd()
 	credentialFilePath := path.Join(pwd, "/../resources/my-credentials.env")
 	t.Setenv("IBM_CREDENTIALS_FILE", credentialFilePath)
@@ -2011,12 +2077,14 @@ func TestConfigureServiceError(t *testing.T) {
 }
 
 func TestAuthNotConfigured(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	service, err := NewBaseService(&ServiceOptions{})
 	assert.NotNil(t, err)
 	assert.Nil(t, service)
 }
 
 func TestAuthInterfaceNilValue(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	var authenticator *NoAuthAuthenticator = nil
 
 	options := &ServiceOptions{
@@ -2115,6 +2183,7 @@ func getTLSVersion(service *BaseService) int {
 }
 
 func TestMinSSLVersion(t *testing.T) {
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	service, err := NewBaseService(
 		&ServiceOptions{
 			Authenticator: &NoAuthAuthenticator{},
