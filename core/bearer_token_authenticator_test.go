@@ -23,6 +23,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	// To enable debug logging during test execution, set this to "LevelDebug"
+	bearerAuthTestLogLevel LogLevel = LevelError
+)
+
 func TestBearerToken(t *testing.T) {
 	authenticator := &BearerTokenAuthenticator{
 		BearerToken: "",
@@ -37,6 +42,7 @@ func TestBearerToken(t *testing.T) {
 }
 
 func TestBearerTokenAuthenticate(t *testing.T) {
+	GetLogger().SetLogLevel(bearerAuthTestLogLevel)
 	authenticator := &BearerTokenAuthenticator{
 		BearerToken: "my-bearer-token",
 	}

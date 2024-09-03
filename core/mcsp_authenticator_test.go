@@ -40,6 +40,7 @@ var (
 
 // Tests involving the Builder
 func TestMCSPAuthBuilderErrors(t *testing.T) {
+	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
 	var err error
 	var auth *MCSPAuthenticator
 
@@ -63,6 +64,7 @@ func TestMCSPAuthBuilderErrors(t *testing.T) {
 }
 
 func TestMCSPAuthBuilderSuccess(t *testing.T) {
+	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
 	var err error
 	var auth *MCSPAuthenticator
 	var expectedHeaders = map[string]string{
@@ -100,6 +102,7 @@ func TestMCSPAuthBuilderSuccess(t *testing.T) {
 }
 
 func TestMCSPAuthReuseAuthenticator(t *testing.T) {
+	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
 	auth, err := NewMCSPAuthenticatorBuilder().
 		SetApiKey(mcspAuthMockApiKey).
 		SetURL(mcspAuthMockURL).
@@ -126,6 +129,7 @@ func TestMCSPAuthReuseAuthenticator(t *testing.T) {
 
 // Tests that construct an authenticator via map properties.
 func TestNewMCSPAuthenticatorFromMap(t *testing.T) {
+	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
 	_, err := newMCSPAuthenticatorFromMap(nil)
 	assert.NotNil(t, err)
 
@@ -723,5 +727,4 @@ func TestMCSPLiveTokenServer(t *testing.T) {
 	// Make sure the auth header values from the two requests are the same.
 	// We should have just used the cached access token in the second request.
 	assert.Equal(t, authHeader1, authHeader2)
-
 }

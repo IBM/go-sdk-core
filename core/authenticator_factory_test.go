@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2019, 2023.
+// (C) Copyright IBM Corp. 2019, 2024.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,11 +22,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	// To enable debug logging during test execution, set this to "LevelDebug"
+	authFactoryTestLogLevel LogLevel = LevelError
+)
+
 // Note: the following functions are used from the config_utils_test.go file:
 // setTestEnvironment()
 // setTestVCAP()
 
 func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
+	GetLogger().SetLogLevel(authFactoryTestLogLevel)
 	t.Setenv("IBM_CREDENTIALS_FILE", "../resources/my-credentials.env")
 
 	authenticator, err := GetAuthenticatorFromEnvironment("service-1")
@@ -133,6 +139,7 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 }
 
 func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
+	GetLogger().SetLogLevel(authFactoryTestLogLevel)
 	setTestEnvironment(t)
 
 	authenticator, err := GetAuthenticatorFromEnvironment("service-1")
@@ -232,6 +239,7 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 }
 
 func TestGetAuthenticatorFromEnvironment3(t *testing.T) {
+	GetLogger().SetLogLevel(authFactoryTestLogLevel)
 	setTestVCAP(t)
 
 	authenticator, err := GetAuthenticatorFromEnvironment("service-1")

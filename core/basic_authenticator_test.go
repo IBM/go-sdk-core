@@ -23,6 +23,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	// To enable debug logging during test execution, set this to "LevelDebug"
+	basicAuthTestLogLevel LogLevel = LevelError
+)
+
 func TestBasicAuthUsername(t *testing.T) {
 	authenticator := &BasicAuthenticator{
 		Username: "{username}",
@@ -64,6 +69,7 @@ func TestBasicAuthPassword(t *testing.T) {
 }
 
 func TestBasicAuthAuthenticate(t *testing.T) {
+	GetLogger().SetLogLevel(basicAuthTestLogLevel)
 	authenticator := &BasicAuthenticator{
 		Username: "foo",
 		Password: "bar",

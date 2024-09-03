@@ -1,3 +1,5 @@
+//go:build all || fast || problem
+
 package core
 
 // (C) Copyright IBM Corp. 2024.
@@ -191,7 +193,7 @@ func TestSDKErrorf(t *testing.T) {
 	assert.Equal(t, "github.com/IBM/go-sdk-core/v5/core.TestSDKErrorf", stack[0].Function)
 	assert.Contains(t, stack[0].File, "core/sdk_problem_test.go")
 	// This might be too fragile. If it becomes an issue, we can remove it.
-	assert.Equal(t, 179, stack[0].Line)
+	assert.Equal(t, 181, stack[0].Line)
 }
 
 func TestSDKErrorfNoCausedBy(t *testing.T) {

@@ -1,3 +1,5 @@
+//go:build all || fast || problem
+
 package core
 
 // (C) Copyright IBM Corp. 2024.

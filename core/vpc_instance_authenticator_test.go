@@ -1,4 +1,4 @@
-//go:build all || auth
+//go:build all || slow || auth
 
 package core
 
