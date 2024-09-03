@@ -1,3 +1,10 @@
+## [5.17.5](https://github.com/IBM/go-sdk-core/compare/v5.17.4...v5.17.5) (2024-09-03)
+
+
+### Bug Fixes
+
+* **logging:** improve go core's debug logging ([#227](https://github.com/IBM/go-sdk-core/issues/227)) ([f0f3237](https://github.com/IBM/go-sdk-core/commit/f0f3237dd13567a394adaf5a5091c64bedec0c59))
+
 ## [5.17.4](https://github.com/IBM/go-sdk-core/compare/v5.17.3...v5.17.4) (2024-06-25)
 
 
