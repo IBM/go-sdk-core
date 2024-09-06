@@ -50,7 +50,7 @@ func TestIsJSONPatchMimeType(t *testing.T) {
 }
 
 func TestStringNilMapper(t *testing.T) {
-	var s = "test string"
+	s := "test string"
 	assert.Equal(t, "", StringNilMapper(nil))
 	assert.Equal(t, "test string", StringNilMapper(&s))
 }
@@ -113,7 +113,9 @@ func TestIsNil(t *testing.T) {
 	assert.False(t, isNilAsIntf(myModel.MySlice))
 
 	// Declare (but don't initialize) local vars of type map and slice.
+	//nolint:staticcheck
 	var testMap map[string]json.RawMessage
+	//nolint:staticcheck
 	var testSlice []json.RawMessage
 
 	// Map and slice are nil.
@@ -270,25 +272,25 @@ func TestHasBadFirstOrLastChar(t *testing.T) {
 }
 
 func TestPointers(t *testing.T) {
-	var str = "test"
+	str := "test"
 	assert.Equal(t, &str, StringPtr(str))
 
-	var boolVar = true
+	boolVar := true
 	assert.Equal(t, &boolVar, BoolPtr(boolVar))
 
-	var intVar = int64(23)
+	intVar := int64(23)
 	assert.Equal(t, &intVar, Int64Ptr(intVar))
 
-	var float32Var = float32(23)
+	float32Var := float32(23)
 	assert.Equal(t, &float32Var, Float32Ptr(float32Var))
 
-	var float64Var = float64(23)
+	float64Var := float64(23)
 	assert.Equal(t, &float64Var, Float64Ptr(float64Var))
 
-	var uuidVar = strfmt.UUID("12345678-1234-1234-1234-123456123456")
+	uuidVar := strfmt.UUID("12345678-1234-1234-1234-123456123456")
 	assert.Equal(t, &uuidVar, UUIDPtr(uuidVar))
 
-	var byteArrayVar = []byte(str)
+	byteArrayVar := []byte(str)
 	assert.Equal(t, &byteArrayVar, ByteArrayPtr(byteArrayVar))
 }
 
@@ -501,7 +503,7 @@ func TestConvertSliceBadInput(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Nil(t, convertedSlice)
 
-	//map[string]interface{}
+	// map[string]interface{}
 	myGenericMap := make(map[string]interface{})
 	convertedSlice, err = ConvertSlice(myGenericMap)
 	assert.NotNil(t, err)
@@ -528,7 +530,6 @@ func TestConvertSliceBadInput(t *testing.T) {
 	convertedSlice, err = ConvertSlice(i)
 	assert.NotNil(t, err)
 	assert.Nil(t, convertedSlice)
-
 }
 
 func TestSliceContains(t *testing.T) {

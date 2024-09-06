@@ -20,6 +20,7 @@ package core
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -41,11 +42,13 @@ func (this MyModel) AssertEqual(t *testing.T, m MyModel) {
 }
 
 // Instances of MyModel used in the tests below.
-var myModel1 MyModel = MyModel{Foo: StringPtr("string1"), Bar: Int64Ptr(44)}
-var myModel2 MyModel = MyModel{Foo: StringPtr("string2"), Bar: Int64Ptr(74)}
-var myModel3 MyModel = MyModel{Foo: StringPtr("string3"), Bar: Int64Ptr(33)}
-var myModel4 MyModel = MyModel{Foo: StringPtr("string4"), Bar: Int64Ptr(21)}
-var myModelZeroValue MyModel
+var (
+	myModel1         MyModel = MyModel{Foo: StringPtr("string1"), Bar: Int64Ptr(44)}
+	myModel2         MyModel = MyModel{Foo: StringPtr("string2"), Bar: Int64Ptr(74)}
+	myModel3         MyModel = MyModel{Foo: StringPtr("string3"), Bar: Int64Ptr(33)}
+	myModel4         MyModel = MyModel{Foo: StringPtr("string4"), Bar: Int64Ptr(21)}
+	myModelZeroValue MyModel
+)
 
 // Simulated "generated" unmarshal function for MyModel struct.
 func UnmarshalMyModel(m map[string]json.RawMessage, result interface{}) (err error) {
@@ -111,7 +114,7 @@ func UnmarshalVehicle(m map[string]json.RawMessage, result interface{}) (err err
 		return
 	}
 	if discValue == "" {
-		err = fmt.Errorf("discriminator property 'vehicle_type' not found in JSON object")
+		err = errors.New("discriminator property 'vehicle_type' not found in JSON object")
 		return
 	}
 	if discValue == "Car" {

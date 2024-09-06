@@ -88,7 +88,7 @@ func NewBaseService(options *ServiceOptions) (*BaseService, error) {
 	}
 
 	if IsNil(options.Authenticator) {
-		err := fmt.Errorf(ERRORMSG_NO_AUTHENTICATOR)
+		err := errors.New(ERRORMSG_NO_AUTHENTICATOR)
 		return nil, SDKErrorf(err, "", "missing-auth", getComponentInfo())
 	}
 
@@ -381,7 +381,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 
 	// Add authentication to the outbound request.
 	if IsNil(service.Options.Authenticator) {
-		err = fmt.Errorf(ERRORMSG_NO_AUTHENTICATOR)
+		err = errors.New(ERRORMSG_NO_AUTHENTICATOR)
 		err = SDKErrorf(err, "", "missing-auth", getComponentInfo())
 		return
 	}
@@ -422,7 +422,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	httpResponse, err = service.Client.Do(req)
 	if err != nil {
 		if strings.Contains(err.Error(), SSL_CERTIFICATION_ERROR) {
-			err = fmt.Errorf(ERRORMSG_SSL_VERIFICATION_FAILED + "\n" + err.Error())
+			err = errors.New(ERRORMSG_SSL_VERIFICATION_FAILED + "\n" + err.Error())
 		}
 		err = SDKErrorf(err, "", "no-connection-made", getComponentInfo())
 		return
