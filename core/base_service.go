@@ -64,7 +64,6 @@ type ServiceOptions struct {
 // BaseService implements the common functionality shared by generated services
 // to manage requests and responses, authenticate outbound requests, etc.
 type BaseService struct {
-
 	// Configuration values for a service.
 	Options *ServiceOptions
 
@@ -622,7 +621,6 @@ func decodeAsMap(byteBuffer []byte) (result map[string]interface{}, err error) {
 
 // getErrorMessage: try to retrieve an error message from the decoded response body (map).
 func getErrorMessage(responseMap map[string]interface{}, statusCode int) string {
-
 	// If the response contained the "errors" field, then try to deserialize responseMap
 	// into an array of Error structs, then return the first entry's "Message" field.
 	if _, ok := responseMap["errors"]; ok {
@@ -664,7 +662,6 @@ func getErrorMessage(responseMap map[string]interface{}, statusCode int) string 
 
 // getErrorCode tries to retrieve an error code from the decoded response body (map).
 func getErrorCode(responseMap map[string]interface{}) string {
-
 	// If the response contained the "errors" field, then try to deserialize responseMap
 	// into an array of Error structs, then return the first entry's "Message" field.
 	if _, ok := responseMap["errors"]; ok {
@@ -784,8 +781,7 @@ func DefaultHTTPClient() *http.Client {
 }
 
 // httpLogger is a shim layer used to allow the Go core's logger to be used with the retryablehttp interfaces.
-type httpLogger struct {
-}
+type httpLogger struct{}
 
 func (l *httpLogger) Printf(format string, inserts ...interface{}) {
 	if GetLogger().IsLogLevelEnabled(LevelDebug) {
