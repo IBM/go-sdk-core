@@ -5,10 +5,6 @@ dist: jammy
 notifications:
   email: false
 
-env:
-  global:
-    - GO111MODULE=on
-
 stages:
   - name: Build-Test
   - name: Semantic-Release
@@ -16,7 +12,7 @@ stages:
 
 # Default "install" and "script" steps.
 install:
-  - curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.59.1
+  - curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.61.0
   - go install golang.org/x/tools/cmd/goimports@latest
 script:
   - make all
@@ -25,9 +21,9 @@ jobs:
   include:
     - stage: Build-Test
       language: go
-      go: '1.20.x'
-    - go: '1.21.x'
+      go: '1.21.x'
     - go: '1.22.x'
+    - go: '1.23.x'
 
     - name: Detect-Secrets
       language: python
