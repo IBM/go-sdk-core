@@ -1,4 +1,4 @@
-//go:build all || fast
+//go:build all || slow || auth
 
 package core
 
@@ -27,9 +27,9 @@ var (
 	authFactoryTestLogLevel LogLevel = LevelError
 )
 
-// Note: the following functions are used from the config_utils_test.go file:
-// setTestEnvironment()
-// setTestVCAP()
+// Note: the following functions are used from other files:
+// setTestEnvironment()  (common_test.go)
+// setTestVCAP()         (config_utils_test.go)
 
 func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	GetLogger().SetLogLevel(authFactoryTestLogLevel)
@@ -136,6 +136,19 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	assert.Equal(t, "my-api-key", mcspAuth.ApiKey)
 	assert.Equal(t, "https://mcsp.ibm.com", mcspAuth.URL)
 	assert.True(t, mcspAuth.DisableSSLVerification)
+
+	// Iam Assume Authenticator.
+	authenticator, err = GetAuthenticatorFromEnvironment("service11")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_IAM_ASSUME, authenticator.AuthenticationType())
+	iamAssume, ok := authenticator.(*IamAssumeAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, iamAssume)
+	assert.Equal(t, "my-api-key", iamAssume.iamDelegate.ApiKey)
+	assert.Equal(t, "iam-profile-1", iamAssume.IAMProfileID)
+	assert.Equal(t, "https://iamassume.ibm.com", iamAssume.URL)
+	assert.True(t, iamAssume.DisableSSLVerification)
 }
 
 func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
@@ -236,6 +249,17 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 	assert.Equal(t, "my-api-key", mcspAuth.ApiKey)
 	assert.Equal(t, "https://mcsp.ibm.com", mcspAuth.URL)
 	assert.True(t, mcspAuth.DisableSSLVerification)
+
+	authenticator, err = GetAuthenticatorFromEnvironment("service15")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_IAM_ASSUME, authenticator.AuthenticationType())
+	iamAssume, ok := authenticator.(*IamAssumeAuthenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, iamAssume)
+	assert.Equal(t, "my-apikey", iamAssume.iamDelegate.ApiKey)
+	assert.Equal(t, "https://iam.assume.ibm.com", iamAssume.URL)
+	assert.False(t, iamAssume.DisableSSLVerification)
 }
 
 func TestGetAuthenticatorFromEnvironment3(t *testing.T) {
