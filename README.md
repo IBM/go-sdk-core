@@ -33,6 +33,60 @@ The go-sdk-core project supports the following types of authentication:
 
 For more information about the various authentication types and how to use them with your services, click [here](Authentication.md).
 
+## Logging
+The go-sdk-core project implements a basic logging facility to log various messages.
+The logger supports these logging levels: Error, Info, Warn, and Debug.
+
+By default, the project will use a logger with log level "Error" configured, which means that
+only error messages will be displayed.  A logger configured at log level "Warn" would display "Error" and "Warn" messages
+(but not "Info" or "Debug"), etc.
+
+To configure the logger to display "Info", "Warn" and "Error" messages, use the `core.SetLoggingLevel()`
+method, as in this example:
+
+```go
+import {
+    "github.com/IBM/go-sdk-core/v5/core"
+}
+
+// Enable Info logging.
+core.SetLoggingLevel(core.LevelInfo)
+```
+
+If you configure the logger for log level "Debug", then HTTP request/response messages will be logged as well.
+Here is an example that shows this, along with the steps needed to enable automatic retries:
+
+```go
+// Enable Debug logging.
+core.SetLoggingLevel(core.LevelDebug)
+
+// Construct the service client.
+myService, err := exampleservicev1.NewExampleServiceV1(options)
+
+// Enable automatic retries.
+myService.EnableRetries(3, 20 * time.Second)
+
+// Create the resource.
+result, detailedResponse, err := myService.CreateResource(createResourceOptionsModel)
+```
+
+When the "CreateResource()" method is invoked, you should see a handful of debug messages
+displayed on the console reporting on progress of the request, including any retries that
+were performed.  Here is an example:
+
+```
+2020/10/29 10:34:57 [DEBUG] POST http://example-service.cloud.ibm.com/api/v1/resource
+2020/10/29 10:34:57 [DEBUG] POST http://example-service.cloud.ibm.com/api/v1/resource (status: 429): retrying in 1s (5 left)
+2020/10/29 10:34:58 [DEBUG] POST http://example-service.cloud.ibm.com/api/v1/resource (status: 429): retrying in 1s (4 left)
+```
+
+In addition to providing a basic logger implementation, the Go core library also defines
+the `Logger` interface and allows users to supply their own implementation to support unique
+logging requirements (perhaps you need messages logged to a file instead of the console).
+To use this advanced feature, simply implement the `Logger` interface and then call the
+`SetLogger(Logger)` function to set your implementation as the logger to be used by the
+Go core library.
+
 ## Issues
 
 If you encounter an issue with this project, you are welcome to submit a [bug report](https://github.com/IBM/go-sdk-core/issues).
