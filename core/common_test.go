@@ -90,6 +90,11 @@ var testEnvironment = map[string]string{
 	"SERVICE14_AUTH_URL":         "https://mcsp.ibm.com",
 	"SERVICE14_APIKEY":           "my-api-key",
 	"SERVICE14_AUTH_DISABLE_SSL": "true",
+	"SERVICE15_AUTH_URL":         "https://iam.assume.ibm.com",
+	"SERVICE15_AUTH_TYPE":        "IAMAssUME",
+	"SERVICE15_APIKEY":           "my-apikey",
+	"SERVICE15_IAM_PROFILE_NAME": "profile-1",
+	"SERVICE15_IAM_ACCOUNT_ID":   "account-1",
 }
 
 // setTestEnvironment sets the environment variables described in our map.
