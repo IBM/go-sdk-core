@@ -38,37 +38,37 @@ import (
 //	Authorization: Bearer <access-token>
 type IamAssumeAuthenticator struct {
 
-	// Specify exactly one of [IAMProfileID, IAMProfileCRN, or IAMProfileName] to
+	// Specify exactly one of [iamProfileID, iamProfileCRN, or iamProfileName] to
 	// identify the trusted profile whose identity should be used.
-	// If IAMProfileID or IAMProfileCRN is used, the trusted profile must exist
+	// If iamProfileID or iamProfileCRN is used, the trusted profile must exist
 	// in the same account.
-	// If and only if IAMProfileName is used, then AccountID must also be
+	// If and only if iamProfileName is used, then iamAccountID must also be
 	// specified to indicate the account that contains the trusted profile.
-	IAMProfileID   string
-	IAMProfileCRN  string
-	IAMProfileName string
+	iamProfileID   string
+	iamProfileCRN  string
+	iamProfileName string
 
-	// If and only if IAMProfileName is used to specify the trusted profile,
-	// then IAMAccountID must also be specified to indicate the account that
+	// If and only if iamProfileName is used to specify the trusted profile,
+	// then iamAccountID must also be specified to indicate the account that
 	// contains the trusted profile.
-	IAMAccountID string
+	iamAccountID string
 
 	// The URL representing the IAM token server's endpoint; If not specified,
 	// a suitable default value will be used [optional].
-	URL     string
+	url     string
 	urlInit sync.Once
 
 	// A flag that indicates whether verification of the server's SSL certificate
 	// should be disabled; defaults to false [optional].
-	DisableSSLVerification bool
+	disableSSLVerification bool
 
 	// A set of key/value pairs that will be sent as HTTP headers in requests
 	// made to the token server [optional].
-	Headers map[string]string
+	headers map[string]string
 
 	// The http.Client object used to invoke token server requests.
 	// If not specified by the user, a suitable default Client will be constructed [optional].
-	Client     *http.Client
+	client     *http.Client
 	clientInit sync.Once
 
 	// The User-Agent header value to be included with each token request.
@@ -109,27 +109,27 @@ func NewIamAssumeAuthenticatorBuilder() *IamAssumeAuthenticatorBuilder {
 	return &IamAssumeAuthenticatorBuilder{}
 }
 
-// SetIAMProfileID sets the IAMProfileID field in the builder.
+// SetIAMProfileID sets the iamProfileID field in the builder.
 func (builder *IamAssumeAuthenticatorBuilder) SetIAMProfileID(s string) *IamAssumeAuthenticatorBuilder {
-	builder.IamAssumeAuthenticator.IAMProfileID = s
+	builder.IamAssumeAuthenticator.iamProfileID = s
 	return builder
 }
 
-// SetIAMProfileCRN sets the IAMProfileCRN field in the builder.
+// SetIAMProfileCRN sets the iamProfileCRN field in the builder.
 func (builder *IamAssumeAuthenticatorBuilder) SetIAMProfileCRN(s string) *IamAssumeAuthenticatorBuilder {
-	builder.IamAssumeAuthenticator.IAMProfileCRN = s
+	builder.IamAssumeAuthenticator.iamProfileCRN = s
 	return builder
 }
 
-// SetIAMProfileName sets the IAMProfileName field in the builder.
+// SetIAMProfileName sets the iamProfileName field in the builder.
 func (builder *IamAssumeAuthenticatorBuilder) SetIAMProfileName(s string) *IamAssumeAuthenticatorBuilder {
-	builder.IamAssumeAuthenticator.IAMProfileName = s
+	builder.IamAssumeAuthenticator.iamProfileName = s
 	return builder
 }
 
-// SetIAMAccountID sets the IAMAccountID field in the builder.
+// SetIAMAccountID sets the iamAccountID field in the builder.
 func (builder *IamAssumeAuthenticatorBuilder) SetIAMAccountID(s string) *IamAssumeAuthenticatorBuilder {
-	builder.IamAssumeAuthenticator.IAMAccountID = s
+	builder.IamAssumeAuthenticator.iamAccountID = s
 	return builder
 }
 
@@ -139,10 +139,10 @@ func (builder *IamAssumeAuthenticatorBuilder) SetApiKey(s string) *IamAssumeAuth
 	return builder
 }
 
-// SetURL sets the URL field in the builder.
+// SetURL sets the url field in the builder.
 func (builder *IamAssumeAuthenticatorBuilder) SetURL(s string) *IamAssumeAuthenticatorBuilder {
 	builder.IamAuthenticator.URL = s
-	builder.IamAssumeAuthenticator.URL = s
+	builder.IamAssumeAuthenticator.url = s
 	return builder
 }
 
@@ -156,7 +156,7 @@ func (builder *IamAssumeAuthenticatorBuilder) SetClientIDSecret(clientID, client
 // SetDisableSSLVerification sets the DisableSSLVerification field in the builder.
 func (builder *IamAssumeAuthenticatorBuilder) SetDisableSSLVerification(b bool) *IamAssumeAuthenticatorBuilder {
 	builder.IamAuthenticator.DisableSSLVerification = b
-	builder.IamAssumeAuthenticator.DisableSSLVerification = b
+	builder.IamAssumeAuthenticator.disableSSLVerification = b
 	return builder
 }
 
@@ -169,14 +169,14 @@ func (builder *IamAssumeAuthenticatorBuilder) SetScope(s string) *IamAssumeAuthe
 // SetHeaders sets the Headers field in the builder.
 func (builder *IamAssumeAuthenticatorBuilder) SetHeaders(headers map[string]string) *IamAssumeAuthenticatorBuilder {
 	builder.IamAuthenticator.Headers = headers
-	builder.IamAssumeAuthenticator.Headers = headers
+	builder.IamAssumeAuthenticator.headers = headers
 	return builder
 }
 
 // SetClient sets the Client field in the builder.
 func (builder *IamAssumeAuthenticatorBuilder) SetClient(client *http.Client) *IamAssumeAuthenticatorBuilder {
 	builder.IamAuthenticator.Client = client
-	builder.IamAssumeAuthenticator.Client = client
+	builder.IamAssumeAuthenticator.client = client
 	return builder
 }
 
@@ -198,27 +198,54 @@ func (builder *IamAssumeAuthenticatorBuilder) Build() (*IamAssumeAuthenticator, 
 	return &builder.IamAssumeAuthenticator, nil
 }
 
+// NewBuilder returns an IamAssumeAuthenticatorBuilder instance configured with the contents of "authenticator".
+func (authenticator *IamAssumeAuthenticator) NewBuilder() *IamAssumeAuthenticatorBuilder {
+	builder := &IamAssumeAuthenticatorBuilder{}
+
+	builder.IamAssumeAuthenticator.iamProfileCRN = authenticator.iamProfileCRN
+	builder.IamAssumeAuthenticator.iamProfileID = authenticator.iamProfileID
+	builder.IamAssumeAuthenticator.iamProfileName = authenticator.iamProfileName
+	builder.IamAssumeAuthenticator.iamAccountID = authenticator.iamAccountID
+	builder.IamAssumeAuthenticator.url = authenticator.url
+	builder.IamAssumeAuthenticator.headers = authenticator.headers
+	builder.IamAssumeAuthenticator.disableSSLVerification = authenticator.disableSSLVerification
+	builder.IamAssumeAuthenticator.client = authenticator.client
+
+	builder.IamAuthenticator.URL = authenticator.url
+	builder.IamAuthenticator.Client = authenticator.client
+	builder.IamAuthenticator.Headers = authenticator.headers
+	builder.IamAuthenticator.DisableSSLVerification = authenticator.disableSSLVerification
+	if authenticator.iamDelegate != nil {
+		builder.IamAuthenticator.ApiKey = authenticator.iamDelegate.ApiKey
+		builder.IamAuthenticator.ClientId = authenticator.iamDelegate.ClientId
+		builder.IamAuthenticator.ClientSecret = authenticator.iamDelegate.ClientSecret
+		builder.IamAuthenticator.Scope = authenticator.iamDelegate.Scope
+	}
+
+	return builder
+}
+
 // Validate will verify the authenticator's configuration.
 func (authenticator *IamAssumeAuthenticator) Validate() error {
 	var numParams int
-	if authenticator.IAMProfileCRN != "" {
+	if authenticator.iamProfileCRN != "" {
 		numParams++
 	}
-	if authenticator.IAMProfileID != "" {
+	if authenticator.iamProfileID != "" {
 		numParams++
 	}
-	if authenticator.IAMProfileName != "" {
+	if authenticator.iamProfileName != "" {
 		numParams++
 	}
 
-	// 1. The user should specify exactly one of IAMProfileID, IAMProfileCRN, or IAMProfileName
+	// 1. The user should specify exactly one of iamProfileID, iamProfileCRN, or iamProfileName
 	if numParams != 1 {
-		err := fmt.Errorf(ERRORMSG_EXCLUSIVE_PROPS_ERROR, "IAMProfileCRN, IAMProfileID", "IAMProfileName")
+		err := fmt.Errorf(ERRORMSG_EXCLUSIVE_PROPS_ERROR, "iamProfileCRN, iamProfileID", "iamProfileName")
 		return SDKErrorf(err, "", "exc-props", getComponentInfo())
 	}
 
-	// 2. The user should specify IAMAccountID if and only if IAMProfileName is also specified.
-	if (authenticator.IAMProfileName == "") != (authenticator.IAMAccountID == "") {
+	// 2. The user should specify iamAccountID if and only if iamProfileName is also specified.
+	if (authenticator.iamProfileName == "") != (authenticator.iamAccountID == "") {
 		err := errors.New(ERRORMSG_ACCOUNTID_PROP_ERROR)
 		return SDKErrorf(err, "", "both-props", getComponentInfo())
 	}
@@ -227,23 +254,23 @@ func (authenticator *IamAssumeAuthenticator) Validate() error {
 }
 
 // client returns the authenticator's http client after potentially initializing it.
-func (authenticator *IamAssumeAuthenticator) client() *http.Client {
+func (authenticator *IamAssumeAuthenticator) getClient() *http.Client {
 	authenticator.clientInit.Do(func() {
-		if authenticator.Client == nil {
-			authenticator.Client = DefaultHTTPClient()
-			authenticator.Client.Timeout = time.Second * 30
+		if authenticator.client == nil {
+			authenticator.client = DefaultHTTPClient()
+			authenticator.client.Timeout = time.Second * 30
 
 			// If the user told us to disable SSL verification, then do it now.
-			if authenticator.DisableSSLVerification {
+			if authenticator.disableSSLVerification {
 				transport := &http.Transport{
 					// #nosec G402
 					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 				}
-				authenticator.Client.Transport = transport
+				authenticator.client.Transport = transport
 			}
 		}
 	})
-	return authenticator.Client
+	return authenticator.client
 }
 
 // getUserAgent returns the User-Agent header value to be included in each token request invoked by the authenticator.
@@ -302,18 +329,18 @@ func (authenticator *IamAssumeAuthenticator) Authenticate(request *http.Request)
 	return nil
 }
 
-// url returns the authenticator's URL property after potentially initializing it.
-func (authenticator *IamAssumeAuthenticator) url() string {
+// getURL returns the authenticator's URL property after potentially initializing it.
+func (authenticator *IamAssumeAuthenticator) getURL() string {
 	authenticator.urlInit.Do(func() {
-		if authenticator.URL == "" {
+		if authenticator.url == "" {
 			// If URL was not specified, then use the default IAM endpoint.
-			authenticator.URL = defaultIamTokenServerEndpoint
+			authenticator.url = defaultIamTokenServerEndpoint
 		} else {
 			// Canonicalize the URL by removing the operation path if it was specified by the user.
-			authenticator.URL = strings.TrimSuffix(authenticator.URL, iamAuthOperationPathGetToken)
+			authenticator.url = strings.TrimSuffix(authenticator.url, iamAuthOperationPathGetToken)
 		}
 	})
-	return authenticator.URL
+	return authenticator.url
 }
 
 // getTokenData returns the tokenData field from the authenticator.
@@ -403,7 +430,7 @@ func (authenticator *IamAssumeAuthenticator) RequestToken() (*IamTokenServerResp
 	// Step 2: Exchange the user's access token for one that reflects the trusted profile
 	// by invoking the getToken-assume operation.
 	builder := NewRequestBuilder(POST)
-	_, err = builder.ResolveRequestURL(authenticator.url(), iamAuthOperationPathGetToken, nil)
+	_, err = builder.ResolveRequestURL(authenticator.getURL(), iamAuthOperationPathGetToken, nil)
 	if err != nil {
 		return nil, RepurposeSDKProblem(err, "url-resolve-error")
 	}
@@ -414,17 +441,17 @@ func (authenticator *IamAssumeAuthenticator) RequestToken() (*IamTokenServerResp
 
 	builder.AddFormData("grant_type", "", "", iamGrantTypeAssume)
 	builder.AddFormData("access_token", "", "", userAccessToken)
-	if authenticator.IAMProfileCRN != "" {
-		builder.AddFormData("profile_crn", "", "", authenticator.IAMProfileCRN)
-	} else if authenticator.IAMProfileID != "" {
-		builder.AddFormData("profile_id", "", "", authenticator.IAMProfileID)
+	if authenticator.iamProfileCRN != "" {
+		builder.AddFormData("profile_crn", "", "", authenticator.iamProfileCRN)
+	} else if authenticator.iamProfileID != "" {
+		builder.AddFormData("profile_id", "", "", authenticator.iamProfileID)
 	} else {
-		builder.AddFormData("profile_name", "", "", authenticator.IAMProfileName)
-		builder.AddFormData("account", "", "", authenticator.IAMAccountID)
+		builder.AddFormData("profile_name", "", "", authenticator.iamProfileName)
+		builder.AddFormData("account", "", "", authenticator.iamAccountID)
 	}
 
 	// Add user-defined headers to request.
-	for headerName, headerValue := range authenticator.Headers {
+	for headerName, headerValue := range authenticator.headers {
 		builder.AddHeader(headerName, headerValue)
 	}
 
@@ -444,7 +471,7 @@ func (authenticator *IamAssumeAuthenticator) RequestToken() (*IamTokenServerResp
 	}
 
 	GetLogger().Debug("Invoking IAM 'get token (assume)' operation: %s", builder.URL)
-	resp, err := authenticator.client().Do(req)
+	resp, err := authenticator.getClient().Do(req)
 	if err != nil {
 		err = SDKErrorf(err, "", "request-error", getComponentInfo())
 		return nil, err

@@ -146,9 +146,9 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotNil(t, iamAssume)
 	assert.Equal(t, "my-api-key", iamAssume.iamDelegate.ApiKey)
-	assert.Equal(t, "iam-profile-1", iamAssume.IAMProfileID)
-	assert.Equal(t, "https://iamassume.ibm.com", iamAssume.URL)
-	assert.True(t, iamAssume.DisableSSLVerification)
+	assert.Equal(t, "iam-profile-1", iamAssume.iamProfileID)
+	assert.Equal(t, "https://iamassume.ibm.com", iamAssume.url)
+	assert.True(t, iamAssume.disableSSLVerification)
 }
 
 func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
@@ -258,8 +258,8 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotNil(t, iamAssume)
 	assert.Equal(t, "my-apikey", iamAssume.iamDelegate.ApiKey)
-	assert.Equal(t, "https://iam.assume.ibm.com", iamAssume.URL)
-	assert.False(t, iamAssume.DisableSSLVerification)
+	assert.Equal(t, "https://iam.assume.ibm.com", iamAssume.url)
+	assert.False(t, iamAssume.disableSSLVerification)
 }
 
 func TestGetAuthenticatorFromEnvironment3(t *testing.T) {

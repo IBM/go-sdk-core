@@ -125,11 +125,11 @@ func TestIamAssumeAuthBuilderSuccess(t *testing.T) {
 	assert.False(t, auth.iamDelegate.DisableSSLVerification)
 	assert.Empty(t, auth.iamDelegate.Scope)
 	assert.Nil(t, auth.iamDelegate.Headers)
-	assert.Empty(t, auth.URL)
-	assert.Empty(t, auth.IAMProfileCRN)
-	assert.Equal(t, iamAssumeMockProfileID, auth.IAMProfileID)
-	assert.Empty(t, auth.IAMProfileName)
-	assert.Empty(t, auth.IAMAccountID)
+	assert.Empty(t, auth.url)
+	assert.Empty(t, auth.iamProfileCRN)
+	assert.Equal(t, iamAssumeMockProfileID, auth.iamProfileID)
+	assert.Empty(t, auth.iamProfileName)
+	assert.Empty(t, auth.iamAccountID)
 	assert.Equal(t, AUTHTYPE_IAM, auth.iamDelegate.AuthenticationType())
 	assert.Equal(t, AUTHTYPE_IAM_ASSUME, auth.AuthenticationType())
 
@@ -140,10 +140,10 @@ func TestIamAssumeAuthBuilderSuccess(t *testing.T) {
 		Build()
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
-	assert.Equal(t, iamAssumeMockProfileCRN, auth.IAMProfileCRN)
-	assert.Empty(t, auth.IAMProfileID)
-	assert.Empty(t, auth.IAMProfileName)
-	assert.Empty(t, auth.IAMAccountID)
+	assert.Equal(t, iamAssumeMockProfileCRN, auth.iamProfileCRN)
+	assert.Empty(t, auth.iamProfileID)
+	assert.Empty(t, auth.iamProfileName)
+	assert.Empty(t, auth.iamAccountID)
 
 	// Specify apikey and profile name.
 	auth, err = NewIamAssumeAuthenticatorBuilder().
@@ -153,10 +153,10 @@ func TestIamAssumeAuthBuilderSuccess(t *testing.T) {
 		Build()
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
-	assert.Empty(t, auth.IAMProfileCRN)
-	assert.Empty(t, auth.IAMProfileID)
-	assert.Equal(t, iamAssumeMockProfileName, auth.IAMProfileName)
-	assert.Equal(t, iamAssumeMockAccountID, auth.IAMAccountID)
+	assert.Empty(t, auth.iamProfileCRN)
+	assert.Empty(t, auth.iamProfileID)
+	assert.Equal(t, iamAssumeMockProfileName, auth.iamProfileName)
+	assert.Equal(t, iamAssumeMockAccountID, auth.iamAccountID)
 
 	// Specify various IAM-related properties.
 	auth, err = NewIamAssumeAuthenticatorBuilder().
@@ -170,13 +170,13 @@ func TestIamAssumeAuthBuilderSuccess(t *testing.T) {
 		Build()
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
-	assert.Equal(t, iamAssumeMockURL, auth.URL)
-	assert.Equal(t, iamAssumeMockProfileCRN, auth.IAMProfileCRN)
-	assert.Empty(t, auth.IAMProfileID)
-	assert.Empty(t, auth.IAMProfileName)
-	assert.Empty(t, auth.IAMAccountID)
-	assert.True(t, auth.DisableSSLVerification)
-	assert.Equal(t, expectedHeaders, auth.Headers)
+	assert.Equal(t, iamAssumeMockURL, auth.url)
+	assert.Equal(t, iamAssumeMockProfileCRN, auth.iamProfileCRN)
+	assert.Empty(t, auth.iamProfileID)
+	assert.Empty(t, auth.iamProfileName)
+	assert.Empty(t, auth.iamAccountID)
+	assert.True(t, auth.disableSSLVerification)
+	assert.Equal(t, expectedHeaders, auth.headers)
 	assert.Equal(t, iamAssumeMockApiKey, auth.iamDelegate.ApiKey)
 	assert.Equal(t, iamAssumeMockURL, auth.iamDelegate.URL)
 	assert.Equal(t, iamAssumeMockClientID, auth.iamDelegate.ClientId)
@@ -186,6 +186,14 @@ func TestIamAssumeAuthBuilderSuccess(t *testing.T) {
 	assert.Equal(t, expectedHeaders, auth.iamDelegate.Headers)
 	assert.Equal(t, AUTHTYPE_IAM, auth.iamDelegate.AuthenticationType())
 	assert.Equal(t, AUTHTYPE_IAM_ASSUME, auth.AuthenticationType())
+
+	// Exercise the NewBuilder method and verify that it returns a builder that can
+	// be used to construct an authenticator equivalent to "auth".
+	builder := auth.NewBuilder()
+	auth2, err := builder.Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, auth2)
+	assert.Equal(t, auth, auth2)
 }
 
 // Tests that construct an authenticator via map properties.
@@ -218,7 +226,7 @@ func TestIamAssumeAuthenticatorFromMap(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
 	assert.Equal(t, iamAssumeMockApiKey, authenticator.iamDelegate.ApiKey)
-	assert.Equal(t, iamAssumeMockProfileCRN, authenticator.IAMProfileCRN)
+	assert.Equal(t, iamAssumeMockProfileCRN, authenticator.iamProfileCRN)
 	assert.Equal(t, AUTHTYPE_IAM_ASSUME, authenticator.AuthenticationType())
 
 	props = map[string]string{
@@ -233,9 +241,9 @@ func TestIamAssumeAuthenticatorFromMap(t *testing.T) {
 	authenticator, err = newIamAssumeAuthenticatorFromMap(props)
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
-	assert.Equal(t, iamAssumeMockProfileName, authenticator.IAMProfileName)
-	assert.Equal(t, iamAssumeMockAccountID, authenticator.IAMAccountID)
-	assert.True(t, authenticator.DisableSSLVerification)
+	assert.Equal(t, iamAssumeMockProfileName, authenticator.iamProfileName)
+	assert.Equal(t, iamAssumeMockAccountID, authenticator.iamAccountID)
+	assert.True(t, authenticator.disableSSLVerification)
 	assert.Equal(t, iamAssumeMockApiKey, authenticator.iamDelegate.ApiKey)
 	assert.True(t, authenticator.iamDelegate.DisableSSLVerification)
 	assert.Equal(t, iamAssumeMockClientID, authenticator.iamDelegate.ClientId)
@@ -251,8 +259,8 @@ func TestIamAssumeAuthDefaultURL(t *testing.T) {
 		Build()
 	assert.Nil(t, err)
 
-	assert.Equal(t, defaultIamTokenServerEndpoint, auth.url())
-	assert.Equal(t, defaultIamTokenServerEndpoint, auth.URL)
+	assert.Equal(t, defaultIamTokenServerEndpoint, auth.getURL())
+	assert.Equal(t, defaultIamTokenServerEndpoint, auth.url)
 	assert.Equal(t, defaultIamTokenServerEndpoint, auth.iamDelegate.url())
 	assert.Equal(t, defaultIamTokenServerEndpoint, auth.iamDelegate.URL)
 }
@@ -314,7 +322,7 @@ func startMockIAMAssumeServer(t *testing.T) *httptest.Server {
 
 			if !validateTrustedProfile(profileCRN, profileID, profileName, accountID) {
 				statusCode = http.StatusBadRequest
-				responseBody = "Bad Request: invalid trust profile"
+				responseBody = "Bad Request: invalid trusted profile"
 			} else {
 				responseBody = fmt.Sprintf(`{"access_token": "%s", "token_type": "Bearer", "expires_in": 3600, "expiration": %d}`,
 					responseToken, GetCurrentTime()+3600)
