@@ -1,3 +1,10 @@
+# [5.18.0](https://github.com/IBM/go-sdk-core/compare/v5.17.5...v5.18.0) (2024-10-15)
+
+
+### Features
+
+* **IamAssumeAuthenticator:** introduce new authenticator type ([#229](https://github.com/IBM/go-sdk-core/issues/229)) ([df85f15](https://github.com/IBM/go-sdk-core/commit/df85f1516a6c1d5c7884f2614dc70404709c4423))
+
 ## [5.17.5](https://github.com/IBM/go-sdk-core/compare/v5.17.4...v5.17.5) (2024-09-03)
 
 
