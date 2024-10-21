@@ -1,3 +1,10 @@
+## [5.18.1](https://github.com/IBM/go-sdk-core/compare/v5.18.0...v5.18.1) (2024-10-21)
+
+
+### Bug Fixes
+
+* fix minor problem with debug message ([#231](https://github.com/IBM/go-sdk-core/issues/231)) ([cf84c9d](https://github.com/IBM/go-sdk-core/commit/cf84c9d32b34d0d1132ab4deb27b998d182e2c58))
+
 # [5.18.0](https://github.com/IBM/go-sdk-core/compare/v5.17.5...v5.18.0) (2024-10-15)
 
 
