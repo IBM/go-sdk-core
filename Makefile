@@ -1,7 +1,6 @@
 # Makefile to build go-sdk-core library
 GO=go
 LINT=golangci-lint
-GOSEC=gosec
 FORMATTER=goimports
 
 COV_OPTS=-coverprofile=coverage.txt -covermode=atomic
@@ -26,3 +25,7 @@ format:
 
 tidy:
 	${GO} mod tidy
+
+detect-secrets:
+	detect-secrets scan --update .secrets.baseline
+	detect-secrets audit .secrets.baseline
