@@ -1,3 +1,10 @@
+## [5.18.2](https://github.com/IBM/go-sdk-core/compare/v5.18.1...v5.18.2) (2024-12-12)
+
+
+### Bug Fixes
+
+* wrap full validation errors instead of just their message ([#232](https://github.com/IBM/go-sdk-core/issues/232)) ([1bfb146](https://github.com/IBM/go-sdk-core/commit/1bfb146dfb85a470a7f0c70854252551853f89bb))
+
 ## [5.18.1](https://github.com/IBM/go-sdk-core/compare/v5.18.0...v5.18.1) (2024-10-21)
 
 
