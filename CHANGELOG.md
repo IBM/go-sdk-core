@@ -1,3 +1,10 @@
+## [5.18.3](https://github.com/IBM/go-sdk-core/compare/v5.18.2...v5.18.3) (2024-12-13)
+
+
+### Bug Fixes
+
+* bump golang.org/x/crypto to avoid CVE-2024-45337 ([#234](https://github.com/IBM/go-sdk-core/issues/234)) ([4b6901f](https://github.com/IBM/go-sdk-core/commit/4b6901f9a3592d55a446d7264192a5108d1a8e30))
+
 ## [5.18.2](https://github.com/IBM/go-sdk-core/compare/v5.18.1...v5.18.2) (2024-12-12)
 
 
