@@ -18,23 +18,15 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     name: Detect-Secrets
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.12']
 
     steps:
-      - name: Trigger info
-        run: |
-          echo "Build triggered by event: " ${{ github.event_name }}
-          echo "                 git ref: " ${{ github.ref }}
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Python v${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.12
 
       - name: Install detect-secrets
         run: |
@@ -69,17 +61,13 @@ jobs:
           golangci-lint version
           go install golang.org/x/tools/cmd/goimports@latest
 
-      - name: Build/Test Project
+      - name: Build & Test
         run: make all
 
-  create_release:
+  publish-release:
     needs: build
-    # Only run this job on the main branch and only for our min version of Go.
     if: "github.ref_name == 'main' && github.event_name != 'pull_request'"
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go-version: ['1.21']
 
     steps:
       - name: Checkout repository
