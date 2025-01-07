@@ -1,3 +1,10 @@
+## [5.18.5](https://github.com/IBM/go-sdk-core/compare/v5.18.4...v5.18.5) (2025-01-07)
+
+
+### Bug Fixes
+
+* avoid runtime panic when the `errors` field of the response is `nil` ([9c104b3](https://github.com/IBM/go-sdk-core/commit/9c104b3c2d304f01bead1ba515d18e461b9c980b))
+
 ## [5.18.4](https://github.com/IBM/go-sdk-core/compare/v5.18.3...v5.18.4) (2025-01-07)
 
 
