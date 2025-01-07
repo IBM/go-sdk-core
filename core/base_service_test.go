@@ -2170,6 +2170,8 @@ func TestErrorMessage(t *testing.T) {
 	testGetErrorMessage(t, http.StatusInternalServerError,
 		`{"errorMessage":{"statusCode":500,"message":"Internal Server Error"}}`,
 		"Internal Server Error")
+
+	testGetErrorMessage(t, http.StatusInternalServerError, `{"errors": null}`, "")
 }
 
 func getTLSVersion(service *BaseService) int {
