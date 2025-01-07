@@ -1,3 +1,11 @@
+## [5.18.4](https://github.com/IBM/go-sdk-core/compare/v5.18.3...v5.18.4) (2025-01-07)
+
+
+### Bug Fixes
+
+* bump x/net to v0.34.0 to avoid CVE-2024-24338 ([#235](https://github.com/IBM/go-sdk-core/issues/235)) ([3b75e84](https://github.com/IBM/go-sdk-core/commit/3b75e8401ca1b0ae8ff600f9ea3a43220a55424b))
+* fix semantic-release config ([9d9e0be](https://github.com/IBM/go-sdk-core/commit/9d9e0be08acd00ccf26ab8e8c6bbc268fc719b8d))
+
 ## [5.18.3](https://github.com/IBM/go-sdk-core/compare/v5.18.2...v5.18.3) (2024-12-13)
 
 
