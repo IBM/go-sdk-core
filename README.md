@@ -46,9 +46,9 @@ To configure the logger to display "Info", "Warn" and "Error" messages, use the 
 method, as in this example:
 
 ```go
-import {
+import (
     "github.com/IBM/go-sdk-core/v5/core"
-}
+)
 
 // Enable Info logging.
 core.SetLoggingLevel(core.LevelInfo)

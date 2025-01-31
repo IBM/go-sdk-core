@@ -50,10 +50,10 @@ each outbound request in the `Authorization` header in the form:
 
 ### Programming example
 ```go
-import {
+import (
     "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 // Create the authenticator.
 authenticator, err := core.NewBasicAuthenticator("myuser", "mypassword")
@@ -84,9 +84,9 @@ export EXAMPLE_SERVICE_PASSWORD=mypassword
 ```
 Application code:
 ```go
-import {
+import (
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 
 // Create the service options struct.
@@ -117,10 +117,10 @@ each outbound request in the `Authorization` header in the form:
 
 ### Programming example
 ```go
-import {
+import (
     "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 // Create the authenticator.
 bearerToken := // ... obtain bearer token value ...
@@ -156,9 +156,9 @@ export EXAMPLE_SERVICE_BEARER_TOKEN=<the bearer token value>
 ```
 Application code:
 ```go
-import {
+import (
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 
 // Create the service options struct.
@@ -250,10 +250,10 @@ that were used when initially obtaining the refresh token value from the IAM tok
 
 ### Programming example
 ```go
-import {
+import (
     "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 // Create the authenticator.
 authenticator, err := core.NewIamAuthenticatorBuilder().
@@ -285,9 +285,9 @@ export EXAMPLE_SERVICE_APIKEY=myapikey
 ```
 Application code:
 ```go
-import {
+import (
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 
 // Create the service options struct.
@@ -392,10 +392,10 @@ to indicate the IAM account in which the named trusted profile can be found.
 
 ### Programming example
 ```go
-import {
+import (
     "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 // Create the authenticator.
 authenticator, err := core.NewIamAssumeAuthenticatorBuilder().
@@ -429,9 +429,9 @@ export EXAMPLE_SERVICE_IAM_PROFILE_ID=myprofile-1
 ```
 Application code:
 ```go
-import {
+import (
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 
 // Create the service options struct.
@@ -518,10 +518,10 @@ by the user, a suitable default Client will be constructed.
 
 ### Programming example
 ```go
-import {
+import (
     "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 // Create the authenticator.
 authenticator, err := core.NewContainerAuthenticatorBuilder().
@@ -553,9 +553,9 @@ export EXAMPLE_SERVICE_IAM_PROFILE_NAME=iam-user123
 ```
 Application code:
 ```go
-import {
+import (
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 
 // Create the service options struct.
@@ -619,10 +619,10 @@ If no default trusted profile is defined for the compute resource, then an error
 
 ### Programming example
 ```go
-import {
+import (
     "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 // Create the authenticator.
 authenticator, err := core.NewVpcInstanceAuthenticatorBuilder().
@@ -654,9 +654,9 @@ export EXAMPLE_SERVICE_IAM_PROFILE_CRN=crn:iam-profile-123
 ```
 Application code:
 ```go
-import {
+import (
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 
 // Create the service options struct.
@@ -674,7 +674,7 @@ if err != nil {
 ```
 
 
-##  Cloud Pak for Data Authentication
+## Cloud Pak for Data Authentication
 The `CloudPakForDataAuthenticator` will accept a user-supplied username value, along with either a
 password or apikey, and will 
 perform the necessary interactions with the Cloud Pak for Data token service to obtain a suitable
@@ -708,10 +708,10 @@ by the user, a suitable default Client will be constructed.
 
 ### Programming example
 ```go
-import {
+import (
     "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 // Create the authenticator using username/apikey.
 authenticator, err := core.NewCloudPakForDataAuthenticatorUsingAPIKey(
@@ -745,9 +745,9 @@ export EXAMPLE_SERVICE_URL=https://mycp4dhost.com
 ```
 Application code:
 ```go
-import {
+import (
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 
 // Create the service options struct.
@@ -802,10 +802,10 @@ exchange the user-supplied apikey for an MCSP access token (the bearer token).
 
 ### Programming example
 ```go
-import {
+import (
     "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 // Create the authenticator.
 authenticator, err := core.NewMCSPAuthenticatorBuilder().
@@ -839,9 +839,9 @@ export EXAMPLE_SERVICE_AUTH_URL=https://example.mcsp.token-exchange.com
 ```
 Application code:
 ```go
-import {
+import (
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 
 // Create the service options struct.
@@ -869,10 +869,10 @@ None
 
 ### Programming example
 ```go
-import {
+import (
     "github.com/IBM/go-sdk-core/v5/core"
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 // Create the authenticator.
 authenticator := &core.NoAuthAuthenticator{}
@@ -898,9 +898,9 @@ export EXAMPLE_SERVICE_AUTH_TYPE=noauth
 ```
 Application code:
 ```go
-import {
+import (
     "<appropriate-git-repo-url>/exampleservicev1"
-}
+)
 ...
 
 // Create the service options struct.
