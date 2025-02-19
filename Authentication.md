@@ -452,10 +452,10 @@ if err != nil {
 ## Container Authentication
 The `ContainerAuthenticator` is intended to be used by application code
 running inside a compute resource managed by the IBM Kubernetes Service (IKS)
-in which a secure compute resource token (CR token) has been stored in a file
-within the compute resource's local file system.
+or IBM Cloud Code Engine in which a secure compute resource token (CR token)
+has been stored in a file within the compute resource's local file system.
 The CR token is similar to an IAM apikey except that it is managed automatically by
-the compute resource provider (IKS).
+the compute resource provider (IKS or Code Engine).
 This allows the application developer to:
 - avoid storing credentials in application code, configuration files or a password vault
 - avoid managing or rotating credentials
@@ -475,7 +475,9 @@ The IAM access token is added to each outbound request in the `Authorization` he
 
 - CRTokenFilename: (optional) the name of the file containing the injected CR token value.
 If not specified, then the authenticator will first try `/var/run/secrets/tokens/vault-token`
-and then `/var/run/secrets/tokens/sa-token` as the default value (first file found is used).
+and then `/var/run/secrets/tokens/sa-token` and finally
+`/var/run/secrets/codeengine.cloud.ibm.com/compute-resource-token/token` as the default value
+(first file found is used).
 The application must have `read` permissions on the file containing the CR token value.
 
 - IAMProfileName: (optional) the name of the linked trusted IAM profile to be used when obtaining the
