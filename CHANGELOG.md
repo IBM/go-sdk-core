@@ -1,3 +1,10 @@
+## [5.18.6](https://github.com/IBM/go-sdk-core/compare/v5.18.5...v5.18.6) (2025-03-07)
+
+
+### Bug Fixes
+
+* **build:** bump crypto dependency to avoid CVE ([22d98e3](https://github.com/IBM/go-sdk-core/commit/22d98e30c32f14284ead14fb13b46625a2c6707f))
+
 ## [5.18.5](https://github.com/IBM/go-sdk-core/compare/v5.18.4...v5.18.5) (2025-01-07)
 
 

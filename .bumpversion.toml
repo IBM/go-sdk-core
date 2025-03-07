@@ -1,5 +1,5 @@
 [tool.bumpversion]
-current_version = "5.18.5"
+current_version = "5.18.6"
 commit = true
 message = "Update version {current_version} -> {new_version} [skip ci]"
 
