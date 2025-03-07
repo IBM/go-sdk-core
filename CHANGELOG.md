@@ -1,3 +1,10 @@
+# [5.19.0](https://github.com/IBM/go-sdk-core/compare/v5.18.6...v5.19.0) (2025-03-07)
+
+
+### Features
+
+* **ContainerAuthenticator:** add support for code engine workload ([#244](https://github.com/IBM/go-sdk-core/issues/244)) ([80518d2](https://github.com/IBM/go-sdk-core/commit/80518d281b258af9f7fd4da3555f06fa0b48bfdd))
+
 ## [5.18.6](https://github.com/IBM/go-sdk-core/compare/v5.18.5...v5.18.6) (2025-03-07)
 
 
