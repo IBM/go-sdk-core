@@ -1,3 +1,10 @@
+## [5.19.1](https://github.com/IBM/go-sdk-core/compare/v5.19.0...v5.19.1) (2025-04-17)
+
+
+### Bug Fixes
+
+* **build:** migrate to new yaml package ([476dc47](https://github.com/IBM/go-sdk-core/commit/476dc472e68919b9bc341a7034cfeda456e3bbd8)), closes [#247](https://github.com/IBM/go-sdk-core/issues/247)
+
 # [5.19.0](https://github.com/IBM/go-sdk-core/compare/v5.18.6...v5.19.0) (2025-03-07)
 
 
