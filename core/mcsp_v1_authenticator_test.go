@@ -30,24 +30,24 @@ import (
 
 var (
 	// To enable debug logging during test execution, set this to "LevelDebug"
-	mcspAuthTestLogLevel LogLevel = LevelError
-	mcspAuthMockApiKey            = "mock-apikey"
-	mcspAuthMockURL               = "https://mock.mcsp.com"
+	mcspv1AuthTestLogLevel LogLevel = LevelError
+	mcspv1AuthMockApiKey            = "mock-apikey"
+	mcspv1AuthMockURL               = "https://mock.mcsp.com"
 
-	mcspAuthTestAccessToken1 string = "eyJraWQiOiJ0WlZVVnQxSmZYR0ZSM3VuczFQLU12cWJuSGE0c2hPUnRJZEM1ZDR0d2o0IiwiYWxnIjoiUlMyNTYifQ.eyJpc3MiOiJodHRwczovL3NpdXNlcm1ndG1zLW1zcC11c2VyLW1hbmFnZXIuYXBwcy5hcC1kcC0xMDEuMnd4aC5wMS5vcGVuc2hpZnRhcHBzLmNvbS9zaXVzZXJtZ3IvYXBpLzEuMCIsImF1ZCI6ImNybjp2MTphd3Mtc3RhZ2luZzpwdWJsaWM6d3hvOnVzLWVhc3QtMTpzdWIvMjAyMzEwMjUtMDQ1Ni01NzI3LTIwNWMtOGU2YWJhM2FiZmUzOjIwMjMxMDI1LTEwMzUtMzY2Ny01MDA2LWUzNjU1N2IyOGRhODo6IiwiZXhwIjoxNjk5MDMzNzM2LCJqdGkiOiJfRFpHSWJPbHlSWmF5TjlFTUowWXpBIiwiaWF0IjoxNjk5MDI2NTM2LCJuYmYiOjE2OTkwMjY1MDYsInRlbmFudElkIjoiMjAyMzEwMjUtMTAzNS0zNjY3LTUwMDYtZTM2NTU3YjI4ZGE4Iiwic3Vic2NyaXB0aW9uSWQiOiIyMDIzMTAyNS0wNDU2LTU3MjctMjA1Yy04ZTZhYmEzYWJmZTMiLCJzdWIiOiI5MGRjZjU4ZC00NzgzLTNmOGUtOGMxNi05ZGU3NTMwNDE0ODAiLCJlbnRpdHlUeXBlIjoiVVNFUiIsImVtYWlsIjoic3Z0X3N0YWdlX2Vzc2VudGlhbEB3by1jZC50ZXN0aW5hdG9yLmNvbSIsIm5hbWUiOiJzdnRfc3RhZ2VfZXNzZW50aWFsQHdvLWNkLnRlc3RpbmF0b3IuY29tIiwiZGlzcGxheW5hbWUiOiJzdnRfc3RhZ2VfZXNzZW50aWFsQHdvLWNkLnRlc3RpbmF0b3IuY29tIiwiaWRwIjp7InJlYWxtTmFtZSI6ImNsb3VkSWRlbnRpdHlSZWFsbSIsImlzcyI6Imh0dHBzOi8vd28taWJtLXN0Zy52ZXJpZnkuaWJtLmNvbS9vaWRjL2VuZHBvaW50L2RlZmF1bHQifSwiZ3JvdXBzIjpbXSwicm9sZXMiOlsiQWRtaW4iXX0.alYTel_rX1JlN9tciTLl5fXSjs4CYbjq7Ywow8aGVG0ONm_GYNyNfhUQ4SGxvvxpA7inXQg-Hcx_K0pTEVPqrV-OUMNBcXJXcAO-ZszEcDgca_BdSxOAVTXV5Y8LkbBRJjJn3bzcZ5Yq0y0cTP0z-tSnRtmP8USyLrOclE3WLV966t_AFi2i0t1FnHFi7pHBoji4idwDK3uYHhduXsHDjiHD2QmydFXKNHYAIAP8De9aCDLsRfVE56ga9Gx2CQ46R5V5tfy5KkYor6RtBAifn-TZUGX5OOai3V-5DqtUrVtIdIGODJCAhFYiruOu4INOgwPdLQgzF0V3uqYeifyQCw" // #nosec
-	mcspAuthTestAccessToken2 string = "eyJraWQiOiJ0WlZVVnQxSmZYR0ZSM3VuczFQLU12cWJuSGE0c2hPUnRJZEM1ZDR0d2o0IiwiYWxnIjoiUlMyNTYifQ.eyJpc3MiOiJodHRwczovL3NpdXNlcm1ndG1zLW1zcC11c2VyLW1hbmFnZXIuYXBwcy5hcC1kcC0xMDEuMnd4aC5wMS5vcGVuc2hpZnRhcHBzLmNvbS9zaXVzZXJtZ3IvYXBpLzEuMCIsImF1ZCI6ImNybjp2MTphd3Mtc3RhZ2luZzpwdWJsaWM6d3hvOnVzLWVhc3QtMTpzdWIvMjAyMzEwMjUtMDQ1Ni01NzI3LTIwNWMtOGU2YWJhM2FiZmUzOjIwMjMxMDI1LTEwMzUtMzY2Ny01MDA2LWUzNjU1N2IyOGRhODo6IiwiZXhwIjoxNjk5MDQ1MDUyLCJqdGkiOiI1dkpvdk85SXJtRnUwWlZTTFBxTmZnIiwiaWF0IjoxNjk5MDM3ODUyLCJuYmYiOjE2OTkwMzc4MjIsInRlbmFudElkIjoiMjAyMzEwMjUtMTAzNS0zNjY3LTUwMDYtZTM2NTU3YjI4ZGE4Iiwic3Vic2NyaXB0aW9uSWQiOiIyMDIzMTAyNS0wNDU2LTU3MjctMjA1Yy04ZTZhYmEzYWJmZTMiLCJzdWIiOiI5MGRjZjU4ZC00NzgzLTNmOGUtOGMxNi05ZGU3NTMwNDE0ODAiLCJlbnRpdHlUeXBlIjoiVVNFUiIsImVtYWlsIjoic3Z0X3N0YWdlX2Vzc2VudGlhbEB3by1jZC50ZXN0aW5hdG9yLmNvbSIsIm5hbWUiOiJzdnRfc3RhZ2VfZXNzZW50aWFsQHdvLWNkLnRlc3RpbmF0b3IuY29tIiwiZGlzcGxheW5hbWUiOiJzdnRfc3RhZ2VfZXNzZW50aWFsQHdvLWNkLnRlc3RpbmF0b3IuY29tIiwiaWRwIjp7InJlYWxtTmFtZSI6ImNsb3VkSWRlbnRpdHlSZWFsbSIsImlzcyI6Imh0dHBzOi8vd28taWJtLXN0Zy52ZXJpZnkuaWJtLmNvbS9vaWRjL2VuZHBvaW50L2RlZmF1bHQifSwiZ3JvdXBzIjpbXSwicm9sZXMiOlsiQWRtaW4iXX0.eFDY62qebPUehd-Bkz9xNzJjNwoGkLYBFhybo-Py97gc100wp9WItBcC409O86mZxsH79zCDqGOHNrrVirh11yv0iv7D2_wt9hHDpHsG48pNmzvLzkRKy-a7xW_YsYB_Es3h3FeXv-nRWBxWLGdel6kkW-OAl1hnuC53r0n2ADO863ifbUlvzhxECWJSsMMCH_ZSJ_ejzGQcKNtPMRYNAgnsdey5qEvQ_Ae_ntt7iGCsOpYfmky0U3CZhMd9QkIvoQC8ulpkYmusmVQzAosCqQtgNGSBP2ekvYgI79v3ZB3c3oQC1aEJOuUGXhrbP7PRnLAkgnEZDAbrIMlQyP9ddA" // #nosec
+	mcspv1AuthTestAccessToken1 string = "eyJraWQiOiJ0WlZVVnQxSmZYR0ZSM3VuczFQLU12cWJuSGE0c2hPUnRJZEM1ZDR0d2o0IiwiYWxnIjoiUlMyNTYifQ.eyJpc3MiOiJodHRwczovL3NpdXNlcm1ndG1zLW1zcC11c2VyLW1hbmFnZXIuYXBwcy5hcC1kcC0xMDEuMnd4aC5wMS5vcGVuc2hpZnRhcHBzLmNvbS9zaXVzZXJtZ3IvYXBpLzEuMCIsImF1ZCI6ImNybjp2MTphd3Mtc3RhZ2luZzpwdWJsaWM6d3hvOnVzLWVhc3QtMTpzdWIvMjAyMzEwMjUtMDQ1Ni01NzI3LTIwNWMtOGU2YWJhM2FiZmUzOjIwMjMxMDI1LTEwMzUtMzY2Ny01MDA2LWUzNjU1N2IyOGRhODo6IiwiZXhwIjoxNjk5MDMzNzM2LCJqdGkiOiJfRFpHSWJPbHlSWmF5TjlFTUowWXpBIiwiaWF0IjoxNjk5MDI2NTM2LCJuYmYiOjE2OTkwMjY1MDYsInRlbmFudElkIjoiMjAyMzEwMjUtMTAzNS0zNjY3LTUwMDYtZTM2NTU3YjI4ZGE4Iiwic3Vic2NyaXB0aW9uSWQiOiIyMDIzMTAyNS0wNDU2LTU3MjctMjA1Yy04ZTZhYmEzYWJmZTMiLCJzdWIiOiI5MGRjZjU4ZC00NzgzLTNmOGUtOGMxNi05ZGU3NTMwNDE0ODAiLCJlbnRpdHlUeXBlIjoiVVNFUiIsImVtYWlsIjoic3Z0X3N0YWdlX2Vzc2VudGlhbEB3by1jZC50ZXN0aW5hdG9yLmNvbSIsIm5hbWUiOiJzdnRfc3RhZ2VfZXNzZW50aWFsQHdvLWNkLnRlc3RpbmF0b3IuY29tIiwiZGlzcGxheW5hbWUiOiJzdnRfc3RhZ2VfZXNzZW50aWFsQHdvLWNkLnRlc3RpbmF0b3IuY29tIiwiaWRwIjp7InJlYWxtTmFtZSI6ImNsb3VkSWRlbnRpdHlSZWFsbSIsImlzcyI6Imh0dHBzOi8vd28taWJtLXN0Zy52ZXJpZnkuaWJtLmNvbS9vaWRjL2VuZHBvaW50L2RlZmF1bHQifSwiZ3JvdXBzIjpbXSwicm9sZXMiOlsiQWRtaW4iXX0.alYTel_rX1JlN9tciTLl5fXSjs4CYbjq7Ywow8aGVG0ONm_GYNyNfhUQ4SGxvvxpA7inXQg-Hcx_K0pTEVPqrV-OUMNBcXJXcAO-ZszEcDgca_BdSxOAVTXV5Y8LkbBRJjJn3bzcZ5Yq0y0cTP0z-tSnRtmP8USyLrOclE3WLV966t_AFi2i0t1FnHFi7pHBoji4idwDK3uYHhduXsHDjiHD2QmydFXKNHYAIAP8De9aCDLsRfVE56ga9Gx2CQ46R5V5tfy5KkYor6RtBAifn-TZUGX5OOai3V-5DqtUrVtIdIGODJCAhFYiruOu4INOgwPdLQgzF0V3uqYeifyQCw" // #nosec
+	mcspv1AuthTestAccessToken2 string = "eyJraWQiOiJ0WlZVVnQxSmZYR0ZSM3VuczFQLU12cWJuSGE0c2hPUnRJZEM1ZDR0d2o0IiwiYWxnIjoiUlMyNTYifQ.eyJpc3MiOiJodHRwczovL3NpdXNlcm1ndG1zLW1zcC11c2VyLW1hbmFnZXIuYXBwcy5hcC1kcC0xMDEuMnd4aC5wMS5vcGVuc2hpZnRhcHBzLmNvbS9zaXVzZXJtZ3IvYXBpLzEuMCIsImF1ZCI6ImNybjp2MTphd3Mtc3RhZ2luZzpwdWJsaWM6d3hvOnVzLWVhc3QtMTpzdWIvMjAyMzEwMjUtMDQ1Ni01NzI3LTIwNWMtOGU2YWJhM2FiZmUzOjIwMjMxMDI1LTEwMzUtMzY2Ny01MDA2LWUzNjU1N2IyOGRhODo6IiwiZXhwIjoxNjk5MDQ1MDUyLCJqdGkiOiI1dkpvdk85SXJtRnUwWlZTTFBxTmZnIiwiaWF0IjoxNjk5MDM3ODUyLCJuYmYiOjE2OTkwMzc4MjIsInRlbmFudElkIjoiMjAyMzEwMjUtMTAzNS0zNjY3LTUwMDYtZTM2NTU3YjI4ZGE4Iiwic3Vic2NyaXB0aW9uSWQiOiIyMDIzMTAyNS0wNDU2LTU3MjctMjA1Yy04ZTZhYmEzYWJmZTMiLCJzdWIiOiI5MGRjZjU4ZC00NzgzLTNmOGUtOGMxNi05ZGU3NTMwNDE0ODAiLCJlbnRpdHlUeXBlIjoiVVNFUiIsImVtYWlsIjoic3Z0X3N0YWdlX2Vzc2VudGlhbEB3by1jZC50ZXN0aW5hdG9yLmNvbSIsIm5hbWUiOiJzdnRfc3RhZ2VfZXNzZW50aWFsQHdvLWNkLnRlc3RpbmF0b3IuY29tIiwiZGlzcGxheW5hbWUiOiJzdnRfc3RhZ2VfZXNzZW50aWFsQHdvLWNkLnRlc3RpbmF0b3IuY29tIiwiaWRwIjp7InJlYWxtTmFtZSI6ImNsb3VkSWRlbnRpdHlSZWFsbSIsImlzcyI6Imh0dHBzOi8vd28taWJtLXN0Zy52ZXJpZnkuaWJtLmNvbS9vaWRjL2VuZHBvaW50L2RlZmF1bHQifSwiZ3JvdXBzIjpbXSwicm9sZXMiOlsiQWRtaW4iXX0.eFDY62qebPUehd-Bkz9xNzJjNwoGkLYBFhybo-Py97gc100wp9WItBcC409O86mZxsH79zCDqGOHNrrVirh11yv0iv7D2_wt9hHDpHsG48pNmzvLzkRKy-a7xW_YsYB_Es3h3FeXv-nRWBxWLGdel6kkW-OAl1hnuC53r0n2ADO863ifbUlvzhxECWJSsMMCH_ZSJ_ejzGQcKNtPMRYNAgnsdey5qEvQ_Ae_ntt7iGCsOpYfmky0U3CZhMd9QkIvoQC8ulpkYmusmVQzAosCqQtgNGSBP2ekvYgI79v3ZB3c3oQC1aEJOuUGXhrbP7PRnLAkgnEZDAbrIMlQyP9ddA" // #nosec
 )
 
 // Tests involving the Builder
-func TestMCSPAuthBuilderErrors(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1AuthBuilderErrors(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 	var err error
 	var auth *MCSPAuthenticator
 
 	// Error: no apikey
 	auth, err = NewMCSPAuthenticatorBuilder().
 		SetApiKey("").
-		SetURL(mcspAuthMockURL).
+		SetURL(mcspv1AuthMockURL).
 		Build()
 	assert.NotNil(t, err)
 	assert.Nil(t, auth)
@@ -55,7 +55,7 @@ func TestMCSPAuthBuilderErrors(t *testing.T) {
 
 	// Error: no url
 	auth, err = NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
+		SetApiKey(mcspv1AuthMockApiKey).
 		SetURL("").
 		Build()
 	assert.NotNil(t, err)
@@ -63,8 +63,8 @@ func TestMCSPAuthBuilderErrors(t *testing.T) {
 	t.Logf("Expected error: %s", err.Error())
 }
 
-func TestMCSPAuthBuilderSuccess(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1AuthBuilderSuccess(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 	var err error
 	var auth *MCSPAuthenticator
 	var expectedHeaders = map[string]string{
@@ -73,39 +73,39 @@ func TestMCSPAuthBuilderSuccess(t *testing.T) {
 
 	// Specify apikey.
 	auth, err = NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
-		SetURL(mcspAuthMockURL).
+		SetApiKey(mcspv1AuthMockApiKey).
+		SetURL(mcspv1AuthMockURL).
 		SetClient(nil).
 		Build()
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
-	assert.Equal(t, mcspAuthMockApiKey, auth.ApiKey)
-	assert.Equal(t, mcspAuthMockURL, auth.URL)
+	assert.Equal(t, mcspv1AuthMockApiKey, auth.ApiKey)
+	assert.Equal(t, mcspv1AuthMockURL, auth.URL)
 	assert.False(t, auth.DisableSSLVerification)
 	assert.Nil(t, auth.Headers)
 	assert.Equal(t, AUTHTYPE_MCSP, auth.AuthenticationType())
 
 	// Specify apikey with other properties.
 	auth, err = NewMCSPAuthenticatorBuilder().
-		SetURL(mcspAuthMockURL).
-		SetApiKey(mcspAuthMockApiKey).
+		SetURL(mcspv1AuthMockURL).
+		SetApiKey(mcspv1AuthMockApiKey).
 		SetDisableSSLVerification(true).
 		SetHeaders(expectedHeaders).
 		Build()
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
-	assert.Equal(t, mcspAuthMockApiKey, auth.ApiKey)
-	assert.Equal(t, mcspAuthMockURL, auth.URL)
+	assert.Equal(t, mcspv1AuthMockApiKey, auth.ApiKey)
+	assert.Equal(t, mcspv1AuthMockURL, auth.URL)
 	assert.True(t, auth.DisableSSLVerification)
 	assert.Equal(t, expectedHeaders, auth.Headers)
 	assert.Equal(t, AUTHTYPE_MCSP, auth.AuthenticationType())
 }
 
-func TestMCSPAuthReuseAuthenticator(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1AuthReuseAuthenticator(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 	auth, err := NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
-		SetURL(mcspAuthMockURL).
+		SetApiKey(mcspv1AuthMockApiKey).
+		SetURL(mcspv1AuthMockURL).
 		Build()
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
@@ -129,52 +129,52 @@ func TestMCSPAuthReuseAuthenticator(t *testing.T) {
 
 // Tests that construct an authenticator via map properties.
 func TestNewMCSPAuthenticatorFromMap(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 	_, err := newMCSPAuthenticatorFromMap(nil)
 	assert.NotNil(t, err)
 
 	// Missing ApiKey
 	var props = map[string]string{
-		PROPNAME_AUTH_URL: mcspAuthMockURL,
+		PROPNAME_AUTH_URL: mcspv1AuthMockURL,
 	}
 	_, err = newMCSPAuthenticatorFromMap(props)
 	assert.NotNil(t, err)
 
 	// Missing URL
 	props = map[string]string{
-		PROPNAME_APIKEY: mcspAuthMockApiKey,
+		PROPNAME_APIKEY: mcspv1AuthMockApiKey,
 	}
 	_, err = newMCSPAuthenticatorFromMap(props)
 	assert.NotNil(t, err)
 
 	// Valid configuration.
 	props = map[string]string{
-		PROPNAME_APIKEY:   mcspAuthMockApiKey,
-		PROPNAME_AUTH_URL: mcspAuthMockURL,
+		PROPNAME_APIKEY:   mcspv1AuthMockApiKey,
+		PROPNAME_AUTH_URL: mcspv1AuthMockURL,
 	}
 	authenticator, err := newMCSPAuthenticatorFromMap(props)
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
-	assert.Equal(t, mcspAuthMockApiKey, authenticator.ApiKey)
-	assert.Equal(t, mcspAuthMockURL, authenticator.URL)
+	assert.Equal(t, mcspv1AuthMockApiKey, authenticator.ApiKey)
+	assert.Equal(t, mcspv1AuthMockURL, authenticator.URL)
 	assert.Equal(t, AUTHTYPE_MCSP, authenticator.AuthenticationType())
 
 	props = map[string]string{
-		PROPNAME_AUTH_URL:         mcspAuthMockURL,
-		PROPNAME_APIKEY:           mcspAuthMockApiKey,
+		PROPNAME_AUTH_URL:         mcspv1AuthMockURL,
+		PROPNAME_APIKEY:           mcspv1AuthMockApiKey,
 		PROPNAME_AUTH_DISABLE_SSL: "false",
 	}
 	authenticator, err = newMCSPAuthenticatorFromMap(props)
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
-	assert.Equal(t, mcspAuthMockApiKey, authenticator.ApiKey)
-	assert.Equal(t, mcspAuthMockURL, authenticator.URL)
+	assert.Equal(t, mcspv1AuthMockApiKey, authenticator.ApiKey)
+	assert.Equal(t, mcspv1AuthMockURL, authenticator.URL)
 	assert.False(t, authenticator.DisableSSLVerification)
 	assert.Equal(t, AUTHTYPE_MCSP, authenticator.AuthenticationType())
 }
 
-func TestMCSPAuthenticateFail(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1AuthenticateFail(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -183,7 +183,7 @@ func TestMCSPAuthenticateFail(t *testing.T) {
 	defer server.Close()
 
 	authenticator, err := NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
+		SetApiKey(mcspv1AuthMockApiKey).
 		SetURL(server.URL).
 		Build()
 	assert.Nil(t, err)
@@ -212,7 +212,7 @@ type mcspRequestBody struct {
 	ApiKey *string `json:"apikey,omitempty"`
 }
 
-func startMockServer(t *testing.T) *httptest.Server {
+func startMCSPV1MockServer(t *testing.T) *httptest.Server {
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		// Unmarshal the request body and verify.
@@ -220,28 +220,28 @@ func startMockServer(t *testing.T) *httptest.Server {
 		_ = json.NewDecoder(req.Body).Decode(requestBody)
 		defer req.Body.Close()
 		assert.NotNil(t, requestBody.ApiKey)
-		assert.Equal(t, mcspAuthMockApiKey, *requestBody.ApiKey)
+		assert.Equal(t, mcspv1AuthMockApiKey, *requestBody.ApiKey)
 
 		// Create the response.
 		w.WriteHeader(http.StatusOK)
 		if firstCall {
-			fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in":7200}`, mcspAuthTestAccessToken1)
+			fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in":7200}`, mcspv1AuthTestAccessToken1)
 			firstCall = false
 		} else {
-			fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in":7200}`, mcspAuthTestAccessToken2)
+			fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in":7200}`, mcspv1AuthTestAccessToken2)
 		}
 	}))
 	return server
 }
 
-func TestMCSPGetTokenSuccess(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1GetTokenSuccess(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 
-	server := startMockServer(t)
+	server := startMCSPV1MockServer(t)
 	defer server.Close()
 
 	authenticator, err := NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
+		SetApiKey(mcspv1AuthMockApiKey).
 		SetURL(server.URL).
 		Build()
 	assert.Nil(t, err)
@@ -251,7 +251,7 @@ func TestMCSPGetTokenSuccess(t *testing.T) {
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, mcspAuthTestAccessToken1, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Force expiration and verify that we got the second access token.
@@ -259,17 +259,17 @@ func TestMCSPGetTokenSuccess(t *testing.T) {
 	_, err = authenticator.GetToken()
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator.getTokenData())
-	assert.Equal(t, mcspAuthTestAccessToken2, authenticator.getTokenData().AccessToken)
+	assert.Equal(t, mcspv1AuthTestAccessToken2, authenticator.getTokenData().AccessToken)
 }
 
-func TestMCSPGetCachedToken(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1GetCachedToken(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 
-	server := startMockServer(t)
+	server := startMCSPV1MockServer(t)
 	defer server.Close()
 
 	authenticator, err := NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
+		SetApiKey(mcspv1AuthMockApiKey).
 		SetURL(server.URL).
 		Build()
 	assert.Nil(t, err)
@@ -278,7 +278,7 @@ func TestMCSPGetCachedToken(t *testing.T) {
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, mcspAuthTestAccessToken1, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Set the expiration time to "force" the use of the cached token.
@@ -289,18 +289,18 @@ func TestMCSPGetCachedToken(t *testing.T) {
 	// Subsequent fetch should still return first access token.
 	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, mcspAuthTestAccessToken1, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 }
 
-func TestMCSPBackgroundTokenRefresh(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1BackgroundTokenRefresh(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 
-	server := startMockServer(t)
+	server := startMCSPV1MockServer(t)
 	defer server.Close()
 
 	authenticator, err := NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
+		SetApiKey(mcspv1AuthMockApiKey).
 		SetURL(server.URL).
 		Build()
 	assert.Nil(t, err)
@@ -309,7 +309,7 @@ func TestMCSPBackgroundTokenRefresh(t *testing.T) {
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, mcspAuthTestAccessToken1, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Now put the test in the "refresh window" where the token is not expired but still needs to be refreshed.
@@ -322,25 +322,25 @@ func TestMCSPBackgroundTokenRefresh(t *testing.T) {
 	// expired.
 	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, mcspAuthTestAccessToken1, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Wait for the background thread to finish
 	time.Sleep(5 * time.Second)
 	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, mcspAuthTestAccessToken2, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken2, token)
 	assert.NotNil(t, authenticator.getTokenData())
 }
 
-func TestMCSPBackgroundTokenRefreshFailure(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1BackgroundTokenRefreshFailure(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if firstCall {
-			fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in": 7200}`, mcspAuthTestAccessToken1)
+			fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in": 7200}`, mcspv1AuthTestAccessToken1)
 			firstCall = false
 		} else {
 			_, _ = w.Write([]byte("Sorry you are forbidden"))
@@ -349,7 +349,7 @@ func TestMCSPBackgroundTokenRefreshFailure(t *testing.T) {
 	defer server.Close()
 
 	authenticator, err := NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
+		SetApiKey(mcspv1AuthMockApiKey).
 		SetURL(server.URL).
 		Build()
 	assert.Nil(t, err)
@@ -358,7 +358,7 @@ func TestMCSPBackgroundTokenRefreshFailure(t *testing.T) {
 	// Successfully fetch the first token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, mcspAuthTestAccessToken1, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Now put the test in the "refresh window" where the token is not expired but still needs to be refreshed.
@@ -371,7 +371,7 @@ func TestMCSPBackgroundTokenRefreshFailure(t *testing.T) {
 	// expired.
 	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, mcspAuthTestAccessToken1, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Wait for the background thread to finish.
@@ -384,14 +384,14 @@ func TestMCSPBackgroundTokenRefreshFailure(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestMCSPBackgroundTokenRefreshIdle(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1BackgroundTokenRefreshIdle(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 
-	server := startMockServer(t)
+	server := startMCSPV1MockServer(t)
 	defer server.Close()
 
 	authenticator, err := NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
+		SetApiKey(mcspv1AuthMockApiKey).
 		SetURL(server.URL).
 		Build()
 	assert.Nil(t, err)
@@ -400,7 +400,7 @@ func TestMCSPBackgroundTokenRefreshIdle(t *testing.T) {
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, mcspAuthTestAccessToken1, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Now simulate the client being idle for 10 minutes into the refresh time
@@ -414,7 +414,7 @@ func TestMCSPBackgroundTokenRefreshIdle(t *testing.T) {
 	// expired.
 	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, mcspAuthTestAccessToken1, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// RefreshTime should have advanced by 1 minute from the current time
@@ -426,7 +426,7 @@ func TestMCSPBackgroundTokenRefreshIdle(t *testing.T) {
 	// a goroutine & refreshed the token.
 	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, mcspAuthTestAccessToken1, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken1, token)
 
 	assert.NotNil(t, authenticator.getTokenData())
 	assert.Equal(t, newRefreshTime, authenticator.getTokenData().RefreshTime)
@@ -435,26 +435,26 @@ func TestMCSPBackgroundTokenRefreshIdle(t *testing.T) {
 	time.Sleep(5 * time.Second)
 	token, err = authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, mcspAuthTestAccessToken2, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken2, token)
 	assert.NotNil(t, authenticator.getTokenData())
 	assert.NotEqual(t, newRefreshTime, authenticator.getTokenData().RefreshTime)
 }
 
-func TestMCSPDisableSSL(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1DisableSSL(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 
-	server := startMockServer(t)
+	server := startMCSPV1MockServer(t)
 	defer server.Close()
 
 	authenticator, err := NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
+		SetApiKey(mcspv1AuthMockApiKey).
 		SetURL(server.URL).
 		SetDisableSSLVerification(true).
 		Build()
 	assert.Nil(t, err)
 
 	token, err := authenticator.GetToken()
-	assert.Equal(t, mcspAuthTestAccessToken1, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken1, token)
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator.Client)
 	assert.NotNil(t, authenticator.Client.Transport)
@@ -464,11 +464,11 @@ func TestMCSPDisableSSL(t *testing.T) {
 	assert.True(t, transport.TLSClientConfig.InsecureSkipVerify)
 }
 
-func TestMCSPUserHeaders(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1UserHeaders(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in":7200}`, mcspAuthTestAccessToken1)
+		fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in":7200}`, mcspv1AuthTestAccessToken1)
 		assert.Equal(t, "Value1", r.Header.Get("Header1"))
 		assert.Equal(t, "Value2", r.Header.Get("Header2"))
 		assert.True(t, strings.HasPrefix(r.Header.Get(headerNameUserAgent),
@@ -484,19 +484,19 @@ func TestMCSPUserHeaders(t *testing.T) {
 	}
 
 	authenticator, err := NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
+		SetApiKey(mcspv1AuthMockApiKey).
 		SetURL(server.URL).
 		SetHeaders(headers).
 		Build()
 	assert.Nil(t, err)
 
 	token, err := authenticator.GetToken()
-	assert.Equal(t, mcspAuthTestAccessToken1, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken1, token)
 	assert.Nil(t, err)
 }
 
-func TestMCSPGetTokenFailure(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1GetTokenFailure(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 
 	var expectedResponse = []byte("Sorry you are forbidden")
 
@@ -507,7 +507,7 @@ func TestMCSPGetTokenFailure(t *testing.T) {
 	defer server.Close()
 
 	authenticator, err := NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
+		SetApiKey(mcspv1AuthMockApiKey).
 		SetURL(server.URL).
 		Build()
 	assert.Nil(t, err)
@@ -530,24 +530,24 @@ func TestMCSPGetTokenFailure(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, statusCode)
 }
 
-func TestMCSPGetTokenTimeoutError(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1GetTokenTimeoutError(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if firstCall {
-			fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in":7200}`, mcspAuthTestAccessToken1)
+			fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in":7200}`, mcspv1AuthTestAccessToken1)
 			firstCall = false
 		} else {
 			time.Sleep(3 * time.Second)
-			fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in":7200}`, mcspAuthTestAccessToken2)
+			fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in":7200}`, mcspv1AuthTestAccessToken2)
 		}
 	}))
 	defer server.Close()
 
 	authenticator, err := NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
+		SetApiKey(mcspv1AuthMockApiKey).
 		SetURL(server.URL).
 		Build()
 	assert.Nil(t, err)
@@ -556,7 +556,7 @@ func TestMCSPGetTokenTimeoutError(t *testing.T) {
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, mcspAuthTestAccessToken1, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Force expiration and verify that we got a timeout error
@@ -574,8 +574,8 @@ func TestMCSPGetTokenTimeoutError(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestMCSPGetTokenServerError(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1GetTokenServerError(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 
 	var expectedResponse = []byte("Gateway Timeout")
 
@@ -583,7 +583,7 @@ func TestMCSPGetTokenServerError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if firstCall {
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in":7200}`, mcspAuthTestAccessToken1)
+			fmt.Fprintf(w, `{"token":"%s","token_type":"jwt","expires_in":7200}`, mcspv1AuthTestAccessToken1)
 			firstCall = false
 		} else {
 			w.WriteHeader(http.StatusGatewayTimeout)
@@ -593,7 +593,7 @@ func TestMCSPGetTokenServerError(t *testing.T) {
 	defer server.Close()
 
 	authenticator, err := NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
+		SetApiKey(mcspv1AuthMockApiKey).
 		SetURL(server.URL).
 		Build()
 	assert.Nil(t, err)
@@ -602,7 +602,7 @@ func TestMCSPGetTokenServerError(t *testing.T) {
 	// Force the first fetch and verify we got the first access token.
 	token, err := authenticator.GetToken()
 	assert.Nil(t, err)
-	assert.Equal(t, mcspAuthTestAccessToken1, token)
+	assert.Equal(t, mcspv1AuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
 	// Force expiration and verify that we got a server error
@@ -626,12 +626,12 @@ func TestMCSPGetTokenServerError(t *testing.T) {
 	assert.Empty(t, token)
 }
 
-func TestMCSPRequestTokenError1(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1RequestTokenError1(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 
 	authenticator, err := NewMCSPAuthenticatorBuilder().
-		SetApiKey(mcspAuthMockApiKey).
-		SetURL(mcspAuthMockURL).
+		SetApiKey(mcspv1AuthMockApiKey).
+		SetURL(mcspv1AuthMockURL).
 		Build()
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
@@ -644,12 +644,12 @@ func TestMCSPRequestTokenError1(t *testing.T) {
 	t.Logf("Expected error: %s", err.Error())
 }
 
-func TestMCSPRequestTokenError2(t *testing.T) {
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+func TestMCSPV1RequestTokenError2(t *testing.T) {
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 
 	// Force an error while resolving the service URL.
 	auth := &MCSPAuthenticator{
-		ApiKey: mcspAuthMockApiKey,
+		ApiKey: mcspv1AuthMockApiKey,
 		URL:    "123:badpath",
 	}
 
@@ -659,7 +659,7 @@ func TestMCSPRequestTokenError2(t *testing.T) {
 	t.Logf("Expected error: %s\n", err.Error())
 }
 
-func TestMCSPNewTokenDataError1(t *testing.T) {
+func TestMCSPV1NewTokenDataError1(t *testing.T) {
 	tokenData, err := newMCSPTokenData(nil)
 	assert.NotNil(t, err)
 	assert.Nil(t, tokenData)
@@ -676,13 +676,13 @@ func TestMCSPNewTokenDataError1(t *testing.T) {
 // Then comment out the "t.Skip()" line below, then run these commands:
 //
 //	cd core
-//	go test -v -tags=auth -run=TestMCSPLiveTokenServer
+//	go test -v -tags=auth -run=TestMCSPV1LiveTokenServer
 //
-// To trace request/response messages, change "mcspAuthTestLogLevel" above to be "LevelDebug".
-func TestMCSPLiveTokenServer(t *testing.T) {
+// To trace request/response messages, change "mcspv1AuthTestLogLevel" above to be "LevelDebug".
+func TestMCSPV1LiveTokenServer(t *testing.T) {
 	t.Skip("Skipping MCSP integration test...")
 
-	GetLogger().SetLogLevel(mcspAuthTestLogLevel)
+	GetLogger().SetLogLevel(mcspv1AuthTestLogLevel)
 
 	var request *http.Request
 	var err error

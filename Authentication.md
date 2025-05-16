@@ -7,7 +7,8 @@ The go-sdk-core project supports the following types of authentication:
 - Container Authentication
 - VPC Instance Authentication
 - Cloud Pak for Data Authentication
-- Multi-Cloud Saas Platform (MCSP) Authentication
+- Multi-Cloud Saas Platform (MCSP) V1 Authentication
+- Multi-Cloud Saas Platform (MCSP) V2 Authentication
 - No Authentication (for testing)
 
 The SDK user configures the appropriate type of authentication for use with service instances.  
@@ -767,11 +768,11 @@ if err != nil {
 ```
 
 
-## Multi-Cloud Saas Platform (MCSP) Authentication
+## Multi-Cloud Saas Platform (MCSP) V1 Authentication
 The `MCSPAuthenticator` can be used in scenarios where an application needs to
 interact with an IBM Cloud service that has been deployed to a non-IBM Cloud environment (e.g. AWS).
-It accepts a user-supplied apikey and performs the necessary interactions with the
-Multi-Cloud Saas Platform token service to obtain a suitable MCSP access token (a bearer token)
+It accepts a user-supplied apikey and invokes the Multi-Cloud Saas Platform token service's
+`POST /siusermgr/api/1.0/apikeys/token` operation to obtain a suitable MCSP access token (a bearer token)
 for the specified apikey.
 The authenticator will also obtain a new bearer token when the current token expires.
 The bearer token is then added to each outbound request in the `Authorization` header in the
@@ -838,6 +839,131 @@ External configuration:
 export EXAMPLE_SERVICE_AUTH_TYPE=mcsp
 export EXAMPLE_SERVICE_APIKEY=myapikey
 export EXAMPLE_SERVICE_AUTH_URL=https://example.mcsp.token-exchange.com
+```
+Application code:
+```go
+import (
+    "<appropriate-git-repo-url>/exampleservicev1"
+)
+...
+
+// Create the service options struct.
+options := &exampleservicev1.ExampleServiceV1Options{
+    ServiceName:   "example_service",
+}
+
+// Construct the service instance.
+service, err := exampleservicev1.NewExampleServiceV1UsingExternalConfig(options)
+if err != nil {
+    panic(err)
+}
+
+// 'service' can now be used to invoke operations.
+```
+
+
+## Multi-Cloud Saas Platform (MCSP) V2 Authentication
+The `MCSPV2Authenticator` can be used in scenarios where an application needs to
+interact with an IBM Cloud service that has been deployed to a non-IBM Cloud environment (e.g. AWS).
+It accepts a user-supplied apikey and invokes the Multi-Cloud Saas Platform token service's
+`POST /api/2.0/{scopeCollectionType}/{scopeId}/apikeys/token` operation to obtain a suitable MCSP access token (a bearer token)
+for the specified apikey.
+The authenticator will also obtain a new bearer token when the current token expires.
+The bearer token is then added to each outbound request in the `Authorization` header in the
+form:
+```
+   Authorization: Bearer <bearer-token>
+```
+
+### Properties
+
+- ApiKey: (required) The apikey to be used to obtain an MCSP access token.
+
+- URL: (required) The URL representing the MCSP token service endpoint's base URL string. Do not include the
+operation path (e.g. `/api/2.0/{scopeCollectionType}/{scopeId}/apikeys/token`) as part of this property's value.
+
+- ScopeCollectionType: (required) The scope collection type of item(s).
+The valid values are: `accounts`, `subscriptions`, `services`.
+
+- ScopeID: (required) The scope identifier of item(s).
+
+- IncludeBuiltinActions: (optional) A flag to include builtin actions in the `actions` claim in the MCSP token (default: false).
+
+- IncludeCustomActions: (optional) A flag to include custom actions in the `actions` claim in the MCSP token (default: false).
+
+- IncludeRoles: (optional) A flag to include the `roles` claim in the MCSP token (default: true).
+
+- PrefixRoles: (optional) A flag to add a prefix with the scope level where 
+the role is defined in the `roles` claim (default: false).
+
+- CallerExtClaim: (optional) A map containing keys and values to be injected into the returned access token
+as the `callerExt` claim. The keys used in this map must be enabled in the apikey by setting the
+`callerExtClaimNames` property when the apikey is created.
+This property is typically only used in scenarios involving an apikey with identityType `SERVICEID`.
+
+- DisableSSLVerification: (optional) A flag that indicates whether verification of the server's SSL 
+certificate should be disabled or not. The default value is `false`.
+
+- Headers: (optional) A set of key/value pairs that will be sent as HTTP headers in requests
+made to the MCSP token service.
+
+- Client: (optional) The `http.Client` object used to invoke token service requests. If not specified
+by the user, a suitable default Client will be constructed.
+
+### Usage Notes
+- When constructing an MCSPV2Authenticator instance, the ApiKey, URL, ScopeCollectionType, and ScopeID properties are required.
+
+- If you specify the CallerExtClaim map, the keys used in the map must have been previously enabled in the apikey
+by setting the `callerExtClaimNames` property when you created the apikey.
+The entries contained in this map will appear in the `callerExt` field (claim) of the returned access token.
+
+- The authenticator will invoke the token server's `POST /api/2.0/{scopeCollectionType}/{scopeId}/apikeys/token` operation to
+exchange the apikey for an MCSP access token (the bearer token).
+
+### Programming example
+```go
+import (
+    "github.com/IBM/go-sdk-core/v5/core"
+    "<appropriate-git-repo-url>/exampleservicev1"
+)
+...
+// Create the authenticator.
+authenticator, err := core.NewMCSPV2AuthenticatorBuilder().
+    SetApiKey("myapikey").
+    SetURL("https://example.mcspv2.token-exchange.com").
+    SetCollectionType("accounts").
+    SetScopeID("20250519-2128-3755-60b3-103e01c509e8").
+    SetIncludeBuiltinActions(true).
+    SetCallerExtClaim(map[string]string{"productID":"prod-123"}).
+    Build()
+if err != nil {
+    panic(err)
+}
+
+// Create the service options struct.
+options := &exampleservicev1.ExampleServiceV1Options{
+    Authenticator: authenticator,
+}
+
+// Construct the service instance.
+service, err := exampleservicev1.NewExampleServiceV1(options)
+if err != nil {
+    panic(err)
+}
+
+// 'service' can now be used to invoke operations.
+```
+
+### Configuration example
+External configuration:
+```
+export EXAMPLE_SERVICE_AUTH_TYPE=mcspv2
+export EXAMPLE_SERVICE_APIKEY=myapikey
+export EXAMPLE_SERVICE_AUTH_URL=https://example.mcspv2.token-exchange.com
+export EXAMPLE_SERVICE_SCOPE_COLLECTION_TYPE=accounts
+export EXAMPLE_SERVICE_SCOPE_ID=20250519-2128-3755-60b3-103e01c509e8
+export EXAMPLE_SERVICE_INCLUDE_BUILTIN_ACTIONS=true
+export EXAMPLE_SERVICE_CALLER_EXT_CLAIM={"productID":"prod-123"}
 ```
 Application code:
 ```go

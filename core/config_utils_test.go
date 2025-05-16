@@ -1,4 +1,4 @@
-//go:build all || fast || basesvc
+//go:build all || fast || basesvc || auth
 
 package core
 
