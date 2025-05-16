@@ -125,17 +125,17 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	assert.Equal(t, "secret1", iamAuth.ClientSecret)
 	assert.Equal(t, "https://iam.refresh-token.com", iamAuth.URL)
 
-	// MCSP Authenticator.
+	// MCSP V1 Authenticator.
 	authenticator, err = GetAuthenticatorFromEnvironment("service10")
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
 	assert.Equal(t, AUTHTYPE_MCSP, authenticator.AuthenticationType())
-	mcspAuth, ok := authenticator.(*MCSPAuthenticator)
+	mcspv1Auth, ok := authenticator.(*MCSPAuthenticator)
 	assert.True(t, ok)
-	assert.NotNil(t, mcspAuth)
-	assert.Equal(t, "my-api-key", mcspAuth.ApiKey)
-	assert.Equal(t, "https://mcsp.ibm.com", mcspAuth.URL)
-	assert.True(t, mcspAuth.DisableSSLVerification)
+	assert.NotNil(t, mcspv1Auth)
+	assert.Equal(t, "my-api-key", mcspv1Auth.ApiKey)
+	assert.Equal(t, "https://mcsp.ibm.com", mcspv1Auth.URL)
+	assert.True(t, mcspv1Auth.DisableSSLVerification)
 
 	// Iam Assume Authenticator.
 	authenticator, err = GetAuthenticatorFromEnvironment("service11")
@@ -149,6 +149,25 @@ func TestGetAuthenticatorFromEnvironment1(t *testing.T) {
 	assert.Equal(t, "iam-profile-1", iamAssume.iamProfileID)
 	assert.Equal(t, "https://iamassume.ibm.com", iamAssume.url)
 	assert.True(t, iamAssume.disableSSLVerification)
+
+	// MCSP V2 Authenticator.
+	authenticator, err = GetAuthenticatorFromEnvironment("service12")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_MCSPV2, authenticator.AuthenticationType())
+	mcspv2Auth, ok := authenticator.(*MCSPV2Authenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, mcspv2Auth)
+	assert.Equal(t, "my-api-key", mcspv2Auth.ApiKey)
+	assert.Equal(t, "https://mcspv2.ibm.com", mcspv2Auth.URL)
+	assert.Equal(t, "subscriptions", mcspv2Auth.ScopeCollectionType)
+	assert.Equal(t, "global_subscriptions", mcspv2Auth.ScopeID)
+	assert.True(t, mcspv2Auth.IncludeBuiltinActions)
+	assert.True(t, mcspv2Auth.IncludeCustomActions)
+	assert.False(t, mcspv2Auth.IncludeRoles)
+	assert.True(t, mcspv2Auth.PrefixRoles)
+	assert.Equal(t, map[string]string{"productID": "prod123"}, mcspv2Auth.CallerExtClaim)
+	assert.True(t, mcspv2Auth.DisableSSLVerification)
 }
 
 func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
@@ -243,12 +262,12 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
 	assert.Equal(t, AUTHTYPE_MCSP, authenticator.AuthenticationType())
-	mcspAuth, ok := authenticator.(*MCSPAuthenticator)
+	mcspv1Auth, ok := authenticator.(*MCSPAuthenticator)
 	assert.True(t, ok)
-	assert.NotNil(t, mcspAuth)
-	assert.Equal(t, "my-api-key", mcspAuth.ApiKey)
-	assert.Equal(t, "https://mcsp.ibm.com", mcspAuth.URL)
-	assert.True(t, mcspAuth.DisableSSLVerification)
+	assert.NotNil(t, mcspv1Auth)
+	assert.Equal(t, "my-api-key", mcspv1Auth.ApiKey)
+	assert.Equal(t, "https://mcsp.ibm.com", mcspv1Auth.URL)
+	assert.True(t, mcspv1Auth.DisableSSLVerification)
 
 	authenticator, err = GetAuthenticatorFromEnvironment("service15")
 	assert.Nil(t, err)
@@ -260,6 +279,25 @@ func TestGetAuthenticatorFromEnvironment2(t *testing.T) {
 	assert.Equal(t, "my-apikey", iamAssume.iamDelegate.ApiKey)
 	assert.Equal(t, "https://iam.assume.ibm.com", iamAssume.url)
 	assert.False(t, iamAssume.disableSSLVerification)
+
+	// MCSP V2 Authenticator.
+	authenticator, err = GetAuthenticatorFromEnvironment("service16")
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, AUTHTYPE_MCSPV2, authenticator.AuthenticationType())
+	mcspv2Auth, ok := authenticator.(*MCSPV2Authenticator)
+	assert.True(t, ok)
+	assert.NotNil(t, mcspv2Auth)
+	assert.Equal(t, "my-api-key", mcspv2Auth.ApiKey)
+	assert.Equal(t, "https://mcspv2.ibm.com", mcspv2Auth.URL)
+	assert.Equal(t, "accounts", mcspv2Auth.ScopeCollectionType)
+	assert.Equal(t, "global_accounts", mcspv2Auth.ScopeID)
+	assert.True(t, mcspv2Auth.IncludeBuiltinActions)
+	assert.True(t, mcspv2Auth.IncludeCustomActions)
+	assert.False(t, mcspv2Auth.IncludeRoles)
+	assert.True(t, mcspv2Auth.PrefixRoles)
+	assert.Equal(t, map[string]string{"productID": "prod456"}, mcspv2Auth.CallerExtClaim)
+	assert.True(t, mcspv2Auth.DisableSSLVerification)
 }
 
 func TestGetAuthenticatorFromEnvironment3(t *testing.T) {
