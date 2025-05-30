@@ -1,3 +1,10 @@
+# [5.20.0](https://github.com/IBM/go-sdk-core/compare/v5.19.1...v5.20.0) (2025-05-30)
+
+
+### Features
+
+* **auth:** add support for MCSP V2 authentication ([c7328f9](https://github.com/IBM/go-sdk-core/commit/c7328f9ce855882def836c80d363bb192287f61e))
+
 ## [5.19.1](https://github.com/IBM/go-sdk-core/compare/v5.19.0...v5.19.1) (2025-04-17)
 
 
