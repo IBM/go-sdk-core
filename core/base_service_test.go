@@ -2,7 +2,7 @@
 
 package core
 
-// (C) Copyright IBM Corp. 2019, 2024.
+// (C) Copyright IBM Corp. 2019, 2025.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1032,12 +1032,15 @@ func TestClient(t *testing.T) {
 	assert.ObjectsAreEqual(mockClient, service.Client)
 }
 
-func TestRequestForDefaultUserAgent(t *testing.T) {
+func TestRequestUserAgentDefault(t *testing.T) {
+	// Tests that the default user-agent string defined in the core
+	// will be used if the User-Agent header is not set in any of the usual ways.
+	expectedUserAgent := "ibm-go-sdk-core"
 	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		fmt.Fprint(w, `{"name": "wonder woman"}`)
-		assert.Contains(t, r.Header.Get("User-Agent"), "ibm-go-sdk-core")
+		assert.Contains(t, r.Header.Get("User-Agent"), expectedUserAgent)
 	}))
 	defer server.Close()
 
@@ -1059,12 +1062,53 @@ func TestRequestForDefaultUserAgent(t *testing.T) {
 	_, _ = service.Request(req, &foo)
 }
 
-func TestRequestForProvidedUserAgent(t *testing.T) {
+func TestRequestUserAgentOperationLevel(t *testing.T) {
+	// Tests that an SDK user can set the User-Agent header at the operation level
+	// (by setting the "Headers" field of the operation's options model), and it will be
+	// used if User-Agent is not set as a default header on the service instance.
+	expectedUserAgent := "user-agent: operation level"
 	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 		fmt.Fprint(w, `{"name": "wonder woman"}`)
-		assert.Contains(t, r.Header.Get("User-Agent"), "provided user agent")
+		assert.Contains(t, r.Header.Get("User-Agent"), expectedUserAgent)
+	}))
+	defer server.Close()
+
+	builder := NewRequestBuilder("GET")
+	_, err := builder.ResolveRequestURL(server.URL, "", nil)
+	assert.Nil(t, err)
+	builder.AddHeader("Content-Type", "Application/json").
+		AddQuery("Version", "2018-22-09")
+	req, _ := builder.Build()
+
+	authenticator, _ := NewBasicAuthenticator("username", "password")
+	options := &ServiceOptions{
+		URL:           server.URL,
+		Authenticator: authenticator,
+	}
+	service, _ := NewBaseService(options)
+
+	// (1) Set the default User-Agent string in the BaseService.
+	// (2) Set a User-Agent header on the request builder (simulates operation-level).
+	// --> The value set on the request builder (operation level) should win.
+	service.SetUserAgent("user-agent: bogus!")
+	builder.AddHeader("User-Agent", expectedUserAgent)
+
+	var foo *Foo
+	_, _ = service.Request(req, &foo)
+}
+
+func TestRequestUserAgentServiceLevel(t *testing.T) {
+	// Tests that an SDK user can set the User-Agent header as a default header
+	// on the service instance, and it will be used on outbound requests even if
+	// User-Agent was set in the other (lower precedence) ways.
+	expectedUserAgent := "user-agent: service-level"
+	GetLogger().SetLogLevel(basesvcAuthTestLogLevel)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-type", "application/json")
+		fmt.Fprint(w, `{"name": "wonder woman"}`)
+		assert.Contains(t, r.Header.Get("User-Agent"), expectedUserAgent)
 	}))
 	defer server.Close()
 
@@ -1082,7 +1126,14 @@ func TestRequestForProvidedUserAgent(t *testing.T) {
 	}
 	service, _ := NewBaseService(options)
 	headers := http.Header{}
-	headers.Add("User-Agent", "provided user agent")
+	headers.Add("User-Agent", expectedUserAgent)
+
+	// (1) Set the default User-Agent string in the BaseService.
+	// (2) Set a User-Agent header on the request builder (simulates operation level).
+	// (3) Set User-Agent as a default header on the service (service level).
+	// --> The value set on the service should win.
+	service.SetUserAgent("user-agent: default bogus!")
+	builder.AddHeader("User-Agent", "user-agent: operation-level bogus!")
 	service.SetDefaultHeaders(headers)
 
 	var foo *Foo
