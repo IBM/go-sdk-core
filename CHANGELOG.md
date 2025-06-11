@@ -1,3 +1,10 @@
+## [5.20.1](https://github.com/IBM/go-sdk-core/compare/v5.20.0...v5.20.1) (2025-06-11)
+
+
+### Bug Fixes
+
+* **BaseService:** allow User-Agent to be set via service-level headers ([ae8e642](https://github.com/IBM/go-sdk-core/commit/ae8e6422bcd1ad5d50d152ecfc0aa2d95167f77a))
+
 # [5.20.0](https://github.com/IBM/go-sdk-core/compare/v5.19.1...v5.20.0) (2025-05-30)
 
 
