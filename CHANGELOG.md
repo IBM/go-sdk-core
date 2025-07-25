@@ -1,3 +1,10 @@
+# [5.21.0](https://github.com/IBM/go-sdk-core/compare/v5.20.1...v5.21.0) (2025-07-25)
+
+
+### Features
+
+* enable proxy support when SSL verification is disabled ([#254](https://github.com/IBM/go-sdk-core/issues/254)) ([28c72e3](https://github.com/IBM/go-sdk-core/commit/28c72e3eb0d6b41cd427753fd5e0e9abfa2313a3))
+
 ## [5.20.1](https://github.com/IBM/go-sdk-core/compare/v5.20.0...v5.20.1) (2025-06-11)
 
 
