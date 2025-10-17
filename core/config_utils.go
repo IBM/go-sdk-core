@@ -198,7 +198,7 @@ func parsePropertyStrings(credentialKey string, propertyStrings []string) map[st
 
 	props := make(map[string]string)
 	credentialKey = strings.ToUpper(credentialKey)
-	credentialKey = strings.Replace(credentialKey, "-", "_", -1)
+	credentialKey = strings.ReplaceAll(credentialKey, "-", "_")
 	credentialKey += "_"
 	for _, propertyString := range propertyStrings {
 

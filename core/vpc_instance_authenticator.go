@@ -92,32 +92,32 @@ func NewVpcInstanceAuthenticatorBuilder() *VpcInstanceAuthenticatorBuilder {
 
 // SetIAMProfileCRN sets the IAMProfileCRN field in the builder.
 func (builder *VpcInstanceAuthenticatorBuilder) SetIAMProfileCRN(s string) *VpcInstanceAuthenticatorBuilder {
-	builder.VpcInstanceAuthenticator.IAMProfileCRN = s
+	builder.IAMProfileCRN = s
 	return builder
 }
 
 // SetIAMProfileID sets the IAMProfileID field in the builder.
 func (builder *VpcInstanceAuthenticatorBuilder) SetIAMProfileID(s string) *VpcInstanceAuthenticatorBuilder {
-	builder.VpcInstanceAuthenticator.IAMProfileID = s
+	builder.IAMProfileID = s
 	return builder
 }
 
 // SetURL sets the URL field in the builder.
 func (builder *VpcInstanceAuthenticatorBuilder) SetURL(s string) *VpcInstanceAuthenticatorBuilder {
-	builder.VpcInstanceAuthenticator.URL = s
+	builder.URL = s
 	return builder
 }
 
 // SetClient sets the Client field in the builder.
 func (builder *VpcInstanceAuthenticatorBuilder) SetClient(client *http.Client) *VpcInstanceAuthenticatorBuilder {
-	builder.VpcInstanceAuthenticator.Client = client
+	builder.Client = client
 	return builder
 }
 
 // Build() returns a validated instance of the VpcInstanceAuthenticator with the config that was set in the builder.
 func (builder *VpcInstanceAuthenticatorBuilder) Build() (*VpcInstanceAuthenticator, error) {
 	// Make sure the config is valid.
-	err := builder.VpcInstanceAuthenticator.Validate()
+	err := builder.Validate()
 	if err != nil {
 		return nil, RepurposeSDKProblem(err, "validation-failed")
 	}

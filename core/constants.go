@@ -67,33 +67,33 @@ const (
 	SSL_CERTIFICATION_ERROR = "x509: certificate"
 
 	// Common error messages.
-	ERRORMSG_PROP_MISSING            = "The %s property is required but was not specified"
-	ERRORMSG_PROP_INVALID            = "The %s property is invalid. Please remove any surrounding {, }, or \" characters"
-	ERRORMSG_EXCLUSIVE_PROPS_ERROR   = "Exactly one of %s or %s must be specified"
-	ERRORMSG_ATLEAST_ONE_PROP_ERROR  = "At least one of %s or %s must be specified"
-	ERRORMSG_ATMOST_ONE_PROP_ERROR   = "At most one of %s or %s may be specified"
-	ERRORMSG_NO_AUTHENTICATOR        = "Authentication information was not properly configured"
-	ERRORMSG_AUTHTYPE_UNKNOWN        = "Unrecognized authentication type: %s"
-	ERRORMSG_PROPS_MAP_NIL           = "The 'properties' map cannot be nil"
-	ERRORMSG_SSL_VERIFICATION_FAILED = "The connection failed because the SSL certificate is not valid. To use a " +
+	ERRORMSG_PROP_MISSING            = "the %s property is required but was not specified"
+	ERRORMSG_PROP_INVALID            = "the %s property is invalid. Please remove any surrounding {, }, or \" characters"
+	ERRORMSG_EXCLUSIVE_PROPS_ERROR   = "exactly one of %s or %s must be specified"
+	ERRORMSG_ATLEAST_ONE_PROP_ERROR  = "at least one of %s or %s must be specified"
+	ERRORMSG_ATMOST_ONE_PROP_ERROR   = "at most one of %s or %s may be specified"
+	ERRORMSG_NO_AUTHENTICATOR        = "authentication information was not properly configured"
+	ERRORMSG_AUTHTYPE_UNKNOWN        = "unrecognized authentication type: %s"
+	ERRORMSG_PROPS_MAP_NIL           = "the 'properties' map cannot be nil"
+	ERRORMSG_SSL_VERIFICATION_FAILED = "the connection failed because the SSL certificate is not valid. To use a " +
 		"self-signed certificate, disable verification of the server's SSL certificate " +
 		"by invoking the DisableSSLVerification() function on your service instance " +
 		"and/or use the DisableSSLVerification option of the authenticator"
-	ERRORMSG_AUTHENTICATE_ERROR      = "An error occurred while performing the 'authenticate' step: %s"
-	ERRORMSG_READ_RESPONSE_BODY      = "An error occurred while reading the response body: %s"
-	ERRORMSG_UNEXPECTED_RESPONSE     = "The response contained unexpected content, Content-Type=%s, operation resultType=%s"
-	ERRORMSG_UNMARSHAL_RESPONSE_BODY = "An error occurred while processing the HTTP response: %s"
-	ERRORMSG_NIL_SLICE               = "The 'slice' parameter cannot be nil"
-	ERRORMSG_PARAM_NOT_SLICE         = "The 'slice' parameter must be a slice"
-	ERRORMSG_MARSHAL_SLICE           = "An error occurred while marshalling the slice: %s"
-	ERRORMSG_CONVERT_SLICE           = "An error occurred while converting 'slice' to string slice"
-	ERRORMSG_UNEXPECTED_STATUS_CODE  = "Unexpected HTTP status code %d (%s)"
+	ERRORMSG_AUTHENTICATE_ERROR      = "an error occurred while performing the 'authenticate' step: %s"
+	ERRORMSG_READ_RESPONSE_BODY      = "an error occurred while reading the response body: %s"
+	ERRORMSG_UNEXPECTED_RESPONSE     = "the response contained unexpected content, Content-Type=%s, operation resultType=%s"
+	ERRORMSG_UNMARSHAL_RESPONSE_BODY = "an error occurred while processing the HTTP response: %s"
+	ERRORMSG_NIL_SLICE               = "the 'slice' parameter cannot be nil"
+	ERRORMSG_PARAM_NOT_SLICE         = "the 'slice' parameter must be a slice"
+	ERRORMSG_MARSHAL_SLICE           = "an error occurred while marshalling the slice: %s"
+	ERRORMSG_CONVERT_SLICE           = "an error occurred while converting 'slice' to string slice"
+	ERRORMSG_UNEXPECTED_STATUS_CODE  = "unexpected HTTP status code %d (%s)"
 	ERRORMSG_UNMARSHAL_AUTH_RESPONSE = "error unmarshalling authentication response: %s"
 	ERRORMSG_UNABLE_RETRIEVE_CRTOKEN = "unable to retrieve compute resource token value: %s"          // #nosec G101
-	ERRORMSG_IAM_GETTOKEN_ERROR      = "IAM 'get token' error, status code %d received from '%s': %s" // #nosec G101
+	ERRORMSG_IAM_GETTOKEN_ERROR      = "iam 'get token' error, status code %d received from '%s': %s" // #nosec G101
 	ERRORMSG_UNABLE_RETRIEVE_IITOKEN = "unable to retrieve instance identity token value: %s"         // #nosec G101
-	ERRORMSG_VPCMDS_OPERATION_ERROR  = "VPC metadata service error, status code %d received from '%s': %s"
-	ERRORMSG_ACCOUNTID_PROP_ERROR    = "IAMAccountID must be specified if and only if IAMProfileName is specified"
+	ERRORMSG_VPCMDS_OPERATION_ERROR  = "vpc metadata service error, status code %d received from '%s': %s"
+	ERRORMSG_ACCOUNTID_PROP_ERROR    = "the IAMAccountID must be specified if and only if IAMProfileName is specified"
 	ERRORMSG_PROP_PARSE_ERROR        = "error parsing configuration property %s, value=%s"
 
 	// The name of this module - matches the value in the go.mod file.
