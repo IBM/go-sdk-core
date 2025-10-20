@@ -222,7 +222,7 @@ func (requestBuilder *RequestBuilder) AddFormData(fieldName string, fileName str
 	contents interface{}) *RequestBuilder {
 	if fileName == "" {
 		if file, ok := contents.(*os.File); ok {
-			if *file != (os.File{}) { // if file is not empty
+			if !((os.File{}) == *file) { // if file is not empty
 				name := filepath.Base(file.Name())
 				fileName = name
 			}
@@ -241,7 +241,7 @@ func (requestBuilder *RequestBuilder) SetBodyContentJSON(bodyContent interface{}
 	requestBuilder.Body = new(bytes.Buffer)
 	err := json.NewEncoder(requestBuilder.Body.(io.Writer)).Encode(bodyContent)
 	if err != nil {
-		err = fmt.Errorf("could not encode JSON body:\n%s", err.Error())
+		err = fmt.Errorf("Could not encode JSON body:\n%s", err.Error())
 		err = SDKErrorf(err, "", "bad-encode", getComponentInfo())
 	}
 	return requestBuilder, err
@@ -514,12 +514,12 @@ func (requestBuilder *RequestBuilder) SetBodyContent(contentType string, jsonCon
 			err = RepurposeSDKProblem(err, "set-body-readerptr-error")
 		} else {
 			builder = requestBuilder
-			err = fmt.Errorf("invalid type for non-JSON body content: %s", reflect.TypeOf(nonJSONContent).String())
+			err = fmt.Errorf("Invalid type for non-JSON body content: %s", reflect.TypeOf(nonJSONContent).String())
 			err = SDKErrorf(err, "", "bad-nonjson-body-content", getComponentInfo())
 		}
 	} else {
 		builder = requestBuilder
-		err = fmt.Errorf("no body content provided")
+		err = fmt.Errorf("No body content provided")
 		err = SDKErrorf(err, "", "no-body-content", getComponentInfo())
 	}
 

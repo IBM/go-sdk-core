@@ -180,7 +180,7 @@ func (service *BaseService) ConfigureService(serviceName string) error {
 		if enableRetries, ok := serviceProps[PROPNAME_SVC_ENABLE_RETRIES]; ok && enableRetries != "" {
 			boolValue, err := strconv.ParseBool(enableRetries)
 			if boolValue && err == nil {
-				var maxRetries = 0
+				var maxRetries int = 0
 				var retryInterval time.Duration = 0
 
 				var s string
@@ -495,21 +495,20 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			// Check to see if the caller wanted the response body as a string.
 			// If the caller passed in 'result' as the address of *string,
 			// then we'll reflectively set result to point to it.
-			switch resultType {
-			case "**string":
+			if resultType == "**string" {
 				responseString := string(responseBody)
 				rResult := reflect.ValueOf(result).Elem()
 				rResult.Set(reflect.ValueOf(&responseString))
 
 				// And set the string in the Result field.
 				detailedResponse.Result = &responseString
-			case "*[]uint8": // byte is an alias for uint8
+			} else if resultType == "*[]uint8" { // byte is an alias for uint8
 				rResult := reflect.ValueOf(result).Elem()
 				rResult.Set(reflect.ValueOf(responseBody))
 
 				// And set the byte slice in the Result field.
 				detailedResponse.Result = responseBody
-			default:
+			} else {
 				// At this point, we don't know how to set the result field, so we have to return an error.
 				// But make sure we save the bytes we read in the DetailedResponse for debugging purposes
 				detailedResponse.Result = responseBody
@@ -702,7 +701,7 @@ func getErrorCode(responseMap map[string]interface{}) string {
 // A retryable client is a client whose transport is a
 // retryablehttp.RoundTripper instance.
 func isRetryableClient(client *http.Client) bool {
-	var isRetryable = false
+	var isRetryable bool = false
 	if client != nil && client.Transport != nil {
 		_, isRetryable = client.Transport.(*retryablehttp.RoundTripper)
 	}

@@ -117,57 +117,57 @@ func NewIamAuthenticatorBuilder() *IamAuthenticatorBuilder {
 
 // SetApiKey sets the ApiKey field in the builder.
 func (builder *IamAuthenticatorBuilder) SetApiKey(s string) *IamAuthenticatorBuilder {
-	builder.ApiKey = s
+	builder.IamAuthenticator.ApiKey = s
 	return builder
 }
 
 // SetRefreshToken sets the RefreshToken field in the builder.
 func (builder *IamAuthenticatorBuilder) SetRefreshToken(s string) *IamAuthenticatorBuilder {
-	builder.RefreshToken = s
+	builder.IamAuthenticator.RefreshToken = s
 	return builder
 }
 
 // SetURL sets the URL field in the builder.
 func (builder *IamAuthenticatorBuilder) SetURL(s string) *IamAuthenticatorBuilder {
-	builder.URL = s
+	builder.IamAuthenticator.URL = s
 	return builder
 }
 
 // SetClientIDSecret sets the ClientId and ClientSecret fields in the builder.
 func (builder *IamAuthenticatorBuilder) SetClientIDSecret(clientID, clientSecret string) *IamAuthenticatorBuilder {
-	builder.ClientId = clientID
-	builder.ClientSecret = clientSecret
+	builder.IamAuthenticator.ClientId = clientID
+	builder.IamAuthenticator.ClientSecret = clientSecret
 	return builder
 }
 
 // SetDisableSSLVerification sets the DisableSSLVerification field in the builder.
 func (builder *IamAuthenticatorBuilder) SetDisableSSLVerification(b bool) *IamAuthenticatorBuilder {
-	builder.DisableSSLVerification = b
+	builder.IamAuthenticator.DisableSSLVerification = b
 	return builder
 }
 
 // SetScope sets the Scope field in the builder.
 func (builder *IamAuthenticatorBuilder) SetScope(s string) *IamAuthenticatorBuilder {
-	builder.Scope = s
+	builder.IamAuthenticator.Scope = s
 	return builder
 }
 
 // SetHeaders sets the Headers field in the builder.
 func (builder *IamAuthenticatorBuilder) SetHeaders(headers map[string]string) *IamAuthenticatorBuilder {
-	builder.Headers = headers
+	builder.IamAuthenticator.Headers = headers
 	return builder
 }
 
 // SetClient sets the Client field in the builder.
 func (builder *IamAuthenticatorBuilder) SetClient(client *http.Client) *IamAuthenticatorBuilder {
-	builder.Client = client
+	builder.IamAuthenticator.Client = client
 	return builder
 }
 
 // Build() returns a validated instance of the IamAuthenticator with the config that was set in the builder.
 func (builder *IamAuthenticatorBuilder) Build() (*IamAuthenticator, error) {
 	// Make sure the config is valid.
-	err := builder.Validate()
+	err := builder.IamAuthenticator.Validate()
 	if err != nil {
 		return nil, RepurposeSDKProblem(err, "validation-failed")
 	}
@@ -547,7 +547,7 @@ type iamTokenData struct {
 // newIamTokenData: constructs a new IamTokenData instance from the specified IamTokenServerResponse instance.
 func newIamTokenData(tokenResponse *IamTokenServerResponse) (*iamTokenData, error) {
 	if tokenResponse == nil {
-		err := fmt.Errorf("Error while trying to parse access token")
+		err := fmt.Errorf("Error while trying to parse access token!")
 		return nil, SDKErrorf(err, "", "token-parse", getComponentInfo())
 	}
 	// Compute the adjusted refresh time (expiration time - 20% of timeToLive)

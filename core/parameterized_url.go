@@ -52,7 +52,7 @@ func ConstructServiceURL(
 			sort.Strings(acceptedNames)
 
 			return "", fmt.Errorf(
-				"'%s' is an invalid variable name.\nValid variable names: %s",
+				"'%s' is an invalid variable name.\nValid variable names: %s.",
 				providedName,
 				acceptedNames,
 			)
