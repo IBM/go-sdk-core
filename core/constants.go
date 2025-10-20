@@ -67,18 +67,18 @@ const (
 	SSL_CERTIFICATION_ERROR = "x509: certificate"
 
 	// Common error messages.
-	ERRORMSG_PROP_MISSING            = "The %s property is required but was not specified"
-	ERRORMSG_PROP_INVALID            = "The %s property is invalid. Please remove any surrounding {, }, or \" characters"
-	ERRORMSG_EXCLUSIVE_PROPS_ERROR   = "Exactly one of %s or %s must be specified"
-	ERRORMSG_ATLEAST_ONE_PROP_ERROR  = "At least one of %s or %s must be specified"
-	ERRORMSG_ATMOST_ONE_PROP_ERROR   = "At most one of %s or %s may be specified"
-	ERRORMSG_NO_AUTHENTICATOR        = "Authentication information was not properly configured"
+	ERRORMSG_PROP_MISSING            = "The %s property is required but was not specified."
+	ERRORMSG_PROP_INVALID            = "The %s property is invalid. Please remove any surrounding {, }, or \" characters."
+	ERRORMSG_EXCLUSIVE_PROPS_ERROR   = "Exactly one of %s or %s must be specified."
+	ERRORMSG_ATLEAST_ONE_PROP_ERROR  = "At least one of %s or %s must be specified."
+	ERRORMSG_ATMOST_ONE_PROP_ERROR   = "At most one of %s or %s may be specified."
+	ERRORMSG_NO_AUTHENTICATOR        = "Authentication information was not properly configured."
 	ERRORMSG_AUTHTYPE_UNKNOWN        = "Unrecognized authentication type: %s"
-	ERRORMSG_PROPS_MAP_NIL           = "The 'properties' map cannot be nil"
+	ERRORMSG_PROPS_MAP_NIL           = "The 'properties' map cannot be nil."
 	ERRORMSG_SSL_VERIFICATION_FAILED = "The connection failed because the SSL certificate is not valid. To use a " +
 		"self-signed certificate, disable verification of the server's SSL certificate " +
 		"by invoking the DisableSSLVerification() function on your service instance " +
-		"and/or use the DisableSSLVerification option of the authenticator"
+		"and/or use the DisableSSLVerification option of the authenticator."
 	ERRORMSG_AUTHENTICATE_ERROR      = "An error occurred while performing the 'authenticate' step: %s"
 	ERRORMSG_READ_RESPONSE_BODY      = "An error occurred while reading the response body: %s"
 	ERRORMSG_UNEXPECTED_RESPONSE     = "The response contained unexpected content, Content-Type=%s, operation resultType=%s"
