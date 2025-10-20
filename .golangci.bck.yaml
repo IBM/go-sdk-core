@@ -1,6 +1,0 @@
-linters:
-  enable:
-    - gosec
-
-run:
-  timeout: 2m

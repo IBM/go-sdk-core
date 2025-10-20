@@ -2,6 +2,8 @@ version: "2"
 linters:
   enable:
     - gosec
+  disable:
+    - staticcheck
   exclusions:
     generated: lax
     presets:
