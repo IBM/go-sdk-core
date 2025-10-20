@@ -22,3 +22,5 @@ formatters:
       - third_party$
       - builtin$
       - examples$
+run:
+  timeout: 2m
