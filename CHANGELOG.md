@@ -1,3 +1,10 @@
+## [5.21.1](https://github.com/IBM/go-sdk-core/compare/v5.21.0...v5.21.1) (2025-11-18)
+
+
+### Bug Fixes
+
+* **build:** bump version to avoid CVEs ([#260](https://github.com/IBM/go-sdk-core/issues/260)) ([6ab9444](https://github.com/IBM/go-sdk-core/commit/6ab9444506adc75ad565daac3d1e44596a5a44db))
+
 # [5.21.0](https://github.com/IBM/go-sdk-core/compare/v5.20.1...v5.21.0) (2025-07-25)
 
 
