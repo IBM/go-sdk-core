@@ -5,7 +5,7 @@
 
 name: build
 
-on: 
+on:
   push:
     branches: ['**']
   pull_request:
@@ -62,6 +62,21 @@ jobs:
 
       - name: Build & Test
         run: make all
+
+  results:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    name: Final Test Results
+    needs: [build]
+    steps:
+      - run: |
+          result="${{ needs.build.result }}"
+          if [[ $result == "success" || $result == "skipped" ]]; then
+            exit 0
+          else
+            exit 1
+          fi
+
 
   publish-release:
     name: semantic-release
