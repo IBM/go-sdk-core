@@ -1,6 +1,6 @@
 module github.com/IBM/go-sdk-core/v5
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/go-openapi/strfmt v0.25.0
