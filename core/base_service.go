@@ -357,6 +357,37 @@ func (service *BaseService) SetUserAgent(userAgent string) {
 //
 // err: a non-nil error object if an error occurred
 func (service *BaseService) Request(req *http.Request, result interface{}) (detailedResponse *DetailedResponse, err error) {
+	// HAR capture state (no-op unless HAR_ENABLED=1).
+	var httpResponse *http.Response
+	var harStart, harEnd time.Time
+	var harReqBodyCopy, harRespBodyCopy bytes.Buffer
+	var harReqContentType, harRespContentType string
+	var harCallErr error
+
+	if HAREnabled() {
+		harStart = time.Now()
+		harReqContentType = req.Header.Get(CONTENT_TYPE)
+		if req.Body != nil && req.Body != http.NoBody {
+			req.Body = io.NopCloser(io.TeeReader(req.Body, &harReqBodyCopy))
+		}
+	}
+	defer func() {
+		if HAREnabled() {
+			harCallErr = err
+			HARAppendWithCopies(
+				req,
+				httpResponse,
+				harStart,
+				harEnd,
+				harCallErr,
+				harReqBodyCopy.Bytes(),
+				harRespBodyCopy.Bytes(),
+				harReqContentType,
+				harRespContentType,
+			)
+		}
+	}()
+
 	// Set default headers on the request.
 	if service.DefaultHeaders != nil {
 		for k, v := range service.DefaultHeaders {
@@ -418,8 +449,15 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 
 	// Invoke the request, then check for errors during the invocation.
 	GetLogger().Debug("Sending HTTP request message...")
-	var httpResponse *http.Response
 	httpResponse, err = service.Client.Do(req)
+
+	if HAREnabled() {
+		harEnd = time.Now()
+		if httpResponse != nil {
+			harRespContentType = httpResponse.Header.Get(CONTENT_TYPE)
+		}
+	}
+
 	if err != nil {
 		if strings.Contains(err.Error(), SSL_CERTIFICATION_ERROR) {
 			err = errors.New(ERRORMSG_SSL_VERIFICATION_FAILED + "\n" + err.Error())
@@ -436,6 +474,14 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 			GetLogger().Debug("Response:\n%s\n", RedactSecrets(string(buf)))
 		} else {
 			GetLogger().Debug("error while attempting to log inbound response: %s", dumpErr.Error())
+		}
+	}
+
+	// Wrap response body for HAR capture.
+	if HAREnabled() && httpResponse != nil && httpResponse.Body != nil && httpResponse.Body != http.NoBody {
+		httpResponse.Body = &harBodyCapture{
+			ReadCloser: httpResponse.Body,
+			capture:    &harRespBodyCopy,
 		}
 	}
 
@@ -955,4 +1001,18 @@ func IBMCloudSDKBackoffPolicy(min, max time.Duration, attemptNum int, resp *http
 	// If no header-based wait time can be determined, then ask DefaultBackoff()
 	// to compute an exponential backoff.
 	return retryablehttp.DefaultBackoff(min, max, attemptNum, resp)
+}
+
+// harBodyCapture wraps an io.ReadCloser to capture body content for HAR while allowing normal reading.
+type harBodyCapture struct {
+	io.ReadCloser
+	capture *bytes.Buffer
+}
+
+func (h *harBodyCapture) Read(p []byte) (n int, err error) {
+	n, err = h.ReadCloser.Read(p)
+	if n > 0 && h.capture != nil {
+		_, _ = h.capture.Write(p[:n])
+	}
+	return n, err
 }
