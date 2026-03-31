@@ -10,10 +10,9 @@ linters:
       - std-error-handling
   settings:
     gosec:
-      includes:
-        - all
-        - -G703
-        - -G704
+      excludes:
+        - G703
+        - G704
     staticcheck:
       checks:
         - all
