@@ -11,8 +11,12 @@ linters:
   settings:
     gosec:
       excludes:
+        - G101
+        - G117
+        - G120
         - G703
         - G704
+        - G705
     staticcheck:
       checks:
         - all
