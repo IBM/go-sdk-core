@@ -71,6 +71,10 @@ type IamAuthenticator struct {
 	// made to the token server.
 	Headers map[string]string
 
+	// [Optional] A set of key/value pairs that will be sent as HTTP form data in requests
+	// made to the token server.
+	FormData map[string]string
+
 	// [Optional] The http.Client object used to invoke token server requests.
 	// If not specified by the user, a suitable default Client will be constructed.
 	Client     *http.Client
@@ -158,6 +162,12 @@ func (builder *IamAuthenticatorBuilder) SetHeaders(headers map[string]string) *I
 	return builder
 }
 
+// SetFormData sets the FormData field in the builder.
+func (builder *IamAuthenticatorBuilder) SetFormData(formData map[string]string) *IamAuthenticatorBuilder {
+	builder.IamAuthenticator.FormData = formData
+	return builder
+}
+
 // SetClient sets the Client field in the builder.
 func (builder *IamAuthenticatorBuilder) SetClient(client *http.Client) *IamAuthenticatorBuilder {
 	builder.IamAuthenticator.Client = client
@@ -207,7 +217,8 @@ func (authenticator *IamAuthenticator) getUserAgent() string {
 // NewIamAuthenticator constructs a new IamAuthenticator instance.
 // Deprecated - use the IamAuthenticatorBuilder instead.
 func NewIamAuthenticator(apiKey string, url string, clientId string, clientSecret string,
-	disableSSLVerification bool, headers map[string]string) (*IamAuthenticator, error) {
+	disableSSLVerification bool, headers map[string]string,
+) (*IamAuthenticator, error) {
 	authenticator, err := NewIamAuthenticatorBuilder().
 		SetApiKey(apiKey).
 		SetURL(url).
@@ -454,6 +465,11 @@ func (authenticator *IamAuthenticator) RequestToken() (*IamTokenServerResponse, 
 	// Add user-defined headers to request.
 	for headerName, headerValue := range authenticator.Headers {
 		builder.AddHeader(headerName, headerValue)
+	}
+
+	// Add user-defined form data to the request.
+	for fieldName, content := range authenticator.FormData {
+		builder.AddFormData(fieldName, "", "", content)
 	}
 
 	req, err := builder.Build()
