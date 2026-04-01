@@ -81,14 +81,17 @@ func TestIamAuthBuilderErrors(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Nil(t, auth)
 	t.Logf("Expected error: %s", err.Error())
-
 }
 
 func TestIamAuthBuilderSuccess(t *testing.T) {
 	var err error
 	var auth *IamAuthenticator
-	var expectedHeaders = map[string]string{
+	expectedHeaders := map[string]string{
 		"header1": "value1",
+	}
+	expectedFormData := map[string]string{
+		"custom_field1": "custom_value1",
+		"custom_field2": "123",
 	}
 
 	// Specify apikey.
@@ -141,6 +144,7 @@ func TestIamAuthBuilderSuccess(t *testing.T) {
 		SetDisableSSLVerification(true).
 		SetScope(iamAuthMockScope).
 		SetHeaders(expectedHeaders).
+		SetFormData(expectedFormData).
 		Build()
 	assert.Nil(t, err)
 	assert.NotNil(t, auth)
@@ -152,6 +156,7 @@ func TestIamAuthBuilderSuccess(t *testing.T) {
 	assert.True(t, auth.DisableSSLVerification)
 	assert.Equal(t, iamAuthMockScope, auth.Scope)
 	assert.Equal(t, expectedHeaders, auth.Headers)
+	assert.Equal(t, expectedFormData, auth.FormData)
 	assert.Equal(t, AUTHTYPE_IAM, auth.AuthenticationType())
 
 	// Specify refresh token with other properties.
@@ -209,7 +214,7 @@ func TestNewIamAuthenticatorFromMap(t *testing.T) {
 	_, err := newIamAuthenticatorFromMap(nil)
 	assert.NotNil(t, err)
 
-	var props = map[string]string{
+	props := map[string]string{
 		PROPNAME_AUTH_URL: iamAuthMockURL,
 	}
 	_, err = newIamAuthenticatorFromMap(props)
@@ -606,6 +611,7 @@ func TestIamGetTokenSuccessWithScope(t *testing.T) {
 	assert.NotNil(t, authenticator.getTokenData())
 	assert.Equal(t, iamAuthTestAccessToken2, authenticator.getTokenData().AccessToken)
 }
+
 func TestIamGetCachedToken(t *testing.T) {
 	GetLogger().SetLogLevel(iamAuthTestLogLevel)
 
@@ -776,7 +782,6 @@ func TestIamBackgroundTokenRefreshFailure(t *testing.T) {
 	// We don't expect a AuthenticateError to be returned, so casting should fail
 	_, ok := err.(*AuthenticationError)
 	assert.False(t, ok)
-
 }
 
 func TestIamBackgroundTokenRefreshIdle(t *testing.T) {
@@ -971,7 +976,7 @@ func TestIamUserHeaders(t *testing.T) {
 	}))
 	defer server.Close()
 
-	var headers = map[string]string{
+	headers := map[string]string{
 		"Header1": "Value1",
 		"Header2": "Value2",
 		"Host":    "iam.cloud.ibm.com",
@@ -981,6 +986,54 @@ func TestIamUserHeaders(t *testing.T) {
 		SetApiKey(iamAuthMockApiKey).
 		SetURL(server.URL).
 		SetHeaders(headers).
+		Build()
+	assert.Nil(t, err)
+
+	token, err := authenticator.GetToken()
+	assert.Equal(t, accessToken, token)
+	assert.Nil(t, err)
+}
+
+func TestIamFormData(t *testing.T) {
+	GetLogger().SetLogLevel(iamAuthTestLogLevel)
+
+	expiration := GetCurrentTime() + 3600
+	accessToken := "oAeisG8yqPY7sFR_x66Z15" // #nosec
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		assert.Nil(t, err)
+
+		// Verify standard IAM fields are present
+		assert.Len(t, r.Form["apikey"], 1)
+		assert.Len(t, r.Form["grant_type"], 1)
+		assert.Len(t, r.Form["response_type"], 1)
+
+		// Verify custom form data fields are present
+		assert.Len(t, r.Form["custom_field1"], 1)
+		assert.Equal(t, "custom_value1", r.Form["custom_field1"][0])
+		assert.Len(t, r.Form["custom_field2"], 1)
+		assert.Equal(t, "123", r.Form["custom_field2"][0])
+
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `{
+			"access_token": "%s",
+			"token_type": "Bearer",
+			"expires_in": 3600,
+			"expiration": %d,
+			"refresh_token": "jy4gl91BQ"
+		}`, accessToken, expiration)
+	}))
+	defer server.Close()
+
+	formData := map[string]string{
+		"custom_field1": "custom_value1",
+		"custom_field2": "123",
+	}
+
+	authenticator, err := NewIamAuthenticatorBuilder().
+		SetApiKey(iamAuthMockApiKey).
+		SetURL(server.URL).
+		SetFormData(formData).
 		Build()
 	assert.Nil(t, err)
 
@@ -1004,7 +1057,7 @@ func TestIamGetTokenFailure(t *testing.T) {
 		Build()
 	assert.Nil(t, err)
 
-	var expectedResponse = []byte("Sorry you are forbidden")
+	expectedResponse := []byte("Sorry you are forbidden")
 
 	_, err = authenticator.GetToken()
 	assert.NotNil(t, err)
@@ -1119,7 +1172,7 @@ func TestIamGetTokenServerError(t *testing.T) {
 	assert.Equal(t, iamAuthTestAccessToken1, token)
 	assert.NotNil(t, authenticator.getTokenData())
 
-	var expectedResponse = []byte("Gateway Timeout")
+	expectedResponse := []byte("Gateway Timeout")
 
 	// Force expiration and verify that we got a server error
 	authenticator.getTokenData().Expiration = GetCurrentTime() - 3600
