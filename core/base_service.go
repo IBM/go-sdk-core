@@ -432,7 +432,7 @@ func (service *BaseService) Request(req *http.Request, result interface{}) (deta
 	// If debug is enabled, then dump the response.
 	if GetLogger().IsLogLevelEnabled(LevelDebug) {
 		buf, dumpErr := httputil.DumpResponse(httpResponse, !IsNil(httpResponse.Body))
-		if err == nil {
+		if dumpErr == nil {
 			GetLogger().Debug("Response:\n%s\n", RedactSecrets(string(buf)))
 		} else {
 			GetLogger().Debug("error while attempting to log inbound response: %s", dumpErr.Error())
