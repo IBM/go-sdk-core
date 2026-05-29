@@ -406,7 +406,7 @@ var redactedTokens = strings.Join(redactedKeywords, "|")
 // Pre-compiled regular expressions used by RedactSecrets().
 var (
 	reAuthHeader      = regexp.MustCompile(`(?m)^(Authorization|X-Auth\S*): .*`)
-	rePropertySetting = regexp.MustCompile(`(?i)(` + redactedTokens + `)=[^&]*(&|$)`)
+	rePropertySetting = regexp.MustCompile(`(?i)(` + redactedTokens + `)=([^&\s]*)(&|\s|$)`)
 	reJsonField       = regexp.MustCompile(`(?i)"([^"]*(` + redactedTokens + `)[^"_]*)":\s*"[^\,]*"`)
 )
 
@@ -416,7 +416,7 @@ func RedactSecrets(input string) string {
 
 	redactedString := input
 	redactedString = reAuthHeader.ReplaceAllString(redactedString, "$1: "+redacted)
-	redactedString = rePropertySetting.ReplaceAllString(redactedString, "$1="+redacted+"$2")
+	redactedString = rePropertySetting.ReplaceAllString(redactedString, "$1="+redacted+"$3")
 	redactedString = reJsonField.ReplaceAllString(redactedString, fmt.Sprintf(`"$1":"%s"`, redacted))
 
 	return redactedString
