@@ -1,3 +1,10 @@
+## [5.21.4](https://github.com/IBM/go-sdk-core/compare/v5.21.3...v5.21.4) (2026-06-03)
+
+
+### Bug Fixes
+
+* correct inline golangci-lint error ([#272](https://github.com/IBM/go-sdk-core/issues/272)) ([8eedd89](https://github.com/IBM/go-sdk-core/commit/8eedd89faf561880c930c2a704014e48961ba5e9))
+
 ## [5.21.3](https://github.com/IBM/go-sdk-core/compare/v5.21.2...v5.21.3) (2026-05-29)
 
 
