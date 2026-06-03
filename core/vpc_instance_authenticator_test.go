@@ -22,11 +22,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/go-openapi/strfmt"
-
-	"testing"
 
 	assert "github.com/stretchr/testify/assert"
 )
@@ -283,7 +282,7 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 
 				buf, err := json.Marshal(response)
 				assert.Nil(t, err)
-				fmt.Fprintf(res, "%s", (string(buf)))
+				fmt.Fprintf(res, "%s", string(buf))
 			}
 
 		case vpcauthOperationPathCreateIamToken:
@@ -383,7 +382,7 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 
 				buf, err := json.Marshal(response)
 				assert.Nil(t, err)
-				fmt.Fprintf(res, "%s", (string(buf)))
+				fmt.Fprintf(res, "%s", string(buf))
 			}
 
 		default:
@@ -1024,4 +1023,86 @@ func TestVpcAuthAuthenticateFailIamToken(t *testing.T) {
 	assert.NotNil(t, err)
 	t.Logf("Expected error: %s\n", err.Error())
 	assertAuthError(t, err)
+}
+
+func TestVpcAuthServiceVersionDefaults(t *testing.T) {
+	authenticator, err := NewVpcInstanceAuthenticatorBuilder().Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	// Test default service version
+	assert.Equal(t, "2022-03-01", authenticator.serviceVersion())
+
+	// Test default token lifetime
+	assert.Equal(t, 300, authenticator.tokenLifetime())
+
+	// Test default paths for old service version
+	assert.Equal(t, "/instance_identity/v1/token", authenticator.getCreateAccessTokenPath())
+	assert.Equal(t, "/instance_identity/v1/iam_token", authenticator.getCreateIamTokenPath())
+}
+
+func TestVpcAuthServiceVersionBuilder(t *testing.T) {
+	authenticator, err := NewVpcInstanceAuthenticatorBuilder().
+		SetServiceVersion("2025-08-26").
+		SetTokenLifetime(600).
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	// Test custom service version
+	assert.Equal(t, "2025-08-26", authenticator.serviceVersion())
+
+	// Test custom token lifetime
+	assert.Equal(t, 600, authenticator.tokenLifetime())
+
+	// Test new paths for new service version
+	assert.Equal(t, "/identity/v1/token", authenticator.getCreateAccessTokenPath())
+	assert.Equal(t, "/identity/v1/iam_tokens", authenticator.getCreateIamTokenPath())
+}
+
+func TestVpcAuthServiceVersionFromMap(t *testing.T) {
+	properties := map[string]string{
+		PROPNAME_VPC_IMS_SERVICE_VERSION: "2025-08-26",
+	}
+
+	authenticator, err := newVpcInstanceAuthenticatorFromMap(properties)
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	// Test service version from environment
+	assert.Equal(t, "2025-08-26", authenticator.serviceVersion())
+
+	// Test new paths for new service version
+	assert.Equal(t, "/identity/v1/token", authenticator.getCreateAccessTokenPath())
+	assert.Equal(t, "/identity/v1/iam_tokens", authenticator.getCreateIamTokenPath())
+}
+
+func TestVpcAuthServiceVersionOldVersion(t *testing.T) {
+	authenticator, err := NewVpcInstanceAuthenticatorBuilder().
+		SetServiceVersion("2022-03-01").
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	// Test old service version
+	assert.Equal(t, "2022-03-01", authenticator.serviceVersion())
+
+	// Test old paths for old service version
+	assert.Equal(t, "/instance_identity/v1/token", authenticator.getCreateAccessTokenPath())
+	assert.Equal(t, "/instance_identity/v1/iam_token", authenticator.getCreateIamTokenPath())
+}
+
+func TestVpcAuthServiceVersionCustomVersion(t *testing.T) {
+	authenticator, err := NewVpcInstanceAuthenticatorBuilder().
+		SetServiceVersion("2024-01-01").
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	// Test custom service version (not 2025-08-26)
+	assert.Equal(t, "2024-01-01", authenticator.serviceVersion())
+
+	// Test old paths for non-2025-08-26 service version
+	assert.Equal(t, "/instance_identity/v1/token", authenticator.getCreateAccessTokenPath())
+	assert.Equal(t, "/instance_identity/v1/iam_token", authenticator.getCreateIamTokenPath())
 }

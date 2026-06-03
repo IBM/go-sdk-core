@@ -53,6 +53,18 @@ type VpcInstanceAuthenticator struct {
 	URL     string
 	urlInit sync.Once
 
+	// [optional] The VPC Instance Metadata Service version.
+	// Can be configured via code or environment variable.
+	// Default value: "2022-03-01"
+	ServiceVersion     string
+	serviceVersionInit sync.Once
+
+	// [optional] The lifetime (in seconds) of the instance identity token.
+	// Can only be configured via code (not from environment variables).
+	// Default value: 300
+	TokenLifetime     int
+	tokenLifetimeInit sync.Once
+
 	// [optional] The http.Client object used to interact with the VPC Instance Metadata Service API.
 	// If not specified by the user, a suitable default Client will be constructed.
 	Client     *http.Client
@@ -114,6 +126,18 @@ func (builder *VpcInstanceAuthenticatorBuilder) SetClient(client *http.Client) *
 	return builder
 }
 
+// SetServiceVersion sets the ServiceVersion field in the builder.
+func (builder *VpcInstanceAuthenticatorBuilder) SetServiceVersion(s string) *VpcInstanceAuthenticatorBuilder {
+	builder.VpcInstanceAuthenticator.ServiceVersion = s
+	return builder
+}
+
+// SetTokenLifetime sets the TokenLifetime field in the builder.
+func (builder *VpcInstanceAuthenticatorBuilder) SetTokenLifetime(lifetime int) *VpcInstanceAuthenticatorBuilder {
+	builder.VpcInstanceAuthenticator.TokenLifetime = lifetime
+	return builder
+}
+
 // Build() returns a validated instance of the VpcInstanceAuthenticator with the config that was set in the builder.
 func (builder *VpcInstanceAuthenticatorBuilder) Build() (*VpcInstanceAuthenticator, error) {
 	// Make sure the config is valid.
@@ -154,6 +178,42 @@ func (authenticator *VpcInstanceAuthenticator) url() string {
 	return authenticator.URL
 }
 
+// serviceVersion returns the authenticator's ServiceVersion property after potentially initializing it.
+func (authenticator *VpcInstanceAuthenticator) serviceVersion() string {
+	authenticator.serviceVersionInit.Do(func() {
+		if authenticator.ServiceVersion == "" {
+			authenticator.ServiceVersion = vpcauthMetadataServiceVersion
+		}
+	})
+	return authenticator.ServiceVersion
+}
+
+// tokenLifetime returns the authenticator's TokenLifetime property after potentially initializing it.
+func (authenticator *VpcInstanceAuthenticator) tokenLifetime() int {
+	authenticator.tokenLifetimeInit.Do(func() {
+		if authenticator.TokenLifetime == 0 {
+			authenticator.TokenLifetime = vpcauthInstanceIdentityTokenLifetime
+		}
+	})
+	return authenticator.TokenLifetime
+}
+
+// getCreateAccessTokenPath returns the operation path for creating an access token based on the service version.
+func (authenticator *VpcInstanceAuthenticator) getCreateAccessTokenPath() string {
+	if authenticator.serviceVersion() == "2025-08-26" {
+		return "/identity/v1/token"
+	}
+	return vpcauthOperationPathCreateAccessToken
+}
+
+// getCreateIamTokenPath returns the operation path for creating an IAM token based on the service version.
+func (authenticator *VpcInstanceAuthenticator) getCreateIamTokenPath() string {
+	if authenticator.serviceVersion() == "2025-08-26" {
+		return "/identity/v1/iam_tokens"
+	}
+	return vpcauthOperationPathCreateIamToken
+}
+
 // newVpcInstanceAuthenticatorFromMap constructs a new VpcInstanceAuthenticator instance from a map containing
 // configuration properties.
 func newVpcInstanceAuthenticatorFromMap(properties map[string]string) (authenticator *VpcInstanceAuthenticator, err error) {
@@ -166,6 +226,7 @@ func newVpcInstanceAuthenticatorFromMap(properties map[string]string) (authentic
 		SetIAMProfileCRN(properties[PROPNAME_IAM_PROFILE_CRN]).
 		SetIAMProfileID(properties[PROPNAME_IAM_PROFILE_ID]).
 		SetURL(properties[PROPNAME_AUTH_URL]).
+		SetServiceVersion(properties[PROPNAME_VPC_IMS_SERVICE_VERSION]).
 		Build()
 
 	return
@@ -328,10 +389,11 @@ type vpcTokenResponse struct {
 // compute resource's instance identity token for an IAM access token that can be used
 // to authenticate outbound REST requests targeting IAM-secured services.
 func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
-	instanceIdentityToken string) (iamTokenResponse *IamTokenServerResponse, err error) {
+	instanceIdentityToken string,
+) (iamTokenResponse *IamTokenServerResponse, err error) {
 	// Set up the request for the VPC "create_iam_token" operation.
 	builder := NewRequestBuilder(POST)
-	_, err = builder.ResolveRequestURL(authenticator.url(), vpcauthOperationPathCreateIamToken, nil)
+	_, err = builder.ResolveRequestURL(authenticator.url(), authenticator.getCreateIamTokenPath(), nil)
 	if err != nil {
 		err = authenticationErrorf(err, &DetailedResponse{}, "noop", getComponentInfo())
 		return
@@ -434,19 +496,19 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 func (authenticator *VpcInstanceAuthenticator) retrieveInstanceIdentityToken() (instanceIdentityToken string, err error) {
 	// Set up the request to invoke the "create_access_token" operation.
 	builder := NewRequestBuilder(PUT)
-	_, err = builder.ResolveRequestURL(authenticator.url(), vpcauthOperationPathCreateAccessToken, nil)
+	_, err = builder.ResolveRequestURL(authenticator.url(), authenticator.getCreateAccessTokenPath(), nil)
 	if err != nil {
 		err = authenticationErrorf(err, &DetailedResponse{}, "noop", getComponentInfo())
 		return
 	}
 
 	// Set the params and request body.
-	builder.AddQuery("version", vpcauthMetadataServiceVersion)
+	builder.AddQuery("version", authenticator.serviceVersion())
 	builder.AddHeader(CONTENT_TYPE, APPLICATION_JSON)
 	builder.AddHeader(Accept, APPLICATION_JSON)
 	builder.AddHeader("Metadata-Flavor", vpcauthMetadataFlavor)
 
-	requestBody := fmt.Sprintf(`{"expires_in": %d}`, vpcauthInstanceIdentityTokenLifetime)
+	requestBody := fmt.Sprintf(`{"expires_in": %d}`, authenticator.tokenLifetime())
 	_, _ = builder.SetBodyContentString(requestBody)
 
 	// Build the request.
