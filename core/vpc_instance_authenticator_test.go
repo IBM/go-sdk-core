@@ -1062,7 +1062,7 @@ func TestVpcAuthServiceVersionBuilder(t *testing.T) {
 
 func TestVpcAuthServiceVersionFromMap(t *testing.T) {
 	properties := map[string]string{
-		PROPNAME_VPC_IMS_SERVICE_VERSION: "2025-08-26",
+		PROPNAME_VPC_IMS_VERSION: "2025-08-26",
 	}
 
 	authenticator, err := newVpcInstanceAuthenticatorFromMap(properties)

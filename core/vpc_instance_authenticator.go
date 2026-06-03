@@ -226,7 +226,7 @@ func newVpcInstanceAuthenticatorFromMap(properties map[string]string) (authentic
 		SetIAMProfileCRN(properties[PROPNAME_IAM_PROFILE_CRN]).
 		SetIAMProfileID(properties[PROPNAME_IAM_PROFILE_ID]).
 		SetURL(properties[PROPNAME_AUTH_URL]).
-		SetServiceVersion(properties[PROPNAME_VPC_IMS_SERVICE_VERSION]).
+		SetServiceVersion(properties[PROPNAME_VPC_IMS_VERSION]).
 		Build()
 
 	return

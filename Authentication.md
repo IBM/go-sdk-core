@@ -680,7 +680,7 @@ To use the new service version:
 ```
 export EXAMPLE_SERVICE_AUTH_TYPE=vpc
 export EXAMPLE_SERVICE_IAM_PROFILE_CRN=crn:iam-profile-123
-export EXAMPLE_SERVICE_VPC_IMS_SERVICE_VERSION=2025-08-26
+export EXAMPLE_SERVICE_VPC_IMS_VERSION=2025-08-26
 ```
 
 Application code:
