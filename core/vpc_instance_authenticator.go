@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httputil"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -90,6 +92,8 @@ const (
 	vpcauthInstanceIdentityTokenLifetime  = 300
 	vpcauthDefaultTimeout                 = time.Second * 30
 )
+
+var vpcauthMetadataServiceSupportedVersions = []string{"2022-03-01", "2025-08-26"}
 
 // VpcInstanceAuthenticatorBuilder is used to construct an instance of the VpcInstanceAuthenticator
 type VpcInstanceAuthenticatorBuilder struct {
@@ -278,6 +282,12 @@ func (authenticator *VpcInstanceAuthenticator) Validate() error {
 	if authenticator.IAMProfileCRN != "" && authenticator.IAMProfileID != "" {
 		err := fmt.Errorf(ERRORMSG_ATMOST_ONE_PROP_ERROR, "IAMProfileCRN", "IAMProfileID")
 		return SDKErrorf(err, "", "both-props", getComponentInfo())
+	}
+
+	serviceVersion := authenticator.serviceVersion()
+	if !slices.Contains(vpcauthMetadataServiceSupportedVersions, serviceVersion) {
+		err := fmt.Errorf(ERRORMSG_INVALID_SERVICE_VERSION, strings.Join(vpcauthMetadataServiceSupportedVersions, ", "))
+		return SDKErrorf(err, "", "invalid-service-version", getComponentInfo())
 	}
 
 	return nil

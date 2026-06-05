@@ -96,6 +96,7 @@ const (
 	ERRORMSG_VPCMDS_OPERATION_ERROR  = "VPC metadata service error, status code %d received from '%s': %s"
 	ERRORMSG_ACCOUNTID_PROP_ERROR    = "IAMAccountID must be specified if and only if IAMProfileName is specified"
 	ERRORMSG_PROP_PARSE_ERROR        = "error parsing configuration property %s, value=%s"
+	ERRORMSG_INVALID_SERVICE_VERSION = "Invalid service version. Supported values are: %s"
 
 	// The name of this module - matches the value in the go.mod file.
 	MODULE_NAME = "github.com/IBM/go-sdk-core/v5"

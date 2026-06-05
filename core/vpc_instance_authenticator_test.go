@@ -1092,17 +1092,28 @@ func TestVpcAuthServiceVersionOldVersion(t *testing.T) {
 	assert.Equal(t, "/instance_identity/v1/iam_token", authenticator.getCreateIamTokenPath())
 }
 
-func TestVpcAuthServiceVersionCustomVersion(t *testing.T) {
+func TestVpcAuthServiceVersionUnsupportedVersion(t *testing.T) {
 	authenticator, err := NewVpcInstanceAuthenticatorBuilder().
 		SetServiceVersion("2024-01-01").
 		Build()
-	assert.Nil(t, err)
-	assert.NotNil(t, authenticator)
 
-	// Test custom service version (not 2025-08-26)
-	assert.Equal(t, "2024-01-01", authenticator.serviceVersion())
+	assert.NotNil(t, err)
+	assert.Nil(t, authenticator)
+	assert.Contains(t, err.Error(), "Invalid service version")
+	assert.Contains(t, err.Error(), "2022-03-01, 2025-08-26")
+	t.Logf("Expected error: %s\n", err.Error())
+}
 
-	// Test old paths for non-2025-08-26 service version
-	assert.Equal(t, "/instance_identity/v1/token", authenticator.getCreateAccessTokenPath())
-	assert.Equal(t, "/instance_identity/v1/iam_token", authenticator.getCreateIamTokenPath())
+func TestVpcAuthValidateServiceVersionFromMap(t *testing.T) {
+	// Test with unsupported version from map
+	properties := map[string]string{
+		PROPNAME_VPC_IMS_VERSION: "2023-12-31",
+	}
+
+	authenticator, err := newVpcInstanceAuthenticatorFromMap(properties)
+	assert.NotNil(t, err)
+	assert.Nil(t, authenticator)
+	assert.Contains(t, err.Error(), "Invalid service version")
+	assert.Contains(t, err.Error(), "2022-03-01, 2025-08-26")
+	t.Logf("Expected error: %s", err.Error())
 }
