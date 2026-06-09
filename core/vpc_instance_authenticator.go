@@ -417,6 +417,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 	builder.AddHeader(Accept, APPLICATION_JSON)
 	builder.AddHeader(headerNameUserAgent, authenticator.getUserAgent())
 	builder.AddHeader("Authorization", "Bearer "+instanceIdentityToken)
+	builder.AddHeader("Metadata-Flavor", vpcauthMetadataFlavor)
 
 	// Next, construct the optional request body to specify the linked IAM profile.
 	// We previously verified that at most one of IBMProfileCRN or IAMProfileID was specified by the user,
