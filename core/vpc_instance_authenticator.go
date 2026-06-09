@@ -84,13 +84,15 @@ type VpcInstanceAuthenticator struct {
 }
 
 const (
-	vpcauthDefaultIMSEndpoint             = "http://169.254.169.254"
-	vpcauthOperationPathCreateAccessToken = "/instance_identity/v1/token"
-	vpcauthOperationPathCreateIamToken    = "/instance_identity/v1/iam_token"
-	vpcauthMetadataFlavor                 = "ibm"
-	vpcauthMetadataServiceVersion         = "2022-03-01"
-	vpcauthInstanceIdentityTokenLifetime  = 300
-	vpcauthDefaultTimeout                 = time.Second * 30
+	vpcauthDefaultIMSEndpoint               = "http://169.254.169.254"
+	vpcauthOperationPathCreateAccessToken   = "/instance_identity/v1/token"
+	vpcauthOperationPathCreateIamToken      = "/instance_identity/v1/iam_token"
+	vpcauthOperationPathCreateAccessTokenV2 = "/identity/v1/token"
+	vpcauthOperationPathCreateIamTokenV2    = "/identity/v1/iam_tokens"
+	vpcauthMetadataFlavor                   = "ibm"
+	vpcauthMetadataServiceVersion           = "2022-03-01"
+	vpcauthInstanceIdentityTokenLifetime    = 300
+	vpcauthDefaultTimeout                   = time.Second * 30
 )
 
 var vpcauthMetadataServiceSupportedVersions = []string{"2022-03-01", "2025-08-26"}
@@ -205,7 +207,7 @@ func (authenticator *VpcInstanceAuthenticator) tokenLifetime() int {
 // getCreateAccessTokenPath returns the operation path for creating an access token based on the service version.
 func (authenticator *VpcInstanceAuthenticator) getCreateAccessTokenPath() string {
 	if authenticator.serviceVersion() == "2025-08-26" {
-		return "/identity/v1/token"
+		return vpcauthOperationPathCreateAccessTokenV2
 	}
 	return vpcauthOperationPathCreateAccessToken
 }
@@ -213,7 +215,7 @@ func (authenticator *VpcInstanceAuthenticator) getCreateAccessTokenPath() string
 // getCreateIamTokenPath returns the operation path for creating an IAM token based on the service version.
 func (authenticator *VpcInstanceAuthenticator) getCreateIamTokenPath() string {
 	if authenticator.serviceVersion() == "2025-08-26" {
-		return "/identity/v1/iam_tokens"
+		return vpcauthOperationPathCreateIamTokenV2
 	}
 	return vpcauthOperationPathCreateIamToken
 }
