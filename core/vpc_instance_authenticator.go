@@ -412,7 +412,7 @@ func (authenticator *VpcInstanceAuthenticator) retrieveIamAccessToken(
 	}
 
 	// Set the params and request body.
-	builder.AddQuery("version", vpcauthMetadataServiceVersion)
+	builder.AddQuery("version", authenticator.serviceVersion())
 	builder.AddHeader(CONTENT_TYPE, APPLICATION_JSON)
 	builder.AddHeader(Accept, APPLICATION_JSON)
 	builder.AddHeader(headerNameUserAgent, authenticator.getUserAgent())
