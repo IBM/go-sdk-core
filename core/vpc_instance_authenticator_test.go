@@ -35,6 +35,7 @@ const (
 	vpcauthTestLogLevel              LogLevel = LevelError
 	vpcauthMockIAMProfileCRN         string   = "crn:iam-profile:123"
 	vpcauthMockIAMProfileID          string   = "iam-id-123"
+	vpcauthMockNewServiceVersion     string   = "2025-08-26"
 	vpcauthMockURL                   string   = "http://vpc.metadata.service.com"
 	vpcauthTestAccessToken1          string   = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"       // #nosec
 	vpcauthTestAccessToken2          string   = "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"       // #nosec
@@ -232,7 +233,7 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 
 		// Process the request according to the operation being invoked.
 		switch operationPath {
-		case vpcauthOperationPathCreateAccessToken:
+		case vpcauthOperationPathCreateAccessToken, vpcauthOperationPathCreateAccessTokenV2:
 			// Process the 'create_access_token' operation invocation.
 
 			// Verify some parts of the request.
@@ -285,7 +286,7 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 				fmt.Fprintf(res, "%s", string(buf))
 			}
 
-		case vpcauthOperationPathCreateIamToken:
+		case vpcauthOperationPathCreateIamToken, vpcauthOperationPathCreateIamTokenV2:
 			// Process the 'create_iam_token' operation invocation.
 
 			// Verify some parts of the request.
@@ -296,6 +297,7 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 			assert.True(t, strings.HasPrefix(req.Header.Get(headerNameUserAgent),
 				fmt.Sprintf("%s/%s", sdkName, "vpc-instance-authenticator")))
 			assert.Equal(t, expectedAuthorizationHeader, req.Header.Get("Authorization"))
+			assert.Equal(t, vpcauthMetadataFlavor, req.Header.Get("Metadata-Flavor"))
 
 			// Models a trusted profile (includes both CRN and ID fields).
 			type trustedProfileIdentity struct {
@@ -334,6 +336,9 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 				assert.Nil(t, requestBody.TrustedProfile.CRN)
 				assert.NotNil(t, requestBody.TrustedProfile.ID)
 				assert.Equal(t, vpcauthMockIAMProfileID, *requestBody.TrustedProfile.ID)
+			case "new-service-version":
+				assert.NotNil(t, requestBody)
+				assert.Equal(t, vpcauthMockNewServiceVersion, req.URL.Query().Get("version"))
 
 			default:
 			}
@@ -603,6 +608,24 @@ func TestVpcAuthRetrieveIamTokenTimeout(t *testing.T) {
 	assert.NotNil(t, err)
 	t.Logf("Expected error: %s\n", err.Error())
 	assertAuthError(t, err)
+}
+
+func TestVpcAuthRetrieveIamTokenSupportedServiceVersion(t *testing.T) {
+	GetLogger().SetLogLevel(vpcauthTestLogLevel)
+
+	server := startMockVPCServer(t, "new-service-version")
+	defer server.Close()
+
+	auth := &VpcInstanceAuthenticator{
+		URL:            server.URL,
+		ServiceVersion: "2025-08-26",
+	}
+	err := auth.Validate()
+	assert.Nil(t, err)
+
+	iamTokenServerResponse, err := auth.retrieveIamAccessToken(vpcauthTestInstanceIdentityToken)
+	assert.Nil(t, err)
+	assert.NotNil(t, iamTokenServerResponse)
 }
 
 //
