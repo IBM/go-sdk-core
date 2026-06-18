@@ -91,11 +91,10 @@ const (
 	vpcauthOperationPathCreateIamTokenV2    = "/identity/v1/iam_tokens"
 	vpcauthMetadataFlavor                   = "ibm"
 	vpcauthMetadataServiceVersion           = "2022-03-01"
+	vpcauthMetadataServiceVersionV2         = "2025-08-26"
 	vpcauthInstanceIdentityTokenLifetime    = 300
 	vpcauthDefaultTimeout                   = time.Second * 30
 )
-
-var vpcauthMetadataServiceSupportedVersions = []string{"2022-03-01", "2025-08-26"}
 
 // VpcInstanceAuthenticatorBuilder is used to construct an instance of the VpcInstanceAuthenticator
 type VpcInstanceAuthenticatorBuilder struct {
@@ -206,7 +205,7 @@ func (authenticator *VpcInstanceAuthenticator) tokenLifetime() int {
 
 // getCreateAccessTokenPath returns the operation path for creating an access token based on the service version.
 func (authenticator *VpcInstanceAuthenticator) getCreateAccessTokenPath() string {
-	if authenticator.serviceVersion() == "2025-08-26" {
+	if authenticator.serviceVersion() == vpcauthMetadataServiceVersionV2 {
 		return vpcauthOperationPathCreateAccessTokenV2
 	}
 	return vpcauthOperationPathCreateAccessToken
@@ -214,7 +213,7 @@ func (authenticator *VpcInstanceAuthenticator) getCreateAccessTokenPath() string
 
 // getCreateIamTokenPath returns the operation path for creating an IAM token based on the service version.
 func (authenticator *VpcInstanceAuthenticator) getCreateIamTokenPath() string {
-	if authenticator.serviceVersion() == "2025-08-26" {
+	if authenticator.serviceVersion() == vpcauthMetadataServiceVersionV2 {
 		return vpcauthOperationPathCreateIamTokenV2
 	}
 	return vpcauthOperationPathCreateIamToken
@@ -286,7 +285,9 @@ func (authenticator *VpcInstanceAuthenticator) Validate() error {
 		return SDKErrorf(err, "", "both-props", getComponentInfo())
 	}
 
+	vpcauthMetadataServiceSupportedVersions := []string{vpcauthMetadataServiceVersion, vpcauthMetadataServiceVersionV2}
 	serviceVersion := authenticator.serviceVersion()
+
 	if !slices.Contains(vpcauthMetadataServiceSupportedVersions, serviceVersion) {
 		err := fmt.Errorf(ERRORMSG_INVALID_SERVICE_VERSION, strings.Join(vpcauthMetadataServiceSupportedVersions, ", "))
 		return SDKErrorf(err, "", "invalid-service-version", getComponentInfo())
