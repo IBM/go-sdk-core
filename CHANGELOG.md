@@ -1,3 +1,10 @@
+# [5.22.0](https://github.com/IBM/go-sdk-core/compare/v5.21.4...v5.22.0) (2026-06-19)
+
+
+### Features
+
+* **auth:** add support for new service version in VPC Instance Auth ([#273](https://github.com/IBM/go-sdk-core/issues/273)) ([a4335d5](https://github.com/IBM/go-sdk-core/commit/a4335d5fd346a1f979d0e572a577d04eb6a89a01))
+
 ## [5.21.4](https://github.com/IBM/go-sdk-core/compare/v5.21.3...v5.21.4) (2026-06-03)
 
 
