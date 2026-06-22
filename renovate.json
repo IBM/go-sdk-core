@@ -2,7 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "prConcurrentLimit": 4,
-  "reviewers": ["Norbert-Biczo", "Lidia-Tarcza", "Andras-Felleg"],
+  "reviewers": ["pyrooka", "diatrcz", "Andris28"],
   "packageRules": [
     {
       "matchManagers": ["gomod"],
