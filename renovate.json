@@ -1,10 +1,21 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "enabled": false,
   "extends": ["config:recommended"],
-  "constraints": {
-    "go": "1.25"
-  },
-  "postUpdateOptions": ["gomodTidy"],
-  "minimumReleaseAge": "3 days"
+  "prConcurrentLimit": 4,
+  "reviewers": ["Norbert-Biczo", "Lidia-Tarcza", "Andras-Felleg"],
+  "packageRules": [
+    {
+      "matchManagers": ["gomod"],
+      "groupName": "Go dependencies",
+      "constraints": {
+        "go": "1.25"
+      },
+      "minimumReleaseAge": "3 days",
+      "postUpdateOptions": ["gomodTidy"]
+    },
+    {
+      "matchManagers" : ["npm"],
+      "extends": ["security:minimumReleaseAgeNpm"]
+    }
+  ]
 }
