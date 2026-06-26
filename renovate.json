@@ -1,0 +1,19 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "prConcurrentLimit": 4,
+  "reviewers": ["pyrooka", "diatrcz", "Andris28"],
+  "packageRules": [
+    {
+      "matchManagers": ["gomod"],
+      "minimumReleaseAge": "3 days",
+      "postUpdateOptions": ["gomodTidy"],
+      "description": "Wait 3 days before updating Go dependencies"
+    },
+    {
+      "matchManagers" : ["npm"],
+      "extends": ["security:minimumReleaseAgeNpm"],
+      "description": "Wait 3 days before updating semantic release dependencies"
+    }
+  ]
+}
