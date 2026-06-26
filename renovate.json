@@ -6,16 +6,14 @@
   "packageRules": [
     {
       "matchManagers": ["gomod"],
-      "groupName": "Go dependencies",
-      "constraints": {
-        "go": "1.25"
-      },
       "minimumReleaseAge": "3 days",
-      "postUpdateOptions": ["gomodTidy"]
+      "postUpdateOptions": ["gomodTidy"],
+      "description": "Wait 3 days before updating Go dependencies"
     },
     {
       "matchManagers" : ["npm"],
-      "extends": ["security:minimumReleaseAgeNpm"]
+      "extends": ["security:minimumReleaseAgeNpm"],
+      "description": "Wait 3 days before updating semantic release dependencies"
     }
   ]
 }
