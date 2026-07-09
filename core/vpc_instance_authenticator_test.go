@@ -355,10 +355,10 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 			type trustedProfileIdentity struct {
 				// The unique identifier for this trusted profile.
 				ID *string `json:"id,omitempty"`
-	
+
 				// The CRN for this trusted profile.
 				CRN *string `json:"crn,omitempty"`
-	
+
 				// The name of this trusted profile.
 				Name *string `json:"name,omitempty"`
 			}
@@ -392,7 +392,7 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 				assert.NotNil(t, requestBody.TrustedProfile.ID)
 				assert.Nil(t, requestBody.TrustedProfile.Name)
 				assert.Equal(t, vpcauthMockIAMProfileID, *requestBody.TrustedProfile.ID)
-	
+
 			case "profile-name":
 				assert.NotNil(t, requestBody)
 				assert.NotNil(t, requestBody.TrustedProfile)
@@ -400,7 +400,7 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 				assert.Nil(t, requestBody.TrustedProfile.ID)
 				assert.NotNil(t, requestBody.TrustedProfile.Name)
 				assert.Equal(t, vpcauthMockIAMProfileName, *requestBody.TrustedProfile.Name)
-	
+
 			case "new-service-version":
 				assert.NotNil(t, requestBody)
 				assert.Equal(t, vpcauthMockNewServiceVersion, req.URL.Query().Get("version"))
@@ -635,8 +635,6 @@ func TestVpcAuthRetrieveIamTokenSuccessProfileName(t *testing.T) {
 	assert.NotNil(t, iamTokenServerResponse)
 	assert.Equal(t, vpcauthTestAccessToken1, iamTokenServerResponse.AccessToken)
 }
-
-
 
 func TestVpcAuthRetrieveIamTokenFail1(t *testing.T) {
 	GetLogger().SetLogLevel(vpcauthTestLogLevel)
