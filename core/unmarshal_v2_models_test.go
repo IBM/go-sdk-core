@@ -35,10 +35,10 @@ type MyModel struct {
 	Bar *int64  `json:"bar" validate:"required"`
 }
 
-// AssertEqual asserts that 'm' is equivalent to 'this'.
-func (this MyModel) AssertEqual(t *testing.T, m MyModel) {
-	assert.True(t, (this.Foo == nil && m.Foo == nil) || (this.Foo != nil && m.Foo != nil && *this.Foo == *m.Foo))
-	assert.True(t, (this.Bar == nil && m.Bar == nil) || (this.Bar != nil && m.Bar != nil && *this.Bar == *m.Bar))
+// AssertEqual asserts that 'm' is equivalent to the receiver.
+func (mm MyModel) AssertEqual(t *testing.T, m MyModel) {
+	assert.True(t, (mm.Foo == nil && m.Foo == nil) || (mm.Foo != nil && m.Foo != nil && *mm.Foo == *m.Foo))
+	assert.True(t, (mm.Bar == nil && m.Bar == nil) || (mm.Bar != nil && m.Bar != nil && *mm.Bar == *m.Bar))
 }
 
 // Instances of MyModel used in the tests below.
@@ -132,11 +132,11 @@ type Car struct {
 	BodyStyle   *string `json:"body_style,omitempty"`
 }
 
-// AssertEqual asserts that 'c' is equivalent to 'this'.
-func (this Car) AssertEqual(t *testing.T, c Car) {
-	assert.True(t, (this.VehicleType == nil && c.VehicleType == nil) || (this.VehicleType != nil && c.VehicleType != nil && *this.VehicleType == *c.VehicleType))
-	assert.True(t, (this.Make == nil && c.Make == nil) || (this.Make != nil && c.Make != nil && *this.Make == *c.Make))
-	assert.True(t, (this.BodyStyle == nil && c.BodyStyle == nil) || (this.BodyStyle != nil && c.BodyStyle != nil && *this.BodyStyle == *c.BodyStyle))
+// AssertEqual asserts that 'c' is equivalent to the receiver.
+func (cc Car) AssertEqual(t *testing.T, c Car) {
+	assert.True(t, (cc.VehicleType == nil && c.VehicleType == nil) || (cc.VehicleType != nil && c.VehicleType != nil && *cc.VehicleType == *c.VehicleType))
+	assert.True(t, (cc.Make == nil && c.Make == nil) || (cc.Make != nil && c.Make != nil && *cc.Make == *c.Make))
+	assert.True(t, (cc.BodyStyle == nil && c.BodyStyle == nil) || (cc.BodyStyle != nil && c.BodyStyle != nil && *cc.BodyStyle == *c.BodyStyle))
 }
 
 // Instance of Car used in tests below.

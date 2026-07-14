@@ -289,7 +289,8 @@ func startMockIAMAssumeServer(t *testing.T) *httptest.Server {
 		var responseToken string
 
 		// Validate and reply to the request based on the grant type.
-		if grantType == iamAuthGrantTypeApiKey {
+		switch grantType {
+		case iamAuthGrantTypeApiKey:
 			numUserTokenRequests++
 			assert.True(t, strings.HasPrefix(userAgent,
 				fmt.Sprintf("%s/%s", sdkName, "iam-authenticator")))
@@ -306,7 +307,7 @@ func startMockIAMAssumeServer(t *testing.T) *httptest.Server {
 				responseBody = fmt.Sprintf(`{"access_token": "%s", "refresh_token": "not_available", "token_type": "Bearer", "expires_in": 3600, "expiration": %d}`,
 					responseToken, GetCurrentTime()+3600)
 			}
-		} else if grantType == iamGrantTypeAssume {
+		case iamGrantTypeAssume:
 			numProfileTokenRequests++
 			assert.True(t, strings.HasPrefix(userAgent,
 				fmt.Sprintf("%s/%s", sdkName, "iam-assume-authenticator")))
@@ -327,7 +328,7 @@ func startMockIAMAssumeServer(t *testing.T) *httptest.Server {
 				responseBody = fmt.Sprintf(`{"access_token": "%s", "token_type": "Bearer", "expires_in": 3600, "expiration": %d}`,
 					responseToken, GetCurrentTime()+3600)
 			}
-		} else {
+		default:
 			// error - incorrect grant type.
 			statusCode = http.StatusBadRequest
 			responseBody = "Bad Request: invalid grant type"

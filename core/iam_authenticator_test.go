@@ -468,7 +468,7 @@ func TestIamGetTokenSuccess10SecWindow(t *testing.T) {
 func TestIamGetTokenSuccessRT(t *testing.T) {
 	GetLogger().SetLogLevel(iamAuthTestLogLevel)
 
-	var newRefreshToken string = "new-refresh-token"
+	var newRefreshToken = "new-refresh-token"
 
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

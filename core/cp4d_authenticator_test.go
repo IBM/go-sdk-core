@@ -603,7 +603,7 @@ func TestCp4dUserHeaders(t *testing.T) {
 		Username: "mookie",
 		APIKey:   "King of the North",
 		Headers:  headers,
-	}
+	} // #nosec G101
 
 	token, err := authenticator.GetToken()
 	assert.Equal(t, cp4dUsernameApikey1, token)
