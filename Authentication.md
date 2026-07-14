@@ -602,7 +602,7 @@ The IAM access token is added to each outbound request in the `Authorization` he
 
 - IAMProfileID: (optional) the id of the linked trusted IAM profile to be used when obtaining the IAM access token.
 
-- IAMProfileName: (optional) the name of the linekd trusted IAM profile to be used when obtaining the IAM access token.
+- IAMProfileName: (optional) the name of the linked trusted IAM profile to be used when obtaining the IAM access token.
 
 - URL: (optional) The base endpoint URL of the VPC Instance Metadata Service.
 The default value of this property is `http://169.254.169.254`.  However, if the VPC Instance Metadata Service is configured
@@ -622,7 +622,7 @@ Usage Notes:
 1. At most one of `IAMProfileCRN`, `IAMProfileID` or `IAMProfileName` may be specified.  The specified value must map
 to a trusted IAM profile that has been linked to the compute resource (virtual server instance).
 
-2. If more than on from `IAMProfileCRN`, `IAMProfileID` or `IAMProfileName` are specified, then an error occurs.
+2. If more than one of `IAMProfileCRN`, `IAMProfileID` or `IAMProfileName` are specified, then an error occurs.
 
 3. If neither `IAMProfileCRN`, `IAMProfileID` nor `IAMProfileName` are specified, then the default trusted profile linked to the
 compute resource will be used to perform the IAM token exchange.
