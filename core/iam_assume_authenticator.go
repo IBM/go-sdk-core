@@ -137,7 +137,7 @@ func (builder *IamAssumeAuthenticatorBuilder) SetIAMAccountID(s string) *IamAssu
 func (builder *IamAssumeAuthenticatorBuilder) SetApiKey(s string) *IamAssumeAuthenticatorBuilder {
 	builder.ApiKey = s
 	return builder
-} //nolint:staticcheck
+}
 
 // SetURL sets the url field in the builder.
 func (builder *IamAssumeAuthenticatorBuilder) SetURL(s string) *IamAssumeAuthenticatorBuilder {
