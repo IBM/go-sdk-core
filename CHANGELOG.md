@@ -1,3 +1,10 @@
+# [5.23.0](https://github.com/IBM/go-sdk-core/compare/v5.22.1...v5.23.0) (2026-07-16)
+
+
+### Features
+
+* **auth:** add new IAM profile selector to VPC Instance Auth ([#277](https://github.com/IBM/go-sdk-core/issues/277)) ([ed9d9f4](https://github.com/IBM/go-sdk-core/commit/ed9d9f422c3b375b944f4693b24c1c76af2deb36))
+
 ## [5.22.1](https://github.com/IBM/go-sdk-core/compare/v5.22.0...v5.22.1) (2026-06-26)
 
 
