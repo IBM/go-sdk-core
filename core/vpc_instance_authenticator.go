@@ -127,7 +127,7 @@ func (builder *VpcInstanceAuthenticatorBuilder) SetIAMProfileID(s string) *VpcIn
 
 // SetIAMProfileName sets the IAMProfileName field in the builder.
 func (builder *VpcInstanceAuthenticatorBuilder) SetIAMProfileName(s string) *VpcInstanceAuthenticatorBuilder {
-	builder.VpcInstanceAuthenticator.IAMProfileName = s
+	builder.IAMProfileName = s
 	return builder
 }
 
