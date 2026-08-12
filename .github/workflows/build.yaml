@@ -60,6 +60,15 @@ jobs:
           golangci-lint version
           go install golang.org/x/tools/cmd/goimports@latest
 
+      - name: Check Go formatting
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "The files below are not formatted correctly. Please run `make format` to fix them."
+            echo "$unformatted"
+            exit 1
+          fi
+
       - name: Build & Test
         run: make all
 
@@ -76,7 +85,6 @@ jobs:
           else
             exit 1
           fi
-
 
   publish-release:
     name: semantic-release
