@@ -598,24 +598,33 @@ The IAM access token is added to each outbound request in the `Authorization` he
 
 ### Properties
 
-- IAMProfileCRN: (optional) the crn of the linked trusted IAM profile to be used when obtaining the IAM access token. 
+- IAMProfileCRN: (optional) the crn of the linked trusted IAM profile to be used when obtaining the IAM access token.
 
 - IAMProfileID: (optional) the id of the linked trusted IAM profile to be used when obtaining the IAM access token.
 
-- URL: (optional) The base endpoint URL of the VPC Instance Metadata Service.  
+- IAMProfileName: (optional) the name of the linked trusted IAM profile to be used when obtaining the IAM access token.
+
+- URL: (optional) The base endpoint URL of the VPC Instance Metadata Service.
 The default value of this property is `http://169.254.169.254`.  However, if the VPC Instance Metadata Service is configured
 with the HTTP Secure Protocol setting (`https`), then you should configure this property to be `https://api.metadata.cloud.ibm.com`.
+
+- ServiceVersion: (optional) The VPC Instance Metadata Service version to use.
+The default value is `2022-03-01`. When set to `2025-08-26`, the authenticator will use the new API paths
+(`/identity/v1/token` and `/identity/v1/iam_tokens`) instead of the legacy paths.
+
+- TokenLifetime: (optional) The lifetime (in seconds) of the instance identity token.
+The default value is `300` seconds. This property can only be configured programmatically (not via environment variables).
 
 - Client: (optional) The `http.Client` object used to interact with the VPC Instance Metadata Service.
 If not specified by the user, a suitable default Client will be constructed.
 
 Usage Notes:
-1. At most one of `IAMProfileCRN` or `IAMProfileID` may be specified.  The specified value must map
+1. At most one of `IAMProfileCRN`, `IAMProfileID` or `IAMProfileName` may be specified.  The specified value must map
 to a trusted IAM profile that has been linked to the compute resource (virtual server instance).
 
-2. If both `IAMProfileCRN` and `IAMProfileID` are specified, then an error occurs.
+2. If more than one of `IAMProfileCRN`, `IAMProfileID` or `IAMProfileName` are specified, then an error occurs.
 
-3. If neither `IAMProfileCRN` nor `IAMProfileID` are specified, then the default trusted profile linked to the 
+3. If neither `IAMProfileCRN`, `IAMProfileID` nor `IAMProfileName` are specified, then the default trusted profile linked to the
 compute resource will be used to perform the IAM token exchange.
 If no default trusted profile is defined for the compute resource, then an error occurs.
 
@@ -649,12 +658,33 @@ if err != nil {
 // 'service' can now be used to invoke operations.
 ```
 
+To use the new service version with custom token lifetime:
+```go
+// Create the authenticator with new service version.
+authenticator, err := core.NewVpcInstanceAuthenticatorBuilder().
+	SetIAMProfileCRN("crn:iam-profile-123").
+	SetServiceVersion("2025-08-26").
+	SetTokenLifetime(600).
+	Build()
+if err != nil {
+    panic(err)
+}
+```
+
 ### Configuration example
 External configuration:
 ```
 export EXAMPLE_SERVICE_AUTH_TYPE=vpc
 export EXAMPLE_SERVICE_IAM_PROFILE_CRN=crn:iam-profile-123
 ```
+
+To use the new service version:
+```
+export EXAMPLE_SERVICE_AUTH_TYPE=vpc
+export EXAMPLE_SERVICE_IAM_PROFILE_CRN=crn:iam-profile-123
+export EXAMPLE_SERVICE_VPC_IMS_VERSION=2025-08-26
+```
+
 Application code:
 ```go
 import (

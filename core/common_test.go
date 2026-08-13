@@ -106,7 +106,7 @@ var testEnvironment = map[string]string{
 	"SERVICE16_PREFIX_ROLES":            "true",
 	"SERVICE16_CALLER_EXT_CLAIM":        `{"productID":"prod456"}`,
 	"SERVICE16_AUTH_DISABLE_SSL":        "true",
-}
+} // #nosec G101
 
 // setTestEnvironment sets the environment variables described in our map.
 // The environment variables are restored to its original value after the test.

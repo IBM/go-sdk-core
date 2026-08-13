@@ -1,3 +1,45 @@
+## [5.23.2](https://github.com/IBM/go-sdk-core/compare/v5.23.1...v5.23.2) (2026-07-28)
+
+
+### Bug Fixes
+
+* **deps:** update packages to address vulnerabilities ([#282](https://github.com/IBM/go-sdk-core/issues/282)) ([09555a1](https://github.com/IBM/go-sdk-core/commit/09555a13595d4dbc7bd1f46bba6dec73307b5b2a))
+
+## [5.23.1](https://github.com/IBM/go-sdk-core/compare/v5.23.0...v5.23.1) (2026-07-16)
+
+
+### Bug Fixes
+
+* fix disabled golangci-lint rules ([#278](https://github.com/IBM/go-sdk-core/issues/278)) ([4bcd6f6](https://github.com/IBM/go-sdk-core/commit/4bcd6f6cb95415190945c5574a7edc95b9f7a4b4))
+
+# [5.23.0](https://github.com/IBM/go-sdk-core/compare/v5.22.1...v5.23.0) (2026-07-16)
+
+
+### Features
+
+* **auth:** add new IAM profile selector to VPC Instance Auth ([#277](https://github.com/IBM/go-sdk-core/issues/277)) ([ed9d9f4](https://github.com/IBM/go-sdk-core/commit/ed9d9f422c3b375b944f4693b24c1c76af2deb36))
+
+## [5.22.1](https://github.com/IBM/go-sdk-core/compare/v5.22.0...v5.22.1) (2026-06-26)
+
+
+### Bug Fixes
+
+* **deps:** bump dependency to fix cve ([#276](https://github.com/IBM/go-sdk-core/issues/276)) ([5907c6c](https://github.com/IBM/go-sdk-core/commit/5907c6c18df6a403a13432aa06070950fb6248c5))
+
+# [5.22.0](https://github.com/IBM/go-sdk-core/compare/v5.21.4...v5.22.0) (2026-06-19)
+
+
+### Features
+
+* **auth:** add support for new service version in VPC Instance Auth ([#273](https://github.com/IBM/go-sdk-core/issues/273)) ([a4335d5](https://github.com/IBM/go-sdk-core/commit/a4335d5fd346a1f979d0e572a577d04eb6a89a01))
+
+## [5.21.4](https://github.com/IBM/go-sdk-core/compare/v5.21.3...v5.21.4) (2026-06-03)
+
+
+### Bug Fixes
+
+* correct inline golangci-lint error ([#272](https://github.com/IBM/go-sdk-core/issues/272)) ([8eedd89](https://github.com/IBM/go-sdk-core/commit/8eedd89faf561880c930c2a704014e48961ba5e9))
+
 ## [5.21.3](https://github.com/IBM/go-sdk-core/compare/v5.21.2...v5.21.3) (2026-05-29)
 
 

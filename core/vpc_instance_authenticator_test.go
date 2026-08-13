@@ -22,11 +22,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/go-openapi/strfmt"
-
-	"testing"
 
 	assert "github.com/stretchr/testify/assert"
 )
@@ -36,6 +35,8 @@ const (
 	vpcauthTestLogLevel              LogLevel = LevelError
 	vpcauthMockIAMProfileCRN         string   = "crn:iam-profile:123"
 	vpcauthMockIAMProfileID          string   = "iam-id-123"
+	vpcauthMockIAMProfileName        string   = "iam-profile-name-123"
+	vpcauthMockNewServiceVersion     string   = "2025-08-26"
 	vpcauthMockURL                   string   = "http://vpc.metadata.service.com"
 	vpcauthTestAccessToken1          string   = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"       // #nosec
 	vpcauthTestAccessToken2          string   = "3yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImhlbGxvIiwicm9sZSI6InVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhZG1pbmlzdHJhdG9yIiwiZGVwbG95bWVudF9hZG1pbiJdLCJzdWIiOiJoZWxsbyIsImlzcyI6IkpvaG4iLCJhdWQiOiJEU1giLCJ1aWQiOiI5OTkiLCJpYXQiOjE1NjAyNzcwNTEsImV4cCI6MTU2MDI4MTgxOSwianRpIjoiMDRkMjBiMjUtZWUyZC00MDBmLTg2MjMtOGNkODA3MGI1NDY4In0.cIodB4I6CCcX8vfIImz7Cytux3GpWyObt9Gkur5g1QI"       // #nosec
@@ -50,10 +51,26 @@ func TestVpcAuthCtorErrors(t *testing.T) {
 	var err error
 	var auth *VpcInstanceAuthenticator
 
-	// Error: both IAMProfileCRN and IBMProfileID are specified
+	// Error: both IAMProfileCRN and IAMProfileID are specified
 	auth, err = NewVpcInstanceAuthenticatorBuilder().
 		SetIAMProfileCRN(vpcauthMockIAMProfileCRN).
 		SetIAMProfileID(vpcauthMockIAMProfileID).Build()
+	assert.NotNil(t, err)
+	assert.Nil(t, auth)
+	t.Logf("Expected error: %s", err.Error())
+
+	// Error: both IAMProfileCRN and IAMProfileName are specified
+	auth, err = NewVpcInstanceAuthenticatorBuilder().
+		SetIAMProfileCRN(vpcauthMockIAMProfileCRN).
+		SetIAMProfileName(vpcauthMockIAMProfileName).Build()
+	assert.NotNil(t, err)
+	assert.Nil(t, auth)
+	t.Logf("Expected error: %s", err.Error())
+
+	// Error: both IAMProfileID and IAMProfileName are specified
+	auth, err = NewVpcInstanceAuthenticatorBuilder().
+		SetIAMProfileID(vpcauthMockIAMProfileID).
+		SetIAMProfileName(vpcauthMockIAMProfileName).Build()
 	assert.NotNil(t, err)
 	assert.Nil(t, auth)
 	t.Logf("Expected error: %s", err.Error())
@@ -94,7 +111,19 @@ func TestVpcAuthCtorSuccess(t *testing.T) {
 	assert.Equal(t, vpcauthMockIAMProfileID, auth.IAMProfileID)
 	assert.Equal(t, "", auth.URL)
 
-	// 3. only URL
+	// 3. only IAMProfileName
+	auth, err = NewVpcInstanceAuthenticatorBuilder().
+		SetIAMProfileName(vpcauthMockIAMProfileName).
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, auth)
+	assert.Equal(t, AUTHTYPE_VPC, auth.AuthenticationType())
+	assert.Equal(t, "", auth.IAMProfileCRN)
+	assert.Equal(t, "", auth.IAMProfileID)
+	assert.Equal(t, vpcauthMockIAMProfileName, auth.IAMProfileName)
+	assert.Equal(t, "", auth.URL)
+
+	// 4. only URL
 	auth, err = NewVpcInstanceAuthenticatorBuilder().
 		SetURL(vpcauthMockURL).
 		Build()
@@ -133,6 +162,16 @@ func TestVpcAuthCtorFromMapErrors(t *testing.T) {
 	configProps = map[string]string{
 		PROPNAME_IAM_PROFILE_CRN: vpcauthMockIAMProfileCRN,
 		PROPNAME_IAM_PROFILE_ID:  vpcauthMockIAMProfileID,
+	}
+	auth, err = newVpcInstanceAuthenticatorFromMap(configProps)
+	assert.NotNil(t, err)
+	assert.Nil(t, auth)
+	t.Logf("Expected error: %s", err.Error())
+
+	// Error: both IAMProfileCRN and IAMProfileName specified
+	configProps = map[string]string{
+		PROPNAME_IAM_PROFILE_CRN:  vpcauthMockIAMProfileCRN,
+		PROPNAME_IAM_PROFILE_NAME: vpcauthMockIAMProfileName,
 	}
 	auth, err = newVpcInstanceAuthenticatorFromMap(configProps)
 	assert.NotNil(t, err)
@@ -179,7 +218,20 @@ func TestVpcAuthCtorFromMapSuccess(t *testing.T) {
 	assert.Equal(t, vpcauthMockIAMProfileID, auth.IAMProfileID)
 	assert.Equal(t, "", auth.URL)
 
-	// 4. only URL
+	// 4. only IAMProfileName
+	configProps = map[string]string{
+		PROPNAME_IAM_PROFILE_NAME: vpcauthMockIAMProfileName,
+	}
+	auth, err = newVpcInstanceAuthenticatorFromMap(configProps)
+	assert.Nil(t, err)
+	assert.NotNil(t, auth)
+	assert.Equal(t, AUTHTYPE_VPC, auth.AuthenticationType())
+	assert.Equal(t, "", auth.IAMProfileCRN)
+	assert.Equal(t, "", auth.IAMProfileID)
+	assert.Equal(t, vpcauthMockIAMProfileName, auth.IAMProfileName)
+	assert.Equal(t, "", auth.URL)
+
+	// 5. only URL
 	configProps = map[string]string{
 		PROPNAME_AUTH_URL: vpcauthMockURL,
 	}
@@ -221,7 +273,7 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 	// In our handler function below, we keep a count of the number of invocations of
 	// the "create_iam_token" operation so we can simulate the use of different
 	// IAM access tokens.
-	var iamTokenCount int = 0
+	var iamTokenCount = 0
 
 	// For calls to the 'create_iam_token' operation we expect the Authorization header
 	// to contain the instance identity token.
@@ -233,7 +285,7 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 
 		// Process the request according to the operation being invoked.
 		switch operationPath {
-		case vpcauthOperationPathCreateAccessToken:
+		case vpcauthOperationPathCreateAccessToken, vpcauthOperationPathCreateAccessTokenV2:
 			// Process the 'create_access_token' operation invocation.
 
 			// Verify some parts of the request.
@@ -281,12 +333,12 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 
 				res.WriteHeader(http.StatusOK)
 
-				buf, err := json.Marshal(response)
+				buf, err := json.Marshal(response) // #nosec G117
 				assert.Nil(t, err)
-				fmt.Fprintf(res, "%s", (string(buf)))
+				fmt.Fprintf(res, "%s", string(buf))
 			}
 
-		case vpcauthOperationPathCreateIamToken:
+		case vpcauthOperationPathCreateIamToken, vpcauthOperationPathCreateIamTokenV2:
 			// Process the 'create_iam_token' operation invocation.
 
 			// Verify some parts of the request.
@@ -297,14 +349,18 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 			assert.True(t, strings.HasPrefix(req.Header.Get(headerNameUserAgent),
 				fmt.Sprintf("%s/%s", sdkName, "vpc-instance-authenticator")))
 			assert.Equal(t, expectedAuthorizationHeader, req.Header.Get("Authorization"))
+			assert.Equal(t, vpcauthMetadataFlavor, req.Header.Get("Metadata-Flavor"))
 
-			// Models a trusted profile (includes both CRN and ID fields).
+			// Models a trusted profile (includes CRN, ID, and Name fields).
 			type trustedProfileIdentity struct {
 				// The unique identifier for this trusted profile.
 				ID *string `json:"id,omitempty"`
 
 				// The CRN for this trusted profile.
 				CRN *string `json:"crn,omitempty"`
+
+				// The name of this trusted profile.
+				Name *string `json:"name,omitempty"`
 			}
 
 			// Models the request body for the 'create_iam_token' operation.
@@ -334,7 +390,20 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 				assert.NotNil(t, requestBody.TrustedProfile)
 				assert.Nil(t, requestBody.TrustedProfile.CRN)
 				assert.NotNil(t, requestBody.TrustedProfile.ID)
+				assert.Nil(t, requestBody.TrustedProfile.Name)
 				assert.Equal(t, vpcauthMockIAMProfileID, *requestBody.TrustedProfile.ID)
+
+			case "profile-name":
+				assert.NotNil(t, requestBody)
+				assert.NotNil(t, requestBody.TrustedProfile)
+				assert.Nil(t, requestBody.TrustedProfile.CRN)
+				assert.Nil(t, requestBody.TrustedProfile.ID)
+				assert.NotNil(t, requestBody.TrustedProfile.Name)
+				assert.Equal(t, vpcauthMockIAMProfileName, *requestBody.TrustedProfile.Name)
+
+			case "new-service-version":
+				assert.NotNil(t, requestBody)
+				assert.Equal(t, vpcauthMockNewServiceVersion, req.URL.Query().Get("version"))
 
 			default:
 			}
@@ -381,16 +450,16 @@ func startMockVPCServer(t *testing.T, scenario string) *httptest.Server {
 					ExpiresIn:   Int64Ptr(3600),
 				}
 
-				buf, err := json.Marshal(response)
+				buf, err := json.Marshal(response) // #nosec G117
 				assert.Nil(t, err)
-				fmt.Fprintf(res, "%s", (string(buf)))
+				fmt.Fprintf(res, "%s", string(buf))
 			}
 
 		default:
 			// Internal testcase error - should never get here :)
 			res.WriteHeader(http.StatusNotFound)
 			msg := "Unknown operation path: " + operationPath
-			fmt.Fprintf(res, "%s", msg)
+			fmt.Fprintf(res, "%s", msg) // #nosec G705
 			assert.Fail(t, msg)
 		}
 	}))
@@ -548,6 +617,25 @@ func TestVpcAuthRetrieveIamTokenSuccessProfileID(t *testing.T) {
 	assert.Equal(t, vpcauthTestAccessToken2, iamTokenServerResponse.AccessToken)
 }
 
+func TestVpcAuthRetrieveIamTokenSuccessProfileName(t *testing.T) {
+	GetLogger().SetLogLevel(vpcauthTestLogLevel)
+
+	server := startMockVPCServer(t, "profile-name")
+	defer server.Close()
+
+	auth := &VpcInstanceAuthenticator{
+		URL:            server.URL,
+		IAMProfileName: vpcauthMockIAMProfileName,
+	}
+	err := auth.Validate()
+	assert.Nil(t, err)
+
+	iamTokenServerResponse, err := auth.retrieveIamAccessToken(vpcauthTestInstanceIdentityToken)
+	assert.Nil(t, err)
+	assert.NotNil(t, iamTokenServerResponse)
+	assert.Equal(t, vpcauthTestAccessToken1, iamTokenServerResponse.AccessToken)
+}
+
 func TestVpcAuthRetrieveIamTokenFail1(t *testing.T) {
 	GetLogger().SetLogLevel(vpcauthTestLogLevel)
 
@@ -604,6 +692,24 @@ func TestVpcAuthRetrieveIamTokenTimeout(t *testing.T) {
 	assert.NotNil(t, err)
 	t.Logf("Expected error: %s\n", err.Error())
 	assertAuthError(t, err)
+}
+
+func TestVpcAuthRetrieveIamTokenSupportedServiceVersion(t *testing.T) {
+	GetLogger().SetLogLevel(vpcauthTestLogLevel)
+
+	server := startMockVPCServer(t, "new-service-version")
+	defer server.Close()
+
+	auth := &VpcInstanceAuthenticator{
+		URL:            server.URL,
+		ServiceVersion: "2025-08-26",
+	}
+	err := auth.Validate()
+	assert.Nil(t, err)
+
+	iamTokenServerResponse, err := auth.retrieveIamAccessToken(vpcauthTestInstanceIdentityToken)
+	assert.Nil(t, err)
+	assert.NotNil(t, iamTokenServerResponse)
 }
 
 //
@@ -1024,4 +1130,97 @@ func TestVpcAuthAuthenticateFailIamToken(t *testing.T) {
 	assert.NotNil(t, err)
 	t.Logf("Expected error: %s\n", err.Error())
 	assertAuthError(t, err)
+}
+
+func TestVpcAuthServiceVersionDefaults(t *testing.T) {
+	authenticator, err := NewVpcInstanceAuthenticatorBuilder().Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	// Test default service version
+	assert.Equal(t, "2022-03-01", authenticator.serviceVersion())
+
+	// Test default token lifetime
+	assert.Equal(t, 300, authenticator.tokenLifetime())
+
+	// Test default paths for old service version
+	assert.Equal(t, "/instance_identity/v1/token", authenticator.getCreateAccessTokenPath())
+	assert.Equal(t, "/instance_identity/v1/iam_token", authenticator.getCreateIamTokenPath())
+}
+
+func TestVpcAuthServiceVersionBuilder(t *testing.T) {
+	authenticator, err := NewVpcInstanceAuthenticatorBuilder().
+		SetServiceVersion("2025-08-26").
+		SetTokenLifetime(600).
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	// Test custom service version
+	assert.Equal(t, "2025-08-26", authenticator.serviceVersion())
+
+	// Test custom token lifetime
+	assert.Equal(t, 600, authenticator.tokenLifetime())
+
+	// Test new paths for new service version
+	assert.Equal(t, "/identity/v1/token", authenticator.getCreateAccessTokenPath())
+	assert.Equal(t, "/identity/v1/iam_tokens", authenticator.getCreateIamTokenPath())
+}
+
+func TestVpcAuthServiceVersionFromMap(t *testing.T) {
+	properties := map[string]string{
+		PROPNAME_VPC_IMS_VERSION: "2025-08-26",
+	}
+
+	authenticator, err := newVpcInstanceAuthenticatorFromMap(properties)
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	// Test service version from environment
+	assert.Equal(t, "2025-08-26", authenticator.serviceVersion())
+
+	// Test new paths for new service version
+	assert.Equal(t, "/identity/v1/token", authenticator.getCreateAccessTokenPath())
+	assert.Equal(t, "/identity/v1/iam_tokens", authenticator.getCreateIamTokenPath())
+}
+
+func TestVpcAuthServiceVersionOldVersion(t *testing.T) {
+	authenticator, err := NewVpcInstanceAuthenticatorBuilder().
+		SetServiceVersion("2022-03-01").
+		Build()
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	// Test old service version
+	assert.Equal(t, "2022-03-01", authenticator.serviceVersion())
+
+	// Test old paths for old service version
+	assert.Equal(t, "/instance_identity/v1/token", authenticator.getCreateAccessTokenPath())
+	assert.Equal(t, "/instance_identity/v1/iam_token", authenticator.getCreateIamTokenPath())
+}
+
+func TestVpcAuthServiceVersionUnsupportedVersion(t *testing.T) {
+	authenticator, err := NewVpcInstanceAuthenticatorBuilder().
+		SetServiceVersion("2024-01-01").
+		Build()
+
+	assert.NotNil(t, err)
+	assert.Nil(t, authenticator)
+	assert.Contains(t, err.Error(), "Invalid service version")
+	assert.Contains(t, err.Error(), "2022-03-01, 2025-08-26")
+	t.Logf("Expected error: %s\n", err.Error())
+}
+
+func TestVpcAuthValidateServiceVersionFromMap(t *testing.T) {
+	// Test with unsupported version from map
+	properties := map[string]string{
+		PROPNAME_VPC_IMS_VERSION: "2023-12-31",
+	}
+
+	authenticator, err := newVpcInstanceAuthenticatorFromMap(properties)
+	assert.NotNil(t, err)
+	assert.Nil(t, authenticator)
+	assert.Contains(t, err.Error(), "Invalid service version")
+	assert.Contains(t, err.Error(), "2022-03-01, 2025-08-26")
+	t.Logf("Expected error: %s", err.Error())
 }

@@ -9,25 +9,10 @@ linters:
       - legacy
       - std-error-handling
   settings:
-    gosec:
-      excludes:
-        - G101
-        - G117
-        - G120
-        - G703
-        - G704
-        - G705
     staticcheck:
       checks:
         - all
-        - -ST1003
         - -ST1005
-        - -ST1006
-        - -ST1023
-        - -QF1001
-        - -QF1003
-        - -QF1004
-        - -QF1008
-        - -QF1011
+        - -ST1003
 run:
   timeout: 2m

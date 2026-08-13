@@ -284,21 +284,22 @@ func startMockIAMServer(t *testing.T) *httptest.Server {
 			// Yes, this is kinda subversive, but sometimes we need to be creative on these big jobs :)
 			scope := req.FormValue("scope")
 
-			if scope == "send-second-token" {
+			switch scope {
+			case "send-second-token":
 				accessToken = containerAuthTestAccessToken2
-			} else if scope == "check-basic-auth" {
+			case "check-basic-auth":
 				username, password, ok := req.BasicAuth()
 				assert.True(t, ok)
 				assert.Equal(t, containerAuthMockClientID, username)
 				assert.Equal(t, containerAuthMockClientSecret, password)
-			} else if scope == "check-user-headers" {
+			case "check-user-headers":
 				assert.Equal(t, "Value-1", req.Header.Get("User-Header-1"))
 				assert.Equal(t, "iam.cloud.ibm.com", req.Host)
-			} else if scope == "status-bad-request" {
+			case "status-bad-request":
 				statusCode = http.StatusBadRequest
-			} else if scope == "status-unauthorized" {
+			case "status-unauthorized":
 				statusCode = http.StatusUnauthorized
-			} else if scope == "sleep" {
+			case "sleep":
 				time.Sleep(3 * time.Second)
 			}
 
@@ -339,7 +340,7 @@ func TestContainerAuthRetrieveCRTokenFail(t *testing.T) {
 	// Use a non-existent cr token file.
 	auth := &ContainerAuthenticator{
 		CRTokenFilename: "bogus-cr-token-file",
-	}
+	} // #nosec G101
 	crToken, err := auth.retrieveCRToken()
 	assert.NotNil(t, err)
 	assert.Equal(t, "", crToken)

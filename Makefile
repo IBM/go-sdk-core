@@ -29,3 +29,6 @@ tidy:
 detect-secrets:
 	detect-secrets scan --update .secrets.baseline
 	detect-secrets audit .secrets.baseline
+
+format:
+	${GO} fmt ./...

@@ -2226,7 +2226,7 @@ func TestErrorMessage(t *testing.T) {
 }
 
 func getTLSVersion(service *BaseService) int {
-	var tlsVersion int = -1
+	var tlsVersion = -1
 	client := service.GetHTTPClient()
 	if client != nil {
 		tr := client.Transport.(*http.Transport)
