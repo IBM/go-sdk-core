@@ -1,3 +1,10 @@
+## [5.23.4](https://github.com/IBM/go-sdk-core/compare/v5.23.3...v5.23.4) (2026-09-09)
+
+
+### Bug Fixes
+
+* **deps:** update all dependencies ([#292](https://github.com/IBM/go-sdk-core/issues/292)) ([fa0080e](https://github.com/IBM/go-sdk-core/commit/fa0080ebdeddb5953935a91f304bc1ae39109463))
+
 ## [5.23.3](https://github.com/IBM/go-sdk-core/compare/v5.23.2...v5.23.3) (2026-08-31)
 
 
