@@ -2,6 +2,9 @@
 
 package core
 
+// DISCLAIMER: The JWT token strings used in this file are for testing purposes only.
+// They are not valid tokens and cannot be used to authenticate with any real service.
+
 // (C) Copyright IBM Corp. 2021.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
