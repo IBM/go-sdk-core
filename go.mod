@@ -4,11 +4,12 @@ go 1.26.0
 
 require (
 	github.com/go-openapi/strfmt v0.27.2
-	github.com/go-playground/validator/v10 v10.30.4
+	github.com/go-playground/validator/v10 v10.30.5
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.43.0
+	github.com/onsi/ginkgo/v2 v2.33.0
+	github.com/onsi/gomega v1.43.1
 	github.com/stretchr/testify v1.12.1
 	sigs.k8s.io/yaml v1.6.0
 )
