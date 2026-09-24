@@ -161,6 +161,11 @@ func TestCp4dAuthenticateFailure(t *testing.T) {
 
 func verifyAuthRequest(t *testing.T, r *http.Request,
 	expectedUsername string, expectedPassword string, expectedApikey string) {
+	verifyAuthRequestWithAccountID(t, r, expectedUsername, expectedPassword, expectedApikey, "")
+}
+
+func verifyAuthRequestWithAccountID(t *testing.T, r *http.Request,
+	expectedUsername string, expectedPassword string, expectedApikey string, expectedAccountID string) {
 
 	assert.True(t, strings.HasSuffix(r.URL.String(), "/v1/authorize"))
 	assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
@@ -171,6 +176,7 @@ func verifyAuthRequest(t *testing.T, r *http.Request,
 	assert.Equal(t, expectedUsername, requestBody.Username)
 	assert.Equal(t, expectedPassword, requestBody.Password)
 	assert.Equal(t, expectedApikey, requestBody.APIKey)
+	assert.Equal(t, expectedAccountID, requestBody.AccountID)
 }
 
 func TestCp4dGetTokenSuccessPW(t *testing.T) {
@@ -179,7 +185,7 @@ func TestCp4dGetTokenSuccessPW(t *testing.T) {
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		verifyAuthRequest(t, r, "mookie", "betts", "")
+		verifyAuthRequestWithAccountID(t, r, "mookie", "betts", "", "test-account-id")
 
 		w.WriteHeader(http.StatusOK)
 
@@ -195,6 +201,9 @@ func TestCp4dGetTokenSuccessPW(t *testing.T) {
 	authenticator, err := NewCloudPakForDataAuthenticator(server.URL, "mookie", "betts", false, nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator)
+
+	// Set AccountID
+	authenticator.AccountID = "test-account-id"
 
 	// Force the first fetch and verify we got the correct access token back
 	accessToken, err := authenticator.GetToken()
@@ -672,6 +681,23 @@ func TestNewCloudPakForDataAuthenticatorFromMap(t *testing.T) {
 	assert.Equal(t, "mookie", authenticator.Username)
 	assert.Empty(t, authenticator.Password)
 	assert.Equal(t, "my_apikey", authenticator.APIKey)
+	assert.Equal(t, true, authenticator.DisableSSLVerification)
+
+	props = map[string]string{
+		PROPNAME_AUTH_URL:         "cp4d-url",
+		PROPNAME_USERNAME:         "mookie",
+		PROPNAME_PASSWORD:         "betts",
+		PROPNAME_CP4D_ACCOUNT_ID:  "my_account_id",
+		PROPNAME_AUTH_DISABLE_SSL: "true",
+	}
+	authenticator, err = newCloudPakForDataAuthenticatorFromMap(props)
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+	assert.Equal(t, "cp4d-url", authenticator.URL)
+	assert.Equal(t, "mookie", authenticator.Username)
+	assert.Equal(t, "betts", authenticator.Password)
+	assert.Empty(t, authenticator.APIKey)
+	assert.Equal(t, "my_account_id", authenticator.AccountID)
 	assert.Equal(t, true, authenticator.DisableSSLVerification)
 }
 
