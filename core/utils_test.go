@@ -688,4 +688,84 @@ func TestRedactSecrets(t *testing.T) {
 	assert.NotContains(t, RedactSecrets(`xxx "auth_provider_x509_cert_url":    "secret",xxx`), "secret")
 	assert.NotContains(t, RedactSecrets(`xxx "auth_uri":    "secret",xxx`), "secret")
 	assert.NotContains(t, RedactSecrets(`xxx "client_email":    "secret",xxx`), "secret")
+
+	// ── Multiline: rePropertySetting ──────────────────────────────────────────
+
+	// Secret keyword=value at end of line must not bleed into the next line.
+	result := RedactSecrets("password=secret\nnextline")
+	assert.NotContains(t, result, "secret")
+	assert.Contains(t, result, "nextline")
+
+	// Two secret pairs on consecutive lines — each is independently redacted.
+	result = RedactSecrets("password=secret1\ntoken=secret2\nsafe=safe2")
+	assert.NotContains(t, result, "secret1")
+	assert.NotContains(t, result, "secret2")
+	assert.Contains(t, result, "safe=safe2")
+
+	// Non-secret key on the line before a secret key — must not be touched.
+	result = RedactSecrets("username=alice\npassword=hunter2")
+	assert.Contains(t, result, "username=alice")
+	assert.NotContains(t, result, "hunter2")
+
+	// Secret key embedded in a query string: value stops at & and the rest is kept.
+	result = RedactSecrets("password=secret&other=kept")
+	assert.NotContains(t, result, "secret")
+	assert.Contains(t, result, "other=kept")
+
+	// Multiple secret keys in one query string on a single line.
+	result = RedactSecrets("apikey=k1&password=p2&token=t3")
+	assert.NotContains(t, result, "k1")
+	assert.NotContains(t, result, "p2")
+	assert.NotContains(t, result, "t3")
+
+	// Non-secret key: must be left untouched.
+	result = RedactSecrets("username=alice")
+	assert.Contains(t, result, "username=alice")
+
+	// Secret keyword=value preceded by unrelated text on the same line.
+	result = RedactSecrets("grant_type=urn:ietf:params:oauth:grant-type:iam-authz&apikey=mysecret")
+	assert.NotContains(t, result, "mysecret")
+	assert.Contains(t, result, "grant_type=urn")
+
+	// ── Multiline: reJsonField ────────────────────────────────────────────────
+
+	// Secret JSON field at end of line must not consume the next line.
+	result = RedactSecrets("\"password\": \"secret\"\n\"other\": \"value\"")
+	assert.NotContains(t, result, "secret")
+	assert.Contains(t, result, "\"other\": \"value\"")
+
+	// Two secret JSON fields on consecutive lines — each redacted independently.
+	result = RedactSecrets("{\n  \"password\": \"secret1\",\n  \"token\": \"secret2\",\n  \"name\": \"alice\"\n}")
+	assert.NotContains(t, result, "secret1")
+	assert.NotContains(t, result, "secret2")
+	assert.Contains(t, result, "\"name\": \"alice\"")
+
+	// Non-secret JSON field on the line before a secret field — must be preserved.
+	result = RedactSecrets("\"username\": \"alice\"\n\"password\": \"hunter2\"")
+	assert.Contains(t, result, "\"username\": \"alice\"")
+	assert.NotContains(t, result, "hunter2")
+
+	// Non-secret JSON field on the line after a secret field — must be preserved.
+	result = RedactSecrets("\"password\": \"hunter2\"\n\"username\": \"alice\"")
+	assert.NotContains(t, result, "hunter2")
+	assert.Contains(t, result, "\"username\": \"alice\"")
+
+	// Secret JSON field with surrounding non-secret fields on the same line.
+	result = RedactSecrets(`{"name": "alice", "password": "s3cr3t", "role": "admin"}`)
+	assert.NotContains(t, result, "s3cr3t")
+	assert.Contains(t, result, "\"name\": \"alice\"")
+	assert.Contains(t, result, "\"role\": \"admin\"")
+
+	// ── Multiline: reAuthHeader ───────────────────────────────────────────────
+
+	// Authorization header at EOL must not consume the line that follows.
+	result = RedactSecrets("Authorization: Bearer tok\nContent-Type: application/json")
+	assert.NotContains(t, result, "tok")
+	assert.Contains(t, result, "Content-Type: application/json")
+
+	// Two auth headers on consecutive lines — each redacted, body line preserved.
+	result = RedactSecrets("Authorization: Bearer tok1\nX-Auth-Token: tok2\nbody")
+	assert.NotContains(t, result, "tok1")
+	assert.NotContains(t, result, "tok2")
+	assert.Contains(t, result, "body")
 }
