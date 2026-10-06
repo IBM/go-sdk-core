@@ -1,3 +1,17 @@
+# [5.24.0](https://github.com/IBM/go-sdk-core/compare/v5.23.5...v5.24.0) (2026-10-02)
+
+
+### Features
+
+* support `aud` with array type in JWT (RFC 7519 §4.1.3) ([#302](https://github.com/IBM/go-sdk-core/issues/302)) ([c4835e2](https://github.com/IBM/go-sdk-core/commit/c4835e2584429242ec4890c7a25a371a4efe482b))
+
+## [5.23.5](https://github.com/IBM/go-sdk-core/compare/v5.23.4...v5.23.5) (2026-09-28)
+
+
+### Bug Fixes
+
+* prevent secret redaction from bleeding past EOL ([#298](https://github.com/IBM/go-sdk-core/issues/298)) ([9ee771b](https://github.com/IBM/go-sdk-core/commit/9ee771b56bff7c565f90d467d92484f23b34cd8d))
+
 ## [5.23.4](https://github.com/IBM/go-sdk-core/compare/v5.23.3...v5.23.4) (2026-09-09)
 
 

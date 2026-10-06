@@ -38,6 +38,9 @@ const (
 	// curl -k -X POST https://<host>/icp4d-api/v1/authorize -H 'Content-Type: application/json' \
 	//      -d '{"username": "testuser", "api_key": "<apikey>" }'
 	jwtUserApikey = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3R1c2VyIiwicm9sZSI6IlVzZXIiLCJwZXJtaXNzaW9ucyI6WyJhY2Nlc3NfY2F0YWxvZyIsImNhbl9wcm92aXNpb24iLCJzaWduX2luX29ubHkiXSwiZ3JvdXBzIjpbMTAwMDBdLCJzdWIiOiJ0ZXN0dXNlciIsImlzcyI6IktOT1hTU08iLCJhdWQiOiJEU1giLCJ1aWQiOiIxMDAwMzMxMDAzIiwiYXV0aGVudGljYXRvciI6ImRlZmF1bHQiLCJpYXQiOjE2MTA1NDgyNDgsImV4cCI6MTYxMDU5MTQxMn0.I8MgxrapKRt0nOn0F41NtLHQ5HGmInZNaJIWcNwyBgLWI5YY_98kpKLecN5d9Ll9g0_lapAFs_b8xpTya0Lvnp2Q81SloRFpDhAMUVHVWq46g2dvZd1JpoFB8NHwrkz2qE_JUHBIonJmQusy8vMm1m1CPy0pE6fTYH1d5EJG2vLo6f2eFiDizLfGxb0ym9lUOkK6dgNZw2T32N8IoSYNan6BQU25Jai6llWRLwZda7R521EPEw2AtPDsd95AxoTd8f4pptxfkL2uXpT35wRguap_09sRlvDTR18Ghs-GbtCh3Do-8OPGEFYKvJkSHNpiXPw8pvHEe5jCGl3l3F5vXQ" // #nosec
+	// JWT with aud as a JSON array (RFC 7519 §4.1.3)
+	// payload: {"aud":["account-iam.platform.saas.ibm.com"],"exp":9999999999,"iat":1610548169}
+	jwtArrayAud = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsiYWNjb3VudC1pYW0ucGxhdGZvcm0uc2Fhcy5pYm0uY29tIl0sImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxNjEwNTQ4MTY5fQ.fakesig" // #nosec
 )
 
 func TestParseJWT(t *testing.T) {
@@ -55,6 +58,13 @@ func TestParseJWT(t *testing.T) {
 	assert.NotNil(t, claims)
 	assert.Equal(t, int64(1610591412), claims.ExpiresAt)
 	assert.Equal(t, int64(1610548248), claims.IssuedAt)
+
+	claims, err = parseJWT(jwtArrayAud)
+	assert.Nil(t, err)
+	assert.NotNil(t, claims)
+	assert.Equal(t, int64(9999999999), claims.ExpiresAt)
+	assert.Equal(t, int64(1610548169), claims.IssuedAt)
+	assert.Equal(t, audClaim{"account-iam.platform.saas.ibm.com"}, claims.Audience)
 }
 
 func TestParseJWTFail(t *testing.T) {
