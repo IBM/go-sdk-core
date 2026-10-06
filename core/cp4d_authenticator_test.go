@@ -185,6 +185,45 @@ func TestCp4dGetTokenSuccessPW(t *testing.T) {
 	firstCall := true
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		verifyAuthRequest(t, r, "mookie", "betts", "")
+
+		w.WriteHeader(http.StatusOK)
+
+		if firstCall {
+			fmt.Fprintf(w, `{ "_messageCode_":"200", "message":"success", "token":"%s"}`, cp4dUsernamePwd1)
+			firstCall = false
+		} else {
+			fmt.Fprintf(w, `{ "_messageCode_":"200", "message":"success", "token":"%s"}`, cp4dUsernamePwd2)
+		}
+	}))
+	defer server.Close()
+
+	authenticator, err := NewCloudPakForDataAuthenticator(server.URL, "mookie", "betts", false, nil)
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator)
+
+	// Force the first fetch and verify we got the correct access token back
+	accessToken, err := authenticator.GetToken()
+	assert.Nil(t, err)
+	assert.Equal(t, cp4dUsernamePwd1, accessToken)
+
+	// Also make sure we get back a nil error from synchronizedRequestToken().
+	assert.Nil(t, authenticator.synchronizedRequestToken())
+
+	// Force an expiration and verify we get back the second access token.
+	authenticator.setTokenData(nil)
+	accessToken, err = authenticator.GetToken()
+	assert.Nil(t, err)
+	assert.NotNil(t, authenticator.getTokenData())
+	assert.Equal(t, cp4dUsernamePwd2, accessToken)
+}
+
+func TestCp4dGetTokenSuccessPWWithAccountID(t *testing.T) {
+	GetLogger().SetLogLevel(cp4dAuthTestLogLevel)
+
+	firstCall := true
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		verifyAuthRequestWithAccountID(t, r, "mookie", "betts", "", "test-account-id")
 
 		w.WriteHeader(http.StatusOK)

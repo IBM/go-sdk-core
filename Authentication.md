@@ -730,7 +730,11 @@ Exactly one of Password or APIKey should be specified.
 - URL: (required) The URL representing the Cloud Pak for Data token service endpoint's base URL string.
 This value should not include the `/v1/authorize` path portion.
 
-- DisableSSLVerification: (optional) A flag that indicates whether verification of the server's SSL 
+- AccountID: (optional) the account ID to be sent with the token request.
+When specified, the value is included as the `account_id` field in the request body
+sent to the `/v1/authorize` endpoint.
+
+- DisableSSLVerification: (optional) A flag that indicates whether verification of the server's SSL
 certificate should be disabled or not. The default value is `false`.
 
 - Headers: (optional) A set of key/value pairs that will be sent as HTTP headers in requests
@@ -752,6 +756,9 @@ authenticator, err := core.NewCloudPakForDataAuthenticatorUsingAPIKey(
 if err != nil {
     panic(err)
 }
+
+// Optionally set the account ID.
+authenticator.AccountID = "myaccountid"
 
 // Create the service options struct.
 options := &exampleservicev1.ExampleServiceV1Options{
@@ -775,6 +782,7 @@ export EXAMPLE_SERVICE_AUTH_TYPE=cp4d
 export EXAMPLE_SERVICE_USERNAME=myuser
 export EXAMPLE_SERVICE_APIKEY=myapikey
 export EXAMPLE_SERVICE_URL=https://mycp4dhost.com
+export EXAMPLE_SERVICE_CP4D_ACCOUNT_ID=myaccountid
 ```
 Application code:
 ```go
