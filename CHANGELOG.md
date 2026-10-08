@@ -1,3 +1,10 @@
+# [5.25.0](https://github.com/IBM/go-sdk-core/compare/v5.24.0...v5.25.0) (2026-10-08)
+
+
+### Features
+
+* **auth:** add support for account ID in CP4D authenticator ([#295](https://github.com/IBM/go-sdk-core/issues/295)) ([5a2a194](https://github.com/IBM/go-sdk-core/commit/5a2a194e2bb8d5515092870f00bc2d51d3a68ffa))
+
 # [5.24.0](https://github.com/IBM/go-sdk-core/compare/v5.23.5...v5.24.0) (2026-10-02)
 
 
