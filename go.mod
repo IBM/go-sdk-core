@@ -3,7 +3,7 @@ module github.com/IBM/go-sdk-core/v5
 go 1.26.0
 
 require (
-	github.com/go-openapi/strfmt v0.27.2
+	github.com/go-openapi/strfmt v0.27.3
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-retryablehttp v0.7.8
