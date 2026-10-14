@@ -56,7 +56,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          curl -sfL https://golangci-lint.run/install.sh| sh -s -- -b $(go env GOPATH)/bin v2.13.2
+          curl -sfL https://golangci-lint.run/install.sh| sh -s -- -b $(go env GOPATH)/bin v2.14.0
           golangci-lint version
           go install golang.org/x/tools/cmd/goimports@latest
 
