@@ -425,6 +425,22 @@ func TestConvertSliceDateTime(t *testing.T) {
 	assert.Empty(t, convertedSlice)
 }
 
+func TestConvertSliceStringWithSpecialCharacters(t *testing.T) {
+	stringSlice := []string{"a,b", "c d", "[e]", "f\",\"g", "h"}
+	expected := []string{"a,b", "c d", "[e]", "f\",\"g", "h"}
+	convertedSlice, err := ConvertSlice(stringSlice)
+
+	assert.Nil(t, err)
+	assert.Equal(t, expected, convertedSlice)
+
+	stringSlice = []string{"only one element with spaces"}
+	expected = []string{"only one element with spaces"}
+	convertedSlice, err = ConvertSlice(stringSlice)
+
+	assert.Nil(t, err)
+	assert.Equal(t, expected, convertedSlice)
+}
+
 func TestConvertSliceString(t *testing.T) {
 	stringSlice := []string{"testString1", "testString2"}
 	expected := []string{"testString1", "testString2"}
