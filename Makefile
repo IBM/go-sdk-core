@@ -21,7 +21,7 @@ lint:
 	DIFF=$$(${FORMATTER} -d core); if [ -n "$$DIFF" ]; then printf "\n$$DIFF\n" && exit 1; fi
 
 format:
-	${FORMATTER} -w core
+	${LINT} fmt
 
 tidy:
 	${GO} mod tidy
@@ -29,6 +29,3 @@ tidy:
 detect-secrets:
 	detect-secrets scan --update .secrets.baseline
 	detect-secrets audit .secrets.baseline
-
-format:
-	${GO} fmt ./...
