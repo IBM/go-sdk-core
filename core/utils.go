@@ -197,13 +197,9 @@ func GetCurrentTime() int64 {
 	return time.Now().Unix()
 }
 
-// Pre-compiled regular expression used to remove the surrounding
-// [] characters from a JSON string containing a slice (e.g. `["str1", "str2", "str3"]`).
-var reJsonSlice = regexp.MustCompile(`(?s)\[(\S*)\]`)
-
-// ConvertSlice marshals 'slice' to a json string, performs
-// string manipulation on the resulting string, and converts
-// the string to a '[]string'. If 'slice' is nil, not a 'slice' type,
+// ConvertSlice marshals 'slice' to a json string, decodes the
+// resulting JSON array element by element, and converts
+// the elements to a '[]string'. If 'slice' is nil, not a 'slice' type,
 // or an error occurred during conversion, an error will be returned
 func ConvertSlice(slice any) (s []string, err error) {
 	inputIsSlice := false
@@ -240,33 +236,26 @@ func ConvertSlice(slice any) (s []string, err error) {
 		return
 	}
 
-	jsonString := string(jsonBuffer)
+	// Decode the JSON array back into its individual elements so that commas,
+	// spaces or brackets inside an element do not affect how it is split.
+	var elements []json.RawMessage
+	if err = json.Unmarshal(jsonBuffer, &elements); err != nil {
+		err = errors.New(ERRORMSG_CONVERT_SLICE)
+		return nil, SDKErrorf(err, "", "cant-convert-slice", getComponentInfo())
+	}
 
-	// Use regex to convert the json string to a string slice
-	match := reJsonSlice.FindStringSubmatch(jsonString)
-	if match != nil && match[1] != "" {
-		newString := match[1]
-		s = strings.Split(newString, ",")
-		// For each slice element, attempt to remove any surrounding quotes
-		// added by marshaling into a json string
-		for i := range s {
-			unquotedString, unquoteErr := strconv.Unquote(s[i])
-			if unquoteErr == nil && unquotedString != "" {
-				s[i] = unquotedString
-			}
+	s = make([]string, len(elements))
+	for i, element := range elements {
+		// Elements that were marshaled as JSON strings (strings, dates, base64-encoded
+		// byte arrays, etc.) are unquoted; any other element keeps its JSON text.
+		var str string
+		if json.Unmarshal(element, &str) == nil {
+			s[i] = str
+		} else {
+			s[i] = string(element)
 		}
-		return
 	}
-
-	// If we returned a plain string that's not in "slice format",
-	// then attempt to just convert it to a string slice.
-	if jsonString != "" {
-		s = strings.Split(jsonString, ",")
-		return
-	}
-
-	err = errors.New(ERRORMSG_CONVERT_SLICE)
-	return nil, SDKErrorf(err, "", "cant-convert-slice", getComponentInfo())
+	return
 }
 
 // SliceContains returns true iff "contains" is an element of "slice"
