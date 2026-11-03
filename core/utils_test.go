@@ -18,6 +18,7 @@ package core
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -768,4 +769,62 @@ func TestRedactSecrets(t *testing.T) {
 	assert.NotContains(t, result, "tok1")
 	assert.NotContains(t, result, "tok2")
 	assert.Contains(t, result, "body")
+}
+
+func TestRedactSecretsCredentialHeaders(t *testing.T) {
+	headers := []string{
+		"Authorization",
+		"Proxy-Authorization",
+		"Cookie",
+		"Set-Cookie",
+		"Secret",
+		"X-Auth-Token",
+		"X-Authorization",
+		"X-Auth-Foo-Bar",
+	}
+	for _, header := range headers {
+		for _, name := range []string{header, strings.ToLower(header), strings.ToUpper(header)} {
+			input := name + ": s3cr3tvalue"
+			result := RedactSecrets(input)
+			assert.NotContains(t, result, "s3cr3tvalue", "header: %s", name)
+			assert.Equal(t, name+": [redacted]", result)
+		}
+	}
+
+	// Cookie-style values with multiple attributes.
+	result := RedactSecrets("Set-Cookie: sid=abc123; Path=/; HttpOnly")
+	assert.NotContains(t, result, "abc123")
+	result = RedactSecrets("Cookie: a=firstval; b=secondval")
+	assert.NotContains(t, result, "firstval")
+	assert.NotContains(t, result, "secondval")
+
+	// A full CRLF-delimited HTTP dump: only credential headers are redacted
+	// and CRLF line terminators are preserved.
+	dump := "POST /v1/token HTTP/1.1\r\n" +
+		"Host: example.com\r\n" +
+		"authorization: Bearer tok1\r\n" +
+		"Proxy-Authorization: Basic tok2\r\n" +
+		"COOKIE: sid=tok3\r\n" +
+		"Content-Type: application/json\r\n" +
+		"X-Auth-Token: tok4\r\n" +
+		"\r\n" +
+		"body\r\n"
+	result = RedactSecrets(dump)
+	for _, tok := range []string{"tok1", "tok2", "tok3", "tok4"} {
+		assert.NotContains(t, result, tok)
+	}
+	assert.Contains(t, result, "Host: example.com\r\n")
+	assert.Contains(t, result, "Content-Type: application/json\r\n")
+	assert.Contains(t, result, "authorization: [redacted]\r\n")
+	assert.Contains(t, result, "\r\n\r\nbody\r\n")
+
+	// Response dump with Set-Cookie.
+	result = RedactSecrets("HTTP/1.1 200 OK\r\nSet-Cookie: session=tok5\r\nContent-Length: 2\r\n\r\n{}")
+	assert.NotContains(t, result, "tok5")
+	assert.Contains(t, result, "Content-Length: 2")
+
+	// Non-credential headers, and names that merely contain a credential name, are untouched.
+	for _, h := range []string{"Content-Type: text/plain", "Accept: */*", "X-Request-Id: abc", "Cookies: yes", "Xx-Auth: keep"} {
+		assert.Equal(t, h, RedactSecrets(h))
+	}
 }
