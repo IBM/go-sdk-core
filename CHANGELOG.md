@@ -1,3 +1,10 @@
+## [5.25.3](https://github.com/IBM/go-sdk-core/compare/v5.25.2...v5.25.3) (2026-11-06)
+
+
+### Bug Fixes
+
+* **logging:** redact credential headers in debug output ([#312](https://github.com/IBM/go-sdk-core/issues/312)) ([51ae4f1](https://github.com/IBM/go-sdk-core/commit/51ae4f18da5196b2169cd2d04835dc62a734dc2f))
+
 ## [5.25.2](https://github.com/IBM/go-sdk-core/compare/v5.25.1...v5.25.2) (2026-10-29)
 
 
