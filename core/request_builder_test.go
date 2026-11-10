@@ -207,6 +207,14 @@ func TestAddQuerySlice(t *testing.T) {
 	assert.Equal(t, expected, builtQuery)
 }
 
+func TestAddQuerySliceStringsWithSpaces(t *testing.T) {
+	request := setup()
+	err := request.AddQuerySlice("names", []string{"first name", "second name"})
+
+	assert.Nil(t, err)
+	assert.Equal(t, "first name,second name", request.Query["names"][0])
+}
+
 func TestAddQuerySliceError(t *testing.T) {
 	request := setup()
 	var slice interface{}
