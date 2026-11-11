@@ -1,7 +1,7 @@
 # Makefile to build go-sdk-core library
 GO=go
 LINT=golangci-lint
-FORMATTER=goimports
+FORMATTER=golangci-lint
 
 COV_OPTS=-coverprofile=coverage.txt -covermode=atomic
 
@@ -18,10 +18,10 @@ test:
 
 lint:
 	${LINT} run --build-tags=all
-	DIFF=$$(${FORMATTER} -d core); if [ -n "$$DIFF" ]; then printf "\n$$DIFF\n" && exit 1; fi
+	DIFF=$$(${FORMATTER} -d); if [ -n "$$DIFF" ]; then printf "\n$$DIFF\n" && exit 1; fi
 
 format:
-	${FORMATTER} -w core
+	${FORMATTER} fmt
 
 tidy:
 	${GO} mod tidy
@@ -29,6 +29,3 @@ tidy:
 detect-secrets:
 	detect-secrets scan --update .secrets.baseline
 	detect-secrets audit .secrets.baseline
-
-format:
-	${GO} fmt ./...
