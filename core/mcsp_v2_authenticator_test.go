@@ -20,8 +20,10 @@ package core
 // limitations under the License.
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -436,6 +438,35 @@ func TestMCSPV2GetTokenSuccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, authenticator.getTokenData())
 	assert.Equal(t, mcspv2AuthTestAccessToken2, authenticator.getTokenData().AccessToken)
+}
+
+// Verifies that the access token is never written to the SDK log, even at the most verbose level.
+func TestMCSPV2GetTokenDoesNotLogToken(t *testing.T) {
+	var logOutput bytes.Buffer
+	goLogger := log.New(&logOutput, "", 0)
+	origLogger := GetLogger()
+	SetLogger(NewLogger(LevelDebug, goLogger, goLogger))
+	defer SetLogger(origLogger)
+
+	server := startMCSPV2MockServer(t)
+	defer server.Close()
+
+	authenticator, err := NewMCSPV2AuthenticatorBuilder().
+		SetApiKey(mcspv2AuthMockApiKey).
+		SetURL(server.URL).
+		SetScopeCollectionType(mcspv2AuthMockScopeCollectionType).
+		SetScopeID(mcspv2AuthMockScopeID).
+		Build()
+	assert.Nil(t, err)
+
+	token, err := authenticator.GetToken()
+	assert.Nil(t, err)
+	assert.Equal(t, mcspv2AuthTestAccessToken1, token)
+
+	assert.NotEmpty(t, logOutput.String())
+	assert.NotContains(t, logOutput.String(), mcspv2AuthTestAccessToken1)
+	// The JWT header segment is enough to identify a leaked token, even if truncated.
+	assert.NotContains(t, logOutput.String(), strings.Split(mcspv2AuthTestAccessToken1, ".")[0])
 }
 
 func TestMCSPV2GetCachedToken(t *testing.T) {
