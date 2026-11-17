@@ -1,3 +1,10 @@
+## [5.25.4](https://github.com/IBM/go-sdk-core/compare/v5.25.3...v5.25.4) (2026-11-17)
+
+
+### Bug Fixes
+
+* **auth:** avoid logging the access token in MCSP authenticators ([#314](https://github.com/IBM/go-sdk-core/issues/314)) ([30905a7](https://github.com/IBM/go-sdk-core/commit/30905a778e1324337522c5df17f978f34d72d8b9))
+
 ## [5.25.3](https://github.com/IBM/go-sdk-core/compare/v5.25.2...v5.25.3) (2026-11-06)
 
 
