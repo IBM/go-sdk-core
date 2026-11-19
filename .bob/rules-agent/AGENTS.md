@@ -3,7 +3,7 @@
 ## Critical gotchas
 
 - **Test build tags are mandatory.** Every test file has `//go:build` at line 1. Running tests without `-tags=all` (or the correct tag) produces 0 test cases and a false green. Run `cd core && go test -tags=all` or use a specific tag.
-- **Formatter is `goimports`, not `gofmt`.** `make lint` diffs with `goimports -d core` — a pass with `gofmt` alone will still fail CI.
+- **Formatting goes through `golangci-lint fmt`, not bare `gofmt`/`goimports`.** `make format` runs `golangci-lint fmt -E goimports -E gofmt`; `make lint` fails on any formatting diff, so run `make format` before committing.
 - **Do not use `== nil` on interface values.** Use `IsNil()` from `core/utils.go`; bare `== nil` misses non-nil interfaces with nil concrete values.
 - **New errors must use the `IBMProblem`/`SDKProblem`/`HTTPProblem` hierarchy** (see `core/ibm_problem.go`, `core/sdk_problem.go`, `core/http_problem.go`). Plain `errors.New` / `fmt.Errorf` are not used for externally surfaced errors in this package.
 - **`SDKProblem` requires the `Function` field** set to the name of the calling function — leave it blank and the computed ID will collide with other problems from the same component.
