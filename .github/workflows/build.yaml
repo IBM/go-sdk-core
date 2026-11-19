@@ -68,7 +68,7 @@ jobs:
 
       - name: Check Go formatting
         run: |
-          unformatted=$(gofmt -l .)
+          unformatted=$(golangci-lint fmt --diff)
           if [ -n "$unformatted" ]; then
             echo "The files below are not formatted correctly. Please run `make format` to fix them."
             echo "$unformatted"

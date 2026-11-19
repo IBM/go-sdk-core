@@ -11,8 +11,8 @@ Go SDK core library (`github.com/IBM/go-sdk-core/v5`). All source lives in `core
 ```sh
 make all          # tidy + test + lint (standard CI gate)
 make test         # go test -tags=all ./...
-make lint         # golangci-lint + goimports diff check on core/
-make format       # goimports -w core   (formatter is goimports, NOT gofmt alone)
+make lint         # golangci-lint run + formatting diff check (golangci-lint fmt)
+make format       # golangci-lint fmt -E goimports -E gofmt   (rewrites files in place)
 make tidy         # go mod tidy
 ```
 
@@ -42,7 +42,7 @@ Use `NewProblemComponent(name, version)` to supply the `Component` field. IDs ar
 
 ## Code Style
 
-- Formatter: **`goimports`** (not `gofmt`). `make lint` will fail if `goimports -d core` produces a diff.
+- Formatters: `gofmt` and `goimports`, run via `golangci-lint fmt` (`make format`). They are enabled by the `-E goimports -E gofmt` flags in the `Makefile`, not by a `formatters:` section in `.golangci.yaml`. `make lint` will fail if any file is not properly formatted. Use `golangci-lint fmt -d` (with the same `-E` flags) to see a diff without rewriting files.
 - Linter: `golangci-lint` with `gosec` enabled. `staticcheck` runs with `all` minus `ST1005`/`ST1003` (error string capitalisation and naming checks are disabled).
 - Constants that map to external config property names use `SCREAMING_SNAKE_CASE` (e.g. `PROPNAME_APIKEY`).
 - Auth type string constants (`AUTHTYPE_*`) are lower-camel (`"bearerToken"`, `"iamAssume"`) — matching is case-insensitive in config parsing.
