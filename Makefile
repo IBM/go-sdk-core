@@ -21,7 +21,7 @@ lint:
 	DIFF=$$(${FORMATTER} -d); if [ -n "$$DIFF" ]; then printf "\n$$DIFF\n" && exit 1; fi
 
 format:
-	${FORMATTER} fmt
+	${FORMATTER} fmt -E goimports -E gofmt
 
 tidy:
 	${GO} mod tidy
